@@ -1,5 +1,6 @@
+//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411;
-
+//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import com.ctre.phoenix.ErrorCode;
 import com.revrobotics.REVLibError;
 
@@ -7,22 +8,34 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+//----------------------------------------------------------------------[Declaration]----------------------------------------------------------------------//
 /**
  * Test for simple exceptions to be thrown when an error arises at runtime with CTRE and REV error codes.
  * 
  * @author Cody Washington
  */
 public final class UtilitiesTest {
+  //----------------------------------------------------------------------[Methods]------------------------------------------------------------------------//
   /**
    * Utilizes CTRE utilities to guarantee that CTRE Error codes are properly interpreted and are thrown
    */
   @Test
-  void checkErrorCTRE() {
+  static void checkErrorCTRE() {
     assertThrows((RuntimeException.class), () -> checkCTRECode(ErrorCode.GeneralError));
     assertThrows((RuntimeException.class), () -> checkCTRECode(ErrorCode.FirmVersionCouldNotBeRetrieved));
     assertDoesNotThrow(() -> checkCTRECode(ErrorCode.OK));
-  }
+  }  
 
+  /**
+   * Utilizes REV utilities to guarantee that CTRE Error codes are properly interpreted and are thrown
+   */
+  @Test
+  static void checkErrorREV() {
+    assertThrows((RuntimeException.class), () -> checkREVCode(REVLibError.kError));
+    assertThrows((RuntimeException.class), () -> checkREVCode(REVLibError.kCantFindFirmware));
+    assertDoesNotThrow(() -> checkREVCode(REVLibError.kOk));
+  }  
+  //-----------------------------------------------------------------------[Tests]-------------------------------------------------------------------------//
   /**
    * Checks if a given CTRE error code is equivalent with an okay error code, if not, an exception is thrown
    * @param Code Error code to check
@@ -31,16 +44,6 @@ public final class UtilitiesTest {
     if (Code != ErrorCode.OK) {
       throw new RuntimeException(String.format(("%s: %s%n"), (""), Code.toString()));
     }
-  }
-
-  /**
-   * Utilizes REV utilities to guarantee that CTRE Error codes are properly interpreted and are thrown
-   */
-  @Test
-  void checkErrorREV() {
-    assertThrows((RuntimeException.class), () -> checkREVCode(REVLibError.kError));
-    assertThrows((RuntimeException.class), () -> checkREVCode(REVLibError.kCantFindFirmware));
-    assertDoesNotThrow(() -> checkREVCode(REVLibError.kOk));
   }
 
   /**

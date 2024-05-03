@@ -27,6 +27,11 @@
   ],
   "java.test.defaultConfig": "WPIlibUnitTests",
   "cSpell.words": [
-    "Akit"
+    "Akit",
+    "CTRE",
+    "Drivebase",
+    "Driverstation",
+    "Pathplanner",
+    "Teleoperated"
   ]
 }

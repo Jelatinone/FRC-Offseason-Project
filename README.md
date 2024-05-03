@@ -1,15 +1,15 @@
 # ![Prosper-Engineering-Team](resources/Banner.png)
-# Prosper Engineering Team Robot Template
+# Prosper Engineering Team Forte Robot
 
-[![Build Status](https://github.com/FRC5411/template-base/actions/workflows/Build.yml/badge.svg?branch=Production)](https://github.com/FRC5411/template-base/actions/workflows/Build.yml)
-[![GitHub Contributors](https://img.shields.io/github/contributors/FRC5411/template-base.svg?branch=Production)](https://github.com/FRC5411/template-base/graphs/contributors)
-[![GitHub Issues](https://img.shields.io/github/issues/FRC5411/template-base.svg?branch=Production)](https://github.com/FRC5411/template-base/graphs/issues)
+[![Build Status](https://github.com/Jelatinone/FRC-Forte-Rewrite/actions/workflows/Build.yml/badge.svg?branch=Production)](https://github.com/Jelatinone/FRC-Forte-Rewrite/actions/workflows/Build.yml)
+[![GitHub Contributors](https://img.shields.io/github/contributors/Jelatinone/FRC-Forte-Rewrite.svg?branch=Production)](https://github.com/Jelatinone/FRC-Forte-Rewrite/graphs/contributors)
+[![GitHub Issues](https://img.shields.io/github/issues/Jelatinone/FRC-Forte-Rewrite.svg?branch=Production)](https://github.com/Jelatinone/FRC-Forte-Rewrite/graphs/issues)
 
 ## Installation & Setup
 
 Below is a list of instructions to properly *build* the project, see [requirements](##Requirements)
 
-1. Clone the repository with `git clone https://github.com/FRC5411/template-base.git`
+1. Clone the repository with `git clone https://github.com/Jelatinone/FRC-Forte-Rewrite.git`
 2. Build the repository with `./gradlew build` or `./gradlew build` if you do not have a local gradle installation
 
 ## Requirements

@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package org.frc5411.lib.util;
+package org.frc5411.lib.external;
 
 import Jama.Matrix;
 import Jama.QRDecomposition;

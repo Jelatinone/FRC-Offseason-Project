@@ -1,8 +1,8 @@
-// ------------------------------------------------------------------[Libraries]-----------------------------------------------------------------//
+//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 import java.nio.charset.StandardCharsets
-// -------------------------------------------------------------------[Plugins]------------------------------------------------------------------//
+// -----------------------------------------------------------------------[Plugins]-----------------------------------------------------------------------//
 plugins {
   id "java"
   id "application"
@@ -14,11 +14,11 @@ plugins {
 }
 
 apply plugin: 'edu.wpi.first.GradleRIO'
-// -------------------------------------------------------------------[Project]------------------------------------------------------------------//
+
 def teamNumber = project.frc.getTeamOrDefault(5411)
 def seasonYear = new SimpleDateFormat("yyyy").format(new Date())
 def revisionNumber = "git rev-list --count HEAD".execute().text.trim()
-
+// -----------------------------------------------------------------------[Project]-----------------------------------------------------------------------//
 application {
   mainClass.set("org.frc${teamNumber}.robot${seasonYear}.Main")
 }
@@ -44,7 +44,7 @@ sourceSets {
     }
   }
 }
-// -----------------------------------------------------------------[Repositories]---------------------------------------------------------------//
+// ---------------------------------------------------------------------[Repositories]--------------------------------------------------------------------//
 repositories {
   maven {
     url = uri("https://maven.pkg.github.com/Mechanical-Advantage/AdvantageKit")
@@ -58,7 +58,7 @@ repositories {
   }
   mavenLocal()
 }
-// ------------------------------------------------------------------[Deployment]----------------------------------------------------------------//
+// ----------------------------------------------------------------------[Deployment]---------------------------------------------------------------------//
 deploy {
   targets {
     roborio(getTargetTypeClass('RoboRIO')) {
@@ -87,7 +87,7 @@ deploy {
     }
   }
 }
-// -----------------------------------------------------------------[Dependencies]---------------------------------------------------------------//
+// ---------------------------------------------------------------------[Dependencies]--------------------------------------------------------------------//
 configurations.all {
   exclude group: "edu.wpi.first.wpilibj"
 }
@@ -129,7 +129,7 @@ dependencies {
   testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.8.2'
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.+'
 }
-// ------------------------------------------------------------------[Formatting]----------------------------------------------------------------//
+// ----------------------------------------------------------------------[Formatting]---------------------------------------------------------------------//
 spotless {
   java {
     target fileTree('src') {
@@ -164,7 +164,7 @@ tasks.withType(Javadoc).configureEach {
   options.addStringOption("encoding", "utf-8")
   destinationDir = layout.projectDirectory.dir("docs").asFile
 }
-// ----------------------------------------------------------------[Build Checks]----------------------------------------------------------------//
+// ------------------------------------------------------------------[Compilation Checks]-----------------------------------------------------------------//
 task(checkAkitInstall, dependsOn: "classes", type: JavaExec) {
   mainClass = "org.littletonrobotics.junction.CheckInstall"
   classpath = sourceSets.main.runtimeClasspath
@@ -210,7 +210,7 @@ test {
   useJUnitPlatform()
   systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
 }
-// -----------------------------------------------------------------[Compilation]----------------------------------------------------------------//
+// ----------------------------------------------------------------------[Compilation]--------------------------------------------------------------------//
 java {
   withSourcesJar()
   sourceCompatibility = JavaVersion.VERSION_17
