@@ -5,15 +5,27 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.thread.CTREOdometryThread;
 import org.frc5411.lib.schema.thread.REVOdometryThread;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
+import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.rlog.RLOGServer;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.photonvision.estimation.OpenCVHelp;
 
 import org.frc5411.lib.schema.thread.OdometryThread;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
+import java.util.HashMap;
+import java.util.Map;
 //------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -28,8 +40,12 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   private static final long serialVersionUID = 9197360083967213848L;
+  private static final Map<String,Integer> COMMANDS = new HashMap<>();
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   private static volatile Robot Instance;
+  private static volatile Command Autonomous;
+  private static volatile Boolean Message;
+  private static volatile Double Timestamp;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Robot Constructor.
@@ -38,16 +54,77 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     REVOdometryThread.getInstance();
     CTREOdometryThread.getInstance();
     OpenCVHelp.forceLoadOpenCV();
+    Logger.recordMetadata(("Robot-Type"), Constants.Robot.TYPE.name());
+    Logger.recordMetadata(("Robot-Mode"), Constants.Robot.MODE.name());
+    Logger.recordMetadata(("Runtime-Type"), getRuntimeType().name());
+    Logger.recordMetadata(("Project-Name"), Metadata.MAVEN_NAME);
+    Logger.recordMetadata(("Project-Date"), Metadata.BUILD_DATE);
+    Logger.recordMetadata(("VCS-SHA"), Metadata.GIT_SHA);
+    Logger.recordMetadata(("VCS-Date"), Metadata.GIT_DATE);
+    Logger.recordMetadata(("VCS-Branch"), Metadata.GIT_BRANCH);
+    Logger.recordMetadata(("VCS-State"), switch(Metadata.DIRTY) {
+      case 0 -> "Committed"; case 1 -> "Changed"; default -> "Unknown";
+    });
   }
   //----------------------------------------------------------------------[Robot Scope]------------------------------------------------------------------------//
   @Override
   public synchronized void robotInit() {
+    switch(Constants.Robot.MODE) {
+      case ACTUAL:
+        Logger.addDataReceiver(new WPILOGWriter());
+      case SIMULATED:
+        Logger.addDataReceiver(new RLOGServer());
+        break;
+      case REPLAY:
+        setUseTiming((false));
+        final var Path = LogFileUtil.findReplayLog();
+        Logger.setReplaySource(new WPILOGReader(Path));
+        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
+        break;
+    }
+    Logger.start();
+    CommandScheduler.getInstance()
+        .onCommandInitialize(
+            (Command Operation) -> {
+              log(Operation, (true));
+            });
+    CommandScheduler.getInstance()
+        .onCommandFinish(
+            (Command Operation) -> {
+              log(Operation, (false));
+            });
+    CommandScheduler.getInstance()
+        .onCommandInterrupt(
+            (Command Operation) -> {
+              log(Operation, (false));
+            });
     setThreadsEnabled((true));
   }
 
   @Override
   public synchronized void robotPeriodic() {
-    CommandScheduler.getInstance().run();
+    synchronized(Instance) {
+      Threads.setCurrentThreadPriority((true), (99));
+      CommandScheduler.getInstance().run();
+      if(isReal()) {
+        final var CAN = RobotController.getCANStatus();
+        Logger.recordOutput(("CAN/Bus-Off-Count"), CAN.busOffCount);
+        Logger.recordOutput(("CAN/Percent-Utilization"), CAN.percentBusUtilization);
+        Logger.recordOutput(("CAN/Receive-Error-Count"), CAN.receiveErrorCount);
+        Logger.recordOutput(("CAN/Transmit-Error-Count"), CAN.transmitErrorCount);
+        Logger.recordOutput(("CAN/TX-Count"), CAN.txFullCount);
+      }
+      if (Autonomous != (null)) {
+        if (!Autonomous.isScheduled() && !Message) {
+          System.out.printf(
+            ("*** Auto %s in %.2f secs ***%n"),
+            (DriverStation.isAutonomousEnabled()? "finished": "cancelled"),
+            Logger.getRealTimestamp() / (1e6) - Timestamp);
+          Message = (true);
+        }
+      }  
+      Threads.setCurrentThreadPriority((true), (10));      
+    }
   }
   //--------------------------------------------------------------------[Simulation Scope]--------------------------------------------------------------------//
   @Override
@@ -73,13 +150,21 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //--------------------------------------------------------------------[Autonomous Scope]-------------------------------------------------------------------//
   
   @Override
-  public synchronized void autonomousInit() {}
+  public synchronized void autonomousInit() {
+    Timestamp = Timer.getFPGATimestamp();
+    Message = (false);
+    if(Autonomous != null) {
+      Autonomous.onlyWhile(this::isAutonomousEnabled).schedule();
+    }
+  }
 
   @Override
   public synchronized void autonomousPeriodic() {}
 
   @Override
-  public synchronized void autonomousExit() {}
+  public synchronized void autonomousExit() {
+
+  }
   //-------------------------------------------------------------------[Teleoperated Scope]------------------------------------------------------------------//
   @Override
   public synchronized void teleopInit() {}
@@ -128,12 +213,37 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   }
 
   /**
+   * Logs a command that has been scheduled with the {@link CommandScheduler} using the {@link Logger}.
+   * @param Operation Command to be logged, can be in any state
+   * @param Running   Whether or not this command is currently active 
+   */
+  private final void log(final Command Operation, final Boolean Running) {
+    final var Name = Operation.getName();
+    final var Count = COMMANDS.getOrDefault(Running, (0)) + (Running? 1: -1);
+    COMMANDS.put(Name, Count);
+    Logger.recordOutput(String.format(("Commands/Unique/[%s]-[%s]"), Name, Integer.toHexString(Operation.hashCode())), Running);
+    Logger.recordOutput(String.format(("Commands/Unique/[%s]"),Name), Count > 0);
+  }
+  //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
+
+  /**
+   * Mutates the current autonomous command to a different command, immediately ends any running commands if applicable.
+   * @param Operation Command to be executed, can be in any state, will be run as {@link Command#asProxy() proxy}
+   */
+  public synchronized void setAutonomousCommand(final Command Operation) {
+    if(Autonomous != null) {
+      Autonomous.cancel();
+    }
+    Autonomous = Operation.asProxy();
+  }
+
+  /**
    * Mutates the current state of the running {@link OdometryThread OdometryThreads} to control if they are enabled
    * through {@link OdometryThread#set(Boolean)}.
    * @param Enabled If this Thread is enabled or not
    */
-  private synchronized void setThreadsEnabled(final Boolean Enabled) {
-    synchronized(Robot.class) {
+  public synchronized void setThreadsEnabled(final Boolean Enabled) {
+    synchronized(Instance) {
       REVOdometryThread.getInstance().set(Enabled);
       CTREOdometryThread.getInstance().set(Enabled);
     }
