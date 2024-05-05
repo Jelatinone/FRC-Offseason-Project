@@ -1,7 +1,7 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//--------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
+//-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Registerable;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Subsystem;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -12,14 +12,14 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.pathplanner.lib.auto.NamedCommands;
 
-import java.io.ObjectInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
-import java.io.Serial;
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
  *
@@ -49,11 +49,13 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
     Mode = State.RELATIVE;
   }
   //----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  @Serial
   @Override
   public synchronized DrivebaseSubsystem readResolve() {
     return Instance;
   }
 
+  @Serial
   @Override
   public synchronized void readObject(final ObjectInputStream Stream) throws IOException, ClassNotFoundException {
     Stream.defaultReadObject();

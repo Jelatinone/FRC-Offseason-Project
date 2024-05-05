@@ -1,19 +1,20 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//--------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.robot2024;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj.Threads;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+//-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.schema.thread.CTREOdometryThread;
+import org.frc5411.lib.schema.thread.REVOdometryThread;
+
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+
 import org.littletonrobotics.junction.LoggedRobot;
 import org.photonvision.estimation.OpenCVHelp;
 
+import org.frc5411.lib.schema.thread.OdometryThread;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
  *
@@ -34,21 +35,19 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * Robot Constructor.
    */
   private Robot() {} static {
+    REVOdometryThread.getInstance();
+    CTREOdometryThread.getInstance();
     OpenCVHelp.forceLoadOpenCV();
   }
   //----------------------------------------------------------------------[Robot Scope]------------------------------------------------------------------------//
   @Override
-  public synchronized void robotInit() {}
+  public synchronized void robotInit() {
+    setThreadsEnabled((true));
+  }
 
   @Override
   public synchronized void robotPeriodic() {
-    synchronized(Instance) {
-      Threads.setCurrentThreadPriority((true), (99));
-      CommandScheduler.getInstance().run();
-      SmartDashboard.updateValues();
-      Shuffleboard.update();
-      Threads.setCurrentThreadPriority((true), (10));      
-    }
+    CommandScheduler.getInstance().run();
   }
   //--------------------------------------------------------------------[Simulation Scope]--------------------------------------------------------------------//
   @Override
@@ -61,13 +60,16 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void disabledInit() {
     CommandScheduler.getInstance().cancelAll();
+    setThreadsEnabled((false));
   }
 
   @Override
   public synchronized void disabledPeriodic() {}
 
   @Override
-  public synchronized void disabledExit() {} 
+  public synchronized void disabledExit() {
+    setThreadsEnabled((true));
+  } 
   //--------------------------------------------------------------------[Autonomous Scope]-------------------------------------------------------------------//
   
   @Override
@@ -97,12 +99,14 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
 
   @Override
   public synchronized void testExit() {}
-  //----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //------------------------------------------------------------------------[Methods]------------------------------------------------------------------------//
+  @Serial
   @Override
   public synchronized Robot readResolve() {
     return Instance;
   }
 
+  @Serial
   @Override
   public synchronized void readObject(final ObjectInputStream Stream) throws IOException, ClassNotFoundException {
     Stream.defaultReadObject();
@@ -120,7 +124,19 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
 
   @Override
   public final Object clone() throws CloneNotSupportedException {
-    return super.clone();
+    throw new CloneNotSupportedException(("Singleton Instances Cannot Be Cloned"));
+  }
+
+  /**
+   * Mutates the current state of the running {@link OdometryThread OdometryThreads} to control if they are enabled
+   * through {@link OdometryThread#set(Boolean)}.
+   * @param Enabled If this Thread is enabled or not
+   */
+  private synchronized void setThreadsEnabled(final Boolean Enabled) {
+    synchronized(Robot.class) {
+      REVOdometryThread.getInstance().set(Enabled);
+      CTREOdometryThread.getInstance().set(Enabled);
+    }
   }
   //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
   /**

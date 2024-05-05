@@ -28,10 +28,15 @@
   "java.test.defaultConfig": "WPIlibUnitTests",
   "cSpell.words": [
     "Akit",
+    "COMPBOT",
     "CTRE",
+    "DEVBOT",
     "Drivebase",
     "Driverstation",
+    "Odometry",
     "Pathplanner",
-    "Teleoperated"
+    "SIMBOT",
+    "Teleoperated",
+    "Timeable"
   ]
 }

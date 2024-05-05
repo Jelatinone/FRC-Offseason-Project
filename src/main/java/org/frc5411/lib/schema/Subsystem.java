@@ -2,14 +2,17 @@
 package org.frc5411.lib.schema;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import lombok.NonNull;
+
+import com.jcabi.aspects.Async;
+
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.urcl.URCL;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
-import org.littletonrobotics.junction.Logger;
-
-import org.littletonrobotics.urcl.URCL;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Subsystem</h1>
@@ -18,7 +21,7 @@ import org.littletonrobotics.urcl.URCL;
  * 
  * @author Cody Washington
  */
-public abstract class Subsystem<Defined extends Registerable, State extends Enum<?>> extends SubsystemBase implements Singleton<Subsystem<Defined, State>> {
+public abstract class Subsystem<@NonNull Defined extends Registerable, @NonNull State extends Enum<?>> extends SubsystemBase implements Singleton<Subsystem<Defined, State>> {
   //---------------------------------------------------------------------[Constants]-----------------------------------------------------------------------//
   private transient static final List<Subsystem<?,?>> SUBSYSTEMS = new ArrayList<>();
   private final Lock OPERATION_LOCK;
@@ -32,12 +35,13 @@ public abstract class Subsystem<Defined extends Registerable, State extends Enum
     OPERATION_LOCK = Objects.requireNonNull(Lock);
     SUBSYSTEMS.add(this);
   }
-  //----------------------------------------------------------------------[Abstract]------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
   /**
    * Updates relevant {@link Logger loggable} values using {@link Logger#recordOutput(String, Type)} that may have changed during runtime. This
    * is inclusive of values such as encoder values, motor outputs, etc, that are not automatically logged (such as {@link URCL}) that may be useful during
    * the debugging process.
    */
+  @Async
   public abstract void update();
 
   /**
@@ -53,7 +57,7 @@ public abstract class Subsystem<Defined extends Registerable, State extends Enum
   public abstract State getState();
   //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
   /**
-   * Provides the lock member-variable of this subsystem used during it's periodic operations.
+   * Provides the lock member-variable of this subsystem used during it's {@link #periodic() periodic} operations.
    * @return Synchronization lock of this subsystem
    */
   public final Lock getLock() {
@@ -62,7 +66,7 @@ public abstract class Subsystem<Defined extends Registerable, State extends Enum
 
   @Override
   public final Object clone() throws CloneNotSupportedException {
-    return super.clone();
+    throw new CloneNotSupportedException(("Singleton Instances Cannot Be Cloned"));
   }
 
   /**

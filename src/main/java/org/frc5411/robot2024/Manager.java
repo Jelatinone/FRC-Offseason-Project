@@ -1,13 +1,13 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//----------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.robot2024;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+//---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
  *
@@ -30,12 +30,15 @@ public final class Manager implements Singleton<Manager> {
   } static {
 
   }
-  //----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+
+  @Serial
   @Override
   public synchronized Manager readResolve() {
     return Instance;
   }
-
+  
+  @Serial
   @Override
   public synchronized void readObject(final ObjectInputStream Stream) throws IOException, ClassNotFoundException {
     Stream.defaultReadObject();
@@ -56,9 +59,9 @@ public final class Manager implements Singleton<Manager> {
 
   @Override
   public final Object clone() throws CloneNotSupportedException {
-    return super.clone();
+    throw new CloneNotSupportedException(("Singleton Instances Cannot Be Cloned"));
   }
-  //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Accessors]--------------------------------------------------------------------------//
   /**
    * Retrieves the existing instance of this static utility class
    * @return Utility class's instance

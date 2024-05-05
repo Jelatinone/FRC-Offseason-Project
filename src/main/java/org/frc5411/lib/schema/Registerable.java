@@ -13,14 +13,14 @@ import com.pathplanner.lib.auto.NamedCommands;
  * @author Cody Washington
  */
 public interface Registerable {
-
+  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Registers a registerable named command, which has both a name and a command proxy retrieved through {@link Command#asProxy()}.
    */
   default void register() {
     NamedCommands.registerCommand(getName(), getCommand());
   }
-
+  //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
   /**
    * Proxy command of the named command to be registered as a named commands
    * @return Command to be registered

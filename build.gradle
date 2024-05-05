@@ -35,12 +35,12 @@ if (hasProperty('buildScan')) {
 sourceSets {
   main {
     java {
-      srcDir '/src/main/java/org/frc{teamNumber}'
+      srcDir "/src/main/java"
     }
   }
   test {
     java {
-      srcDir '/src/test/java'
+      srcDir "/src/test/java"
     }
   }
 }
@@ -66,17 +66,17 @@ deploy {
       debug = project.frc.getDebugOrDefault(false)
       artifacts {
         frcJava(getArtifactTypeClass('FRCJavaArtifact')) {
+          gcType = edu.wpi.first.gradlerio.deploy.roborio.GarbageCollectorType.G1_Base
           jarTask = shadowJar
-
-          gcType = edu.wpi.first.gradlerio.deploy.roborio.GarbageCollectorType.Other
           jvmArgs << '-XX:+UseG1GC'
-
-          jvmArgs.add("-Dcom.sun.management.jmxremote=true")
-          jvmArgs.add("-Dcom.sun.management.jmxremote.port=1198")
-          jvmArgs.add("-Dcom.sun.management.jmxremote.local.only=false")
-          jvmArgs.add("-Dcom.sun.management.jmxremote.ssl=false")
-          jvmArgs.add("-Dcom.sun.management.jmxremote.authenticate=false")
-          jvmArgs.add("-Djava.rmi.server.hostname=10.54.11.2")
+          if (frc.project.hasProperty("profile")) {
+            jvmArgs.add("-Dcom.sun.management.jmxremote=true")
+            jvmArgs.add("-Dcom.sun.management.jmxremote.port=1198")
+            jvmArgs.add("-Dcom.sun.management.jmxremote.local.only=false")
+            jvmArgs.add("-Dcom.sun.management.jmxremote.ssl=false")
+            jvmArgs.add("-Dcom.sun.management.jmxremote.authenticate=false")
+            jvmArgs.add("-Djava.rmi.server.hostname=10.54.11.2")            
+          }
         }
         frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
           predeploy << { execute 'rm -rf /home/lvuser/deploy' }
@@ -218,6 +218,14 @@ java {
 }
 
 jar {
+  from { 
+    configurations.runtimeClasspath.collect { 
+      it.isDirectory() ? it : zipTree(it) 
+    } 
+  }
+  from sourceSets.main.allSource
+  manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest("org.frc${teamNumber}.robot${seasonYear}.Main")
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
   exclude("org/frc${teamNumber}/lib/**")
   manifest {
     attributes(

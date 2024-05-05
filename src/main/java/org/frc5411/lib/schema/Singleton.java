@@ -1,15 +1,14 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.schema;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import java.io.Serializable;
-
-import lombok.NonNull;
-
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamException;
 import java.io.Serial;
-import java.io.IOException;
+import java.io.Serializable;
+
+import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Singleton</h1>
@@ -51,7 +50,7 @@ public interface Singleton<@NonNull Type> extends Serializable, Closeable, Clone
 
   /**
    * Clones this singleton instance, throws an exception when this method is called because a singleton implicitly has only one instance
-   * @return Nothing, an error is always thrown
+   * @return                            Nothing, an error is always thrown
    * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
    */
   default Object clone() throws CloneNotSupportedException {
