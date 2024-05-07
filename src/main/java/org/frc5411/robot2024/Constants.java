@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.RobotBase;
  *
  *
  * <h1>RobotConstants</h1>
- *
+ *e
  * <p>Contains all robot-wide constants, does not contain subsystem specific constants.
  *
  * @see Manager
@@ -21,11 +21,13 @@ public final class Constants {
    * @param Options Additional options applied via the command line
    */
   public static synchronized final void main(final String... Options) {
-
+    if(Robot.TYPE == Type.SIMBOT) {
+      System.exit((1));
+    }
   }
   //----------------------------------------------------------------------[Internal]-----------------------------------------------------------------------//
   public static final class Robot {
-    public static final Type TYPE = Type.COMPBOT;
+    public static final Type TYPE = Type.DEVBOT;
     public static final Mode MODE = switch(TYPE) {
       case DEVBOT, COMPBOT 
         -> RobotBase.isReal()? Mode.ACTUAL: Mode.REPLAY;

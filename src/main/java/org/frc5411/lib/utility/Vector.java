@@ -1,16 +1,16 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]------------------------=----------------------------------------------------//
 package org.frc5411.lib.utility;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import edu.wpi.first.hal.util.BoundaryException;
-import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.Num;
-import edu.wpi.first.math.numbers.N0;
-
+//-----------------------------------------------------------------------[Libraries]----------------------------------------------------------------------------//
 import com.jcabi.aspects.Immutable.Array;
-
-import java.util.Objects;
+import edu.wpi.first.math.Num;
+import edu.wpi.first.math.Nat;
 import javax.validation.constraints.NotNull;
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+
+import edu.wpi.first.hal.util.BoundaryException;
+import edu.wpi.first.math.numbers.N0;
+import java.util.Objects;
+
+//----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//
 /**
  * 
  * 
@@ -25,6 +25,7 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
   private static final Vector<Object,N0> EMPTY = new Vector<>(Nat.N0());
   private final @NotNull @Array Type[] VECTOR;
   private final @NotNull Nat<Elements> ELEMENTS;
+
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   /**
    * Type Vector Constructor.
@@ -47,7 +48,7 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
     VECTOR = Objects.requireNonNull(Vector);
     ELEMENTS = Objects.requireNonNull(Elements);
   }
-  //----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**
    * Creates a type vector with the specified elements
    * @param <Type>                Type of the generic array
@@ -70,7 +71,7 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
   public static <Type, Elements extends Num> Vector<Type, Elements> empty() {
     return (Vector<Type, Elements>) EMPTY;
   }
-  //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Accessors]------------------------------------------------------------------------//
   /**
    * Provides the underlying, specified type, array that was defined during construction, will always meet the expected bounds of Elements.
    * @return Array of specified type

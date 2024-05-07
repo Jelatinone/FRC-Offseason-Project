@@ -5,6 +5,8 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.thread.CTREOdometryThread;
 import org.frc5411.lib.schema.thread.REVOdometryThread;
 
+import edu.wpi.first.net.PortForwarder;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
@@ -18,6 +20,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.rlog.RLOGServer;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.littletonrobotics.urcl.URCL;
 import org.photonvision.estimation.OpenCVHelp;
 
 import org.frc5411.lib.schema.thread.OdometryThread;
@@ -98,6 +101,10 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
             (Command Operation) -> {
               log(Operation, (false));
             });
+    DataLogManager.start();
+    Logger.registerURCL(URCL.startExternal());
+    DriverStation.silenceJoystickConnectionWarning((true));
+    PortForwarder.add((5800), ("photonvision.local"), (5800));
     setThreadsEnabled((true));
   }
 
