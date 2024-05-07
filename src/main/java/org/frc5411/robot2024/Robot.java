@@ -216,7 +216,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
 
   @Override
   public final Object clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(("Singleton Instances Cannot Be Cloned"));
+    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
 
   /**

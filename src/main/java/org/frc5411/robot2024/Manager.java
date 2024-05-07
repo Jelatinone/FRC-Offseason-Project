@@ -59,7 +59,7 @@ public final class Manager implements Singleton<Manager> {
 
   @Override
   public final Object clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(("Singleton Instances Cannot Be Cloned"));
+    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
   //---------------------------------------------------------------------[Accessors]--------------------------------------------------------------------------//
   /**
