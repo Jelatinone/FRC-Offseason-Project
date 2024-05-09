@@ -1,22 +1,18 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.mechanism.actuator.module;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import org.frc5411.lib.mechanism.Report;
-
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import org.littletonrobotics.junction.LogTable;
-
-import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
- * <h1>Module</h1>
+ * <h1>Report</h1>
  * c
  * <p>
  * 
  * @author Cody Washington
  */
-public class Record extends Report<SwerveModulePosition> {
+public class Report extends org.frc5411.lib.mechanism.Report<SwerveModulePosition> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   public volatile Double TranslationalVelocityRotationsMinute = (0d);
   public volatile Double TranslationalAppliedVoltage = (0d);
@@ -30,16 +26,18 @@ public class Record extends Report<SwerveModulePosition> {
   public volatile Double RotationalTemperatureCelsius = (0d);
   public volatile Boolean RotationalConnected = (false);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//  
-  //TODO: Implement Unimplemented Methods
   @Override
   public void toLog(LogTable table) {
     
   }
+
   @Override
   public void fromLog(LogTable table) {
+    
   }
+
   @Override
-  public Report<@NonNull SwerveModulePosition> clone() {
-    return null;
+  public Report clone() {
+    return (null);
   }
 }

@@ -16,18 +16,18 @@ import java.util.Objects;
  * 
  * @author Cody Washington
  */
-public abstract class Module<Placement extends Enum<?>, Kind extends Descriptor<Placement>> implements Actuatable<SwerveModuleState, SwerveModulePosition, Record> {
+public abstract class Module<Placement extends Enum<?>> implements Actuatable<SwerveModuleState, SwerveModulePosition, Report> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  private final Kind DESCRIPTION;
+  private final Descriptor<Placement> DESCRIPTION;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.
    * @param Description Real-world description of the system, contains relevant constants to the operation of the module
    */
-  protected Module(final Kind Description) {
+  protected Module(final Descriptor<Placement> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
   }
-  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
   /**
    * Mutates the current voltage applied to the module's translational motor controller
    * @param Demand Voltage sent to the controller object 
@@ -57,7 +57,7 @@ public abstract class Module<Placement extends Enum<?>, Kind extends Descriptor<
    * @return Velocity of the translational controller's axis of rotation in meters/second
    */
   public Double getTranslationalVelocity() {
-    return ((Record) getReport()).TranslationalVelocityRotationsMinute;
+    return ((Report) getReport()).TranslationalVelocityRotationsMinute;
   }
 
   /**
@@ -65,7 +65,7 @@ public abstract class Module<Placement extends Enum<?>, Kind extends Descriptor<
    * @return Velocity of the rotational controller's axis of rotation in meters/second
    */
   public Double getRotationalVelocity() {
-    return ((Record) getReport()).RotationalVelocityRotationsMinute;
+    return ((Report) getReport()).RotationalVelocityRotationsMinute;
   }
 
   /**
@@ -106,7 +106,7 @@ public abstract class Module<Placement extends Enum<?>, Kind extends Descriptor<
    * Provides the real-world description of the module, essentially an object makeup of the system's constants.
    * @return Description of this module
    */
-  public Kind getDescriptor() {
+  public Descriptor<Placement> getDescriptor() {
     return DESCRIPTION;
   }
 

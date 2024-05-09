@@ -40,7 +40,7 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
   private static final long serialVersionUID = 2571418245449373564L;
   private static final Lock SUBSYSTEM_LOCK;
   private static final Operator<Double> DISCRETE_CLOCK;
-  private static final List<Module<?,?>> MODULES;
+  private static final List<Module<?>> MODULES;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   private static volatile DrivebaseSubsystem Instance;
   private static volatile State Mode;
@@ -57,7 +57,7 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
       (Retained, Source) -> Retained - Source, 
       Timer.getFPGATimestamp());
     MODULES = List.of(
-
+    
     );
     Mode = State.RELATIVE;
   }
