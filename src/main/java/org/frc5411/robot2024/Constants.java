@@ -2,7 +2,6 @@
 package org.frc5411.robot2024;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import edu.wpi.first.wpilibj.RobotBase;
-
 //----------------------------------------------------------------------[Declaration]----------------------------------------------------------------------//
 /**
  *
@@ -21,7 +20,7 @@ public final class Constants {
    * @param Options Additional options applied via the command line
    * 
    */
-  public static synchronized final void main(final String... Options) {
+  public static synchronized void main(final String... Options) {
     if(Robot.TYPE == Type.SIMBOT) {
       System.exit((1));
     }
@@ -33,6 +32,8 @@ public final class Constants {
     public static final Mode MODE = switch(TYPE) {
       case DEVBOT, COMPBOT 
         -> RobotBase.isReal()? Mode.ACTUAL: Mode.REPLAY;
+      case ANONBOT
+        -> Mode.ANONYMOUS;
       case SIMBOT 
         -> Mode.SIMULATED;
     };
@@ -47,6 +48,8 @@ public final class Constants {
  */
 enum Mode {
 
+  ANONYMOUS,
+
   ACTUAL,
 
   SIMULATED,
@@ -59,6 +62,8 @@ enum Mode {
  * development for testing purposes.
  */
 enum Type {
+
+  ANONBOT,
 
   DEVBOT,
 

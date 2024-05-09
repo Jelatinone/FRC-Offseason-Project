@@ -1,4 +1,8 @@
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+
+
+import edu.wpi.first.gradlerio.GradleRIOPlugin
+import edu.wpi.first.gradlerio.deploy.roborio.GarbageCollectorType
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 import java.nio.charset.StandardCharsets
@@ -67,7 +71,7 @@ deploy {
       debug = project.frc.getDebugOrDefault(false)
       artifacts {
         frcJava(getArtifactTypeClass('FRCJavaArtifact')) {
-          gcType = edu.wpi.first.gradlerio.deploy.roborio.GarbageCollectorType.G1_Base
+          gcType = GarbageCollectorType.G1_Base
           jarTask = shadowJar
           jvmArgs << '-XX:+UseG1GC'
           if (frc.project.hasProperty("profile")) {
@@ -89,7 +93,7 @@ deploy {
   }
 }
 // ---------------------------------------------------------------------[Dependencies]--------------------------------------------------------------------//
-configurations.all {
+configurations.configureEach {
   exclude group: "edu.wpi.first.wpilibj"
 }
 
@@ -166,21 +170,23 @@ tasks.withType(Javadoc).configureEach {
   destinationDir = layout.projectDirectory.dir("docs").asFile
 }
 // ------------------------------------------------------------------[Compilation Checks]-----------------------------------------------------------------//
-task(checkAkitInstall, dependsOn: "classes", type: JavaExec) {
+tasks.register('checkAkitInstall', JavaExec) {
+  dependsOn "classes"
   mainClass = "org.littletonrobotics.junction.CheckInstall"
   classpath = sourceSets.main.runtimeClasspath
 }
 compileJava.finalizedBy(checkAkitInstall)
 
-task(checkRobot, dependsOn: "classes", type: JavaExec) {
+tasks.register('checkRobot', JavaExec) {
+  dependsOn "classes"
   main = "org.frc${teamNumber}.robot${seasonYear}.Constants"
   classpath = sourceSets.main.runtimeClasspath
 }
 deployroborio.dependsOn(checkRobot)
 
-task(eventDeploy) {
+tasks.register('eventDeploy') {
   doLast {
-    if (project.gradle.startParameter.taskNames.any({it.toLowerCase().contains("deploy")})) {
+    if (project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })) {
       def branchPrefix = "event"
       def branch = 'git branch --show-current'.execute().text.trim()
       def commitMessage = "Update at '${new Date().toString()}'"
@@ -225,7 +231,7 @@ jar {
     }
   }
   duplicatesStrategy = DuplicatesStrategy.INCLUDE
-  manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(robotMainClass)
+  manifest GradleRIOPlugin.javaManifest(robotMainClass)
   manifest {
     attributes(
         'Team-Number'           : "${teamNumber}",
@@ -255,7 +261,7 @@ gversion {
   indent       = "  "
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
   options.compilerArgs.add '-XDoclint=summary'
   options.compilerArgs.add '-XDstringConcat=inline'
   options.encoding = 'UTF-8'

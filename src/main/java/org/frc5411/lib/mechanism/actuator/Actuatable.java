@@ -25,12 +25,12 @@ public interface Actuatable<@NonNull Reference, @NonNull Measurement extends WPI
   void set(final Reference Demand);
 
   /**
-   * Immediately stops this actuator in such a way that {@link #set(WPISerializable)} can be called again after.
+   * Immediately stops this actuator in such a way that {@link #set(Object)} can be called again after.
    */
   void cease();
 
   /**
-   * Provides the current reference state, in other words the Demand set by calling {@link #set(WPISerializable)}.
+   * Provides the current reference state, in other words the Demand set by calling {@link #set(Object)}.
    * @return Struct of current state
    */
   Reference getState();

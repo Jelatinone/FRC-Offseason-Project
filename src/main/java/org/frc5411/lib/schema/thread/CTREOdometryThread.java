@@ -132,7 +132,7 @@ public final class CTREOdometryThread extends Thread implements OdometryThread<S
   }
 
   @Override
-  public final Object clone() throws CloneNotSupportedException {
+  public Object clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(("Singleton Instances Cannot Be Cloned"));
   }
 
@@ -161,7 +161,7 @@ public final class CTREOdometryThread extends Thread implements OdometryThread<S
             final var Providers = SIGNAL_PROVIDERS.iterator();
             final var Timestamp = new AtomicReference<>(Logger.getRealTimestamp() / (1e6));
             Timestamp.accumulateAndGet(SIGNAL_PROVIDERS.stream().mapToDouble(
-              (Signal) -> Signal.getTimestamp().getLatency()).average().getAsDouble(), (a, b) -> a -= b);
+              (Signal) -> Signal.getTimestamp().getLatency()).average().getAsDouble(), (a, b) -> a - b);
             SIGNAL_QUEUES.forEach((final Queue<Double> Queue) -> {
               synchronized(Queue) {
                 Queue.offer(Providers.next().getValueAsDouble());

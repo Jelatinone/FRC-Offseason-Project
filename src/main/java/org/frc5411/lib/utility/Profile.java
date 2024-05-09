@@ -54,7 +54,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
    * Adds a keybinding to the keybinding map of this profile, and updates that value across to the Sendable builder, if {@link #initSendable(SendableBuilder) applicable}. 
    * @param Keybinding Key to pull and put the Control value to
    * @param Control Trigger object to store within the Keybinding Map
-   * @return This operator, for chained calls to {@link #add(Enum, Trigger)} and {@link #add(Enum, Preference)}
+   * @return This operator, for chained calls to {@link #add(Enum, Trigger)} and {@link #add(Enum, Object)}
    */
   public synchronized Profile<Keybindings,Preferences> add(final Keybindings Keybinding, final Trigger Control) {
     synchronized(KEYBINDING_MAP) {
@@ -78,7 +78,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
    * @param <Preference> Relevant type of the value being added to the preference map
    * @param Preference Key to pull and put the preference value to
    * @param Value Object of any type object to store within the Keybinding Map
-   * @return This operator, for chained calls to {@link #add(Enum, Preference)} and {@link #add(Enum, Trigger)}
+   * @return This operator, for chained calls to {@link #add(Enum, Object)} and {@link #add(Enum, Trigger)}
    */
   public synchronized <Preference> Profile<Keybindings, Preferences> add(final Preferences Preference, final Preference Value) {
     synchronized(PREFERENCE_MAP) {
@@ -123,7 +123,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
   }
 
   /**
-   * Irreversibly clears all of the map data for both Keybindings and Preferences, but doesn't specifically make this
+   * Irreversibly clears all the map data for both Keybindings and Preferences, but doesn't specifically make this
    * instance unusable, and can be re-used with new keybindings.
    */
   @Override
@@ -160,7 +160,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
 
   /**
    * Provides optionally a reference to the keybinding value, if present, of a preference within the keybinding map, null if not present
-   * @param Preference Key to pull the value from as an Trigger
+   * @param Keybinding Key to pull the value from as an Trigger
    * @return {@link Optional} reference to a keybinding, if it exists or else it is {@link Optional#empty()}
    * @see {@link Optional}
    */

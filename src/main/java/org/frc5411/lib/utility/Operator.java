@@ -4,6 +4,8 @@ package org.frc5411.lib.utility;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import lombok.Getter;
 //----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//
 /**
  * 
@@ -18,8 +20,22 @@ public class Operator<Type extends Number> implements Supplier<Type>, Consumer<T
   private final Supplier<Type> SOURCE;
   private final BinaryOperator<Type> OPERATOR;
   private final Type INITIAL;
+  /**
+   * -- GETTER --
+   *  Provides the previously saved value of this operator directly from the source
+   *
+   * @return Retained value based on the value of it's source
+   */
   //------------------------------------------------------------------------[Fields]----------------------------------------------------------------------------//
+  @Getter
   private volatile Type Retained;
+  /**
+   * -- GETTER --
+   *  Provides the previously operated value of this operator
+   *
+   * @return Operated value based on the evaluation of it's expression
+   */
+  @Getter
   private volatile Type Operated;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -48,7 +64,7 @@ public class Operator<Type extends Number> implements Supplier<Type>, Consumer<T
 
   /**
    * Mutates the retained value to the initial value passed as an argument or supplied from the source
-   * shorthand for {@link #accept(double)} where {@link #getInitial()} is the argument
+   * shorthand for {@link #accept(Type)} where {@link #getInitial()} is the argument
    */
   public synchronized void reset() {
     synchronized(Retained) {
@@ -65,13 +81,6 @@ public class Operator<Type extends Number> implements Supplier<Type>, Consumer<T
     }
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
-  /**
-   * Provides the previously saved value of this operator directly from the source
-   * @return Retained value based on the value of it's source
-   */
-  public Type getRetained() {
-    return Retained;
-  }
 
   /**
    * Provides the initial value either passed in as an argument or supplied from the source function
@@ -79,14 +88,6 @@ public class Operator<Type extends Number> implements Supplier<Type>, Consumer<T
    */
   public Type getInitial() {
     return INITIAL;
-  }
-
-  /**
-   * Provides the previously operated value of this operator
-   * @return Operated value based on the evaluation of it's expression
-   */
-  public Type getOperated() {
-    return Operated;
   }
 
 

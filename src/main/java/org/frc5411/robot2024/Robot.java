@@ -60,9 +60,11 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Logger.recordMetadata(("Robot-Type"), Constants.Robot.TYPE.name());
     Logger.recordMetadata(("Robot-Mode"), Constants.Robot.MODE.name());
     Logger.recordMetadata(("Runtime-Type"), getRuntimeType().name());
+    Logger.recordMetadata(("Robot-Number"), String.valueOf(RobotController.getTeamNumber()));
     Logger.recordMetadata(("Project-Name"), Metadata.MAVEN_NAME);
     Logger.recordMetadata(("Project-Date"), Metadata.BUILD_DATE);
     Logger.recordMetadata(("VCS-SHA"), Metadata.GIT_SHA);
+    Logger.recordMetadata(("VCS-Revision"), String.valueOf(Metadata.GIT_REVISION));
     Logger.recordMetadata(("VCS-Date"), Metadata.GIT_DATE);
     Logger.recordMetadata(("VCS-Branch"), Metadata.GIT_BRANCH);
     Logger.recordMetadata(("VCS-State"), switch(Metadata.DIRTY) {
@@ -73,38 +75,35 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void robotInit() {
     switch(Constants.Robot.MODE) {
+      case ANONYMOUS:
+        break;
       case ACTUAL:
         Logger.addDataReceiver(new WPILOGWriter());
       case SIMULATED:
         Logger.addDataReceiver(new RLOGServer());
+        Logger.start();
         break;
       case REPLAY:
         setUseTiming((false));
         final var Path = LogFileUtil.findReplayLog();
         Logger.setReplaySource(new WPILOGReader(Path));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
+        Logger.start();
         break;
     }
-    Logger.start();
     CommandScheduler.getInstance()
         .onCommandInitialize(
-            (Command Operation) -> {
-              log(Operation, (true));
-            });
+            (Command Operation) -> log(Operation, (true)));
     CommandScheduler.getInstance()
         .onCommandFinish(
-            (Command Operation) -> {
-              log(Operation, (false));
-            });
+            (Command Operation) -> log(Operation, (false)));
     CommandScheduler.getInstance()
         .onCommandInterrupt(
-            (Command Operation) -> {
-              log(Operation, (false));
-            });
+            (Command Operation) -> log(Operation, (false)));
     DataLogManager.start();
     Logger.registerURCL(URCL.startExternal());
     DriverStation.silenceJoystickConnectionWarning((true));
-    PortForwarder.add((5800), ("photonvision.local"), (5800));
+    PortForwarder.add((5800), ("photoemission.local"), (5800));
     setThreadsEnabled((true));
   }
 
@@ -215,16 +214,16 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   }
 
   @Override
-  public final Object clone() throws CloneNotSupportedException {
+  public Object clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
 
   /**
    * Logs a command that has been scheduled with the {@link CommandScheduler} using the {@link Logger}.
    * @param Operation Command to be logged, can be in any state
-   * @param Running   Whether or not this command is currently active 
+   * @param Running   Whether this command is currently active
    */
-  private final void log(final Command Operation, final Boolean Running) {
+  private void log(final Command Operation, final Boolean Running) {
     final var Name = Operation.getName();
     final var Count = COMMANDS.getOrDefault(Running, (0)) + (Running? 1: -1);
     COMMANDS.put(Name, Count);

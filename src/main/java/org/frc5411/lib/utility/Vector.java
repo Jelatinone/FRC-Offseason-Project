@@ -60,7 +60,7 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
    */
   @SuppressWarnings("unchecked")
   public static <Type, Elements extends Num> Vector<Type,Elements> fill(final Type... Vector) {
-    return new Vector<Type,Elements>(() -> Vector.length, Vector);
+    return new Vector<>(() -> Vector.length, Vector);
   }
 
   /**

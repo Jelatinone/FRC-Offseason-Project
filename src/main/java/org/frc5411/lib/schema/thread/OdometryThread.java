@@ -17,7 +17,7 @@ import java.util.concurrent.locks.Lock;
  * @see REVOdometryThread
  * 
  */
-public sealed interface OdometryThread<Registerable> extends Runnable, Singleton<OdometryThread<Registerable>> permits CTREOdometryThread, REVOdometryThread {
+public sealed interface OdometryThread<Registrable> extends Runnable, Singleton<OdometryThread<Registrable>> permits CTREOdometryThread, REVOdometryThread {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double STANDARD_FREQUENCY = (250d);
   Integer STANDARD_QUEUE_SIZE = (5);
@@ -27,7 +27,7 @@ public sealed interface OdometryThread<Registerable> extends Runnable, Singleton
    * @param Signal Signal source, which can be queried for new signal values
    * @return The {@link Queue} of signal values
    */
-  Queue<Double> register(final Registerable Signal);
+  Queue<Double> register(final Registrable Signal);
 
   /**
    * Provides the timestamps for the available odometry queues.

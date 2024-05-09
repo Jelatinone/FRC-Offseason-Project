@@ -94,5 +94,5 @@ public interface Component<@NonNull Measurement extends WPISerializable, @NonNul
    */
   default List<Measurement> getMeasurements() {
     return List.of(getReport().Measurements);
-  };  
+  }
 }

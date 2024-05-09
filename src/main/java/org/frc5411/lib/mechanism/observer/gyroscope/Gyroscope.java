@@ -3,10 +3,10 @@ package org.frc5411.lib.mechanism.observer.gyroscope;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.mechanism.Component;
 
-import java.util.Objects;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+
+import java.util.Objects;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Gyroscope</h1>
@@ -80,7 +80,7 @@ public abstract class Gyroscope implements Component<Rotation3d, Report> {
    * @return Velocity of the magnetic encoder of the gyroscope
    */
   public Rotation3d getVelocity() {
-    return ((Report) getReport()).MeasurementVelocityRotationsMinute;
+    return ((Report) getReport()).VelocityRotationsMinute;
   }
 
     /**

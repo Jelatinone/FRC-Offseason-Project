@@ -18,7 +18,7 @@ public final class Main {
    * Initializes the robot and underlying systems
    * @param Options Additional options applied via the command line
    */
-  public static synchronized final void main(final String... Options) {
+  public static synchronized void main(final String... Options) {
     RobotBase.startRobot(Robot::getInstance);
   }
 }

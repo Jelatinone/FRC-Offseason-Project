@@ -14,7 +14,7 @@ import lombok.NonNull;
  * <h1>Report</h1>
  * 
  * <p>Describes a general structure for a reported measurements of a {@link Component device} which produces measurement data of some type with 
- * a changing-value updated {@link Component#update() periodically}. Any types extending this class should be annotated with the relevant
+ * a changing-value updated {@link Component#update(Report) periodically}. Any types extending this class should be annotated with the relevant
  * {@link AutoLog annotation}.
  * @see LoggableInputs
  * @see Struct

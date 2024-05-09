@@ -1,8 +1,8 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.mechanism.actuator.module;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+import lombok.NonNull;
+//----------------------------------------------------------------------[Declaration]----------------------------------------------------------------------//
 /**
  * <h1>Descriptor</h1>
  * c
@@ -10,7 +10,7 @@ package org.frc5411.lib.mechanism.actuator.module;
  * 
  * @author Cody Washington
  */
-public class Descriptor<Placement extends Enum<?>> {
+public class Descriptor<@NonNull Placement extends Enum<?>> {
 
   public Double TRANSLATIONAL_GEAR_RATIO;
   public Double TRANSLATIONAL_ENCODER_OFFSET_RADIANS;

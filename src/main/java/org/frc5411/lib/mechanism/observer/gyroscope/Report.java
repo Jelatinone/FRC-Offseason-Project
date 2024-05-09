@@ -14,7 +14,7 @@ import org.littletonrobotics.junction.LogTable;
  */
 public class Report extends org.frc5411.lib.mechanism.Report<Rotation3d> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  public volatile Rotation3d MeasurementVelocityRotationsMinute;
+  public volatile Rotation3d VelocityRotationsMinute;
   public volatile Double AppliedVoltage = (0d);
   public volatile Double CurrentAmperage = (0d);
   public volatile Double TemperatureCelsius = (0d);

@@ -22,9 +22,9 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public abstract class Subsystem<@NonNull Defined extends Registerable, @NonNull State extends Enum<?>> extends SubsystemBase implements Singleton<Subsystem<Defined, State>> {
+public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull State extends Enum<?>> extends SubsystemBase implements Singleton<Subsystem<Defined, State>> {
   //---------------------------------------------------------------------[Constants]-----------------------------------------------------------------------//
-  private transient static final List<Subsystem<?,?>> SUBSYSTEMS = new ArrayList<>();
+  private static final List<Subsystem<?,?>> SUBSYSTEMS = new ArrayList<>();
   private final Lock OPERATION_LOCK;
   //-------------------------------------------------------------------[Constructor(s)]--------------------------------------------------------------------//
   /**
@@ -38,15 +38,15 @@ public abstract class Subsystem<@NonNull Defined extends Registerable, @NonNull 
   }
   //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
   /**
-   * Updates relevant {@link Logger loggable} values using {@link Logger#recordOutput(String, Type)} that may have changed during runtime. This
-   * is inclusive of values such as encoder values, motor outputs, etc, that are not automatically logged (such as {@link URCL}) that may be useful during
+   * Updates relevant {@link Logger loggable} values using {@link Logger#recordOutput(String, edu.wpi.first.util.WPISerializable)} that may have changed during runtime. This
+   * is inclusive of values such as encoder values, motor outputs, etc., that are not automatically logged (such as {@link URCL}) that may be useful during
    * the debugging process.
    */
   @Async
   public abstract void update();
 
   /**
-   * Provides the list of enum values containing all of the named commands registered under this subsystem instance
+   * Provides the list of enum values containing all the named commands registered under this subsystem instance
    * @return Enum of Named Commands
    */
   public abstract List<Defined> getCommands();
@@ -74,7 +74,7 @@ public abstract class Subsystem<@NonNull Defined extends Registerable, @NonNull 
    * Provides a list (ordered) of all constructed subsystems.
    * @return List of subsystems
    */
-  public static final List<Subsystem<?,?>> getSubsystems() {
+  public static List<Subsystem<?,?>> getSubsystems() {
     return SUBSYSTEMS;
   }
 }

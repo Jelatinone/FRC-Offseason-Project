@@ -27,14 +27,10 @@ public class Report extends org.frc5411.lib.mechanism.Report<SwerveModulePositio
   public volatile Boolean RotationalConnected = (false);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//  
   @Override
-  public void toLog(LogTable table) {
-    
-  }
+  public void toLog(LogTable table) {}
 
   @Override
-  public void fromLog(LogTable table) {
-    
-  }
+  public void fromLog(LogTable table) {}
 
   @Override
   public Report clone() {
