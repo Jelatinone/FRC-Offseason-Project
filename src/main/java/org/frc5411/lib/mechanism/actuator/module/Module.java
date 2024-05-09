@@ -3,11 +3,11 @@ package org.frc5411.lib.mechanism.actuator.module;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.mechanism.actuator.Actuatable;
 
-import java.util.Objects;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+
+import java.util.Objects;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Module</h1>

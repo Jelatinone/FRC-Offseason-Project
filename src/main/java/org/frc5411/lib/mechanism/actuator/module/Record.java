@@ -1,10 +1,12 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.mechanism.actuator.module;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import org.littletonrobotics.junction.LogTable;
 import org.frc5411.lib.mechanism.Report;
 
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+
+import org.littletonrobotics.junction.LogTable;
+
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**

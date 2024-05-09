@@ -18,9 +18,10 @@ apply plugin: 'edu.wpi.first.GradleRIO'
 def teamNumber = project.frc.getTeamOrDefault(5411)
 def seasonYear = new SimpleDateFormat("yyyy").format(new Date())
 def revisionNumber = "git rev-list --count HEAD".execute().text.trim()
+def robotMainClass = "org.frc${teamNumber}.robot${seasonYear}.Main"
 // -----------------------------------------------------------------------[Project]-----------------------------------------------------------------------//
 application {
-  mainClass.set("org.frc${teamNumber}.robot${seasonYear}.Main")
+  mainClass.set(robotMainClass)
 }
 project.setGroup("org.frc{teamNumber}")
 project.setVersion("${seasonYear}-1.${revisionNumber}")
@@ -212,20 +213,27 @@ test {
 }
 // ----------------------------------------------------------------------[Compilation]--------------------------------------------------------------------//
 java {
-  withSourcesJar()
   sourceCompatibility = JavaVersion.VERSION_17
   targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
   exclude("org/frc${teamNumber}/lib/**")
+  from {
+    configurations.runtimeClasspath.collect {
+      it.isDirectory() ? it : zipTree(it)
+    }
+  }
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(robotMainClass)
   manifest {
     attributes(
         'Team-Number'           : "${teamNumber}",
-        'Built-By'              : System.getProperty("user.name"),
+        'Revision-Number'       : "${revisionNumber}",
+        'Build-By'              : System.getProperty("user.name"),
         'Build-Timestamp'       : new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
-        'Build-Jdk'             : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
-        'Created-By'            : "Gradle ${gradle.gradleVersion}",
+        'JDK-Version'           : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+        'Gradle-Version'        : "Gradle ${gradle.gradleVersion}",
         'Implementation-Version': project.version)
   }
 }

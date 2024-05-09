@@ -1,8 +1,8 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.mechanism;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.WPISerializable;
+import edu.wpi.first.util.struct.Struct;
 
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.inputs.LoggableInputs;

@@ -4,9 +4,9 @@ package org.frc5411.lib.mechanism;
 import org.frc5411.lib.schema.thread.OdometryThread;
 
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.util.WPISerializable;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.util.WPISerializable;
 
 import org.littletonrobotics.junction.AutoLog;
 

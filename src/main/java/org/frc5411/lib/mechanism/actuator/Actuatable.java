@@ -5,6 +5,7 @@ import org.frc5411.lib.mechanism.Component;
 import org.frc5411.lib.mechanism.Report;
 
 import edu.wpi.first.util.WPISerializable;
+
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
