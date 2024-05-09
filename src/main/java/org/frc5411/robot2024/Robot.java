@@ -3,6 +3,7 @@ package org.frc5411.robot2024;
 //-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.thread.CTREOdometryThread;
+import org.frc5411.lib.schema.thread.OdometryThread;
 import org.frc5411.lib.schema.thread.REVOdometryThread;
 
 import edu.wpi.first.net.PortForwarder;
@@ -23,7 +24,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
 import org.photonvision.estimation.OpenCVHelp;
 
-import org.frc5411.lib.schema.thread.OdometryThread;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;

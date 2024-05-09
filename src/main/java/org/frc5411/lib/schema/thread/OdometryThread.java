@@ -1,10 +1,10 @@
 //--------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.schema.thread;
 //-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+import org.frc5411.lib.schema.Singleton;
+
 import java.util.Queue;
 import java.util.concurrent.locks.Lock;
-
-import org.frc5411.lib.schema.Singleton;
 //------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -44,7 +44,7 @@ public sealed interface OdometryThread<Registerable> extends Runnable, Singleton
    * Starts the thread instance of this method, should only be run once.
    */
   void start();
-  //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Mutators]-------------------------------------------------------------------------//
 
   /**
    * Mutates the current frequency of updating the odometry
@@ -59,7 +59,7 @@ public sealed interface OdometryThread<Registerable> extends Runnable, Singleton
    * @param Enabled If this Thread is enabled or not
    */
   void set(final Boolean Enabled);
-  //---------------------------------------------------------------------[Accessors]----------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
   /**
    * Provides the lock member-variable of this thread used during it's {@link #run() runnable} operations.
    * @return Synchronization lock of this subsystem

@@ -1,14 +1,15 @@
 //------------------------------------------------------------------------[Package]------------------------=----------------------------------------------------//
 package org.frc5411.lib.utility;
 //-----------------------------------------------------------------------[Libraries]----------------------------------------------------------------------------//
-import com.jcabi.aspects.Immutable.Array;
-import edu.wpi.first.math.Num;
-import edu.wpi.first.math.Nat;
-import javax.validation.constraints.NotNull;
-
 import edu.wpi.first.hal.util.BoundaryException;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.Num;
 import edu.wpi.first.math.numbers.N0;
+
+import com.jcabi.aspects.Immutable.Array;
+
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 //----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//
 /**

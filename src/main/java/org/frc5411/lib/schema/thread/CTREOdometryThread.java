@@ -6,8 +6,8 @@ import com.ctre.phoenix6.StatusSignal;
 
 import org.littletonrobotics.junction.Logger;
 
-import java.io.ObjectInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;

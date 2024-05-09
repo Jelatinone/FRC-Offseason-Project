@@ -1,6 +1,7 @@
 //--------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+import org.frc5411.lib.mechanism.actuator.module.Module;
 import org.frc5411.lib.schema.Registerable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Operator;
@@ -8,6 +9,7 @@ import org.frc5411.lib.utility.Operator;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -38,6 +40,7 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
   private static final long serialVersionUID = 2571418245449373564L;
   private static final Lock SUBSYSTEM_LOCK;
   private static final Operator<Double> DISCRETE_CLOCK;
+  private static final List<Module<?,?>> MODULES;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   private static volatile DrivebaseSubsystem Instance;
   private static volatile State Mode;
@@ -53,9 +56,12 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
       Timer::getFPGATimestamp, 
       (Retained, Source) -> Retained - Source, 
       Timer.getFPGATimestamp());
+    MODULES = List.of(
+
+    );
     Mode = State.RELATIVE;
   }
-  //----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Serial
   @Override
   public synchronized DrivebaseSubsystem readResolve() {
@@ -79,8 +85,12 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
   @Override
   public synchronized void periodic() {
     SUBSYSTEM_LOCK.lock();
-
-    //TODO: This can only be safely used within this subsystem once per scheduler loop of #periodic()
+    MODULES.forEach((Module) -> {
+      Module.periodic();
+      if(DriverStation.isEStopped()) {
+        Module.cease();
+      }
+    });
     DISCRETE_CLOCK.get();
 
     SUBSYSTEM_LOCK.unlock();
@@ -90,9 +100,9 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
   public synchronized void update() {
 
   }
-  //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
   
-  //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public List<Named> getCommands() {
     return List.of(Named.values());
@@ -120,7 +130,7 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
     return Result;
   }
 } 
-//-----------------------------------------------------------------------[External]------------------------------------------------------------------------//
+//-----------------------------------------------------------------------[External]--------------------------------------------------------------------------//
 /**
  * Represents the named states of operation of the drivebase, which have distinct behavior that differentiate it from 
  * robot-oriented (Relative) control.
@@ -132,7 +142,7 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
    * to game pieces and field elements.
    */
   OBJECTIVE((Translation, Rotation) -> {
-
+    
     return null;
   }),
 
@@ -140,19 +150,25 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
    * Control based on the direction of the absolute rotation (yaw) of the gyroscope , i.e. Field Oriented; driving
    * with respect to the direction of the driverstation on the field
    */
-  ABSOLUTE((Translation, Rotation) -> {
-
-    return null;
-  }),
+  ABSOLUTE((Translation, Rotation) -> 
+    ChassisSpeeds.fromFieldRelativeSpeeds(
+      Translation.getX(), 
+      Translation.getY(), 
+      Rotation.getRadians(), 
+      null)
+  ),
 
   /**
    * Control based on the relative direction of the robot, i. e. Robot-Oriented; driving with no frame of reference
    * to guide us
    */
-  RELATIVE((Translation, Rotation) -> {
-
-    return null;
-  });
+  RELATIVE((Translation, Rotation) -> 
+    ChassisSpeeds.fromRobotRelativeSpeeds(
+      Translation.getX(), 
+      Translation.getY(), 
+      Rotation.getRadians(), 
+      null)
+  );
 
   private final BiFunction<Translation2d, Rotation2d, ChassisSpeeds> FUNCTION;
 

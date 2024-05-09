@@ -2,7 +2,6 @@
 package org.frc5411.lib.schema;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import lombok.NonNull;
 
 import com.jcabi.aspects.Async;
 
@@ -13,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
+
+import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Subsystem</h1>

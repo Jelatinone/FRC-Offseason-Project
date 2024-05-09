@@ -1,16 +1,16 @@
 //------------------------------------------------------------------------[Package]------------------------=----------------------------------------------------//
 package org.frc5411.lib.utility;
 //-----------------------------------------------------------------------[Libraries]----------------------------------------------------------------------------//
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import edu.wpi.first.util.sendable.Sendable;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//

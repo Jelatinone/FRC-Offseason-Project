@@ -5,8 +5,8 @@ import edu.wpi.first.wpilibj.Notifier;
 
 import org.littletonrobotics.junction.Logger;
 
-import java.io.ObjectInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 //------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -32,11 +32,11 @@ import java.util.function.DoubleSupplier;
  * @author Mechanical Advantage (Original)
  * 
  */
-public final class REVOdometryThread implements OdometryThread<DoubleSupplier> {  
+public final class REVOdometryThread implements OdometryThread<Supplier<Number>> {  
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   private static final long serialVersionUID = 84309938899889961L;
-  private static final List<DoubleSupplier> SIGNAL_PROVIDERS;
+  private static final List<Supplier<Number>> SIGNAL_PROVIDERS;
   private static final List<Queue<Double>> TIMESTAMP_QUEUES;
   private static final List<Queue<Double>> SIGNAL_QUEUES;
   private final Lock ODOMETRY_LOCK;
@@ -64,7 +64,7 @@ public final class REVOdometryThread implements OdometryThread<DoubleSupplier> {
   }
   //-----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public synchronized Queue<Double> register(final DoubleSupplier Signal) {
+  public synchronized Queue<Double> register(final Supplier<Number> Signal) {
     Queue<Double> Queue = new ArrayBlockingQueue<>(STANDARD_QUEUE_SIZE);
     ODOMETRY_LOCK.lock();
     try {
@@ -137,7 +137,7 @@ public final class REVOdometryThread implements OdometryThread<DoubleSupplier> {
           final var Timestamp = Logger.getRealTimestamp() / (1e6);
           SIGNAL_QUEUES.forEach((final Queue<Double> Queue) -> {
             synchronized(Queue) {
-              Queue.offer(Providers.next().getAsDouble());
+              Queue.offer(Providers.next().get().doubleValue());
             }
           });
           TIMESTAMP_QUEUES.forEach((final Queue<Double> Queue) ->  {

@@ -1,7 +1,6 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-
 import edu.wpi.first.wpilibj.RobotBase;
 
 //----------------------------------------------------------------------[Declaration]----------------------------------------------------------------------//
@@ -9,7 +8,7 @@ import edu.wpi.first.wpilibj.RobotBase;
  *
  *
  * <h1>RobotConstants</h1>
- *e
+ *
  * <p>Contains all robot-wide constants, does not contain subsystem specific constants.
  *
  * @see Manager
@@ -17,8 +16,10 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Constants {
   //----------------------------------------------------------------------[Methods]------------------------------------------------------------------------//
   /**
-   * Initializes the robot and underlying systems
+   * Performs a pre-deployment check for Deployment of the robot, ensuring that the robot is running
+   * on real-hardware, with the correct mode selected
    * @param Options Additional options applied via the command line
+   * 
    */
   public static synchronized final void main(final String... Options) {
     if(Robot.TYPE == Type.SIMBOT) {
@@ -27,13 +28,16 @@ public final class Constants {
   }
   //----------------------------------------------------------------------[Internal]-----------------------------------------------------------------------//
   public static final class Robot {
-    public static final Type TYPE = Type.DEVBOT;
+    private static final Type DESIRED_TYPE = Type.DEVBOT;
+    public static final Type TYPE = RobotBase.isReal()? DESIRED_TYPE: Type.SIMBOT;
     public static final Mode MODE = switch(TYPE) {
       case DEVBOT, COMPBOT 
         -> RobotBase.isReal()? Mode.ACTUAL: Mode.REPLAY;
       case SIMBOT 
         -> Mode.SIMULATED;
     };
+    public static final Profile DRIVER = Profile.PLACEHOLDER_DRIVER;
+    public static final Profile OPERATOR = Profile.PLACEHOLDER_OPERATOR;
   }
 }
 //-----------------------------------------------------------------------[External]------------------------------------------------------------------------//
@@ -61,4 +65,15 @@ enum Type {
   SIMBOT,
 
   COMPBOT,
+}
+
+/**
+ * Represents a different pre-set profile for different drivers operating the robot, i. e, drivers with different preferences for keybindings
+ * and robot operation
+ */
+enum Profile {
+  
+  PLACEHOLDER_DRIVER,
+
+  PLACEHOLDER_OPERATOR,
 }
