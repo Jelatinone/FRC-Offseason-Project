@@ -9,7 +9,9 @@ import lombok.NonNull;
 /**
  * <h1>Actuatable</h1>
  * 
- * <p>
+ * <p>Describes any {@link Component} that can also be actuated, like a motor or pneumatic device. This is essentially any device that can be
+ * actuated, i.e. controlling the Effort of the controller. This provides base implementation for essentially any system that can be moved 
+ * (but not limited to) to a given Demand, such as a Drivebase, Piston, or Module.
  * 
  * @author Cody Washington
  */

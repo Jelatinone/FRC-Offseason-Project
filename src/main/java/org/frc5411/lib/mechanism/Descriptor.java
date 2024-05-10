@@ -2,11 +2,15 @@
 package org.frc5411.lib.mechanism;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import lombok.NonNull;
+import lombok.Builder;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Descriptor</h1>
  * 
- * <p>
+ * <p>As the name implies, Describes the mechanical constants of a given system that implements the {@link Component} type. The relevant constants are 
+ * contained within the object as a final property (without a value). The {@link Builder} annotation should be applied (though entirely unforced by this type)
+ *  so that these properties can easily be defined through
+ * by making a builder.
  * 
  * @author Cody Washington
  */

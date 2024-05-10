@@ -11,7 +11,8 @@ import java.util.Objects;
 /**
  * <h1>Gyroscope</h1>
  * 
- * <p>
+ * <p>Any device which measures the relative orientation of a mechanical system to constant axes. More specifically, a device which measures across three 
+ * rotational axes: yaw, pitch, and roll. 
  * 
  * @author Cody Washington
  */

@@ -45,6 +45,11 @@ public class Report<@NonNull Measurement extends StructSerializable> implements 
     return Copy;
   }
 
+
+  /**
+   * Updates a LogTable with the data to log.
+   * Downstream type implementations should make calls to {@link #toLog(LogTable)} using super.
+   */
   @Override
   public void toLog(final LogTable Table) {
     Table.put(("Connected"), Connected);
@@ -52,6 +57,11 @@ public class Report<@NonNull Measurement extends StructSerializable> implements 
     Table.put(("Measurement"), Measurement);
     Table.put(("Measurements"), Measurements);
   }
+
+  /**
+   * Updates data based on a LogTable.
+   * Downstream type implementations should make calls to {@link #fromLog(LogTable)} using super.
+   */
   @Override
   public void fromLog(final LogTable Table) {
     Connected = Table.get(("Connected")).getBoolean();

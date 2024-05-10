@@ -6,9 +6,9 @@ import lombok.Builder;
 import org.frc5411.lib.mechanism.Descriptor;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
- * <h1>Descriptor</h1>
- * c
- * <p>
+ * <h1>GyroscopeDescriptor</h1>
+ * 
+ * @see Descriptor
  * 
  * @author Cody Washington
  */

@@ -7,9 +7,9 @@ import org.frc5411.lib.mechanism.Report;
 import org.littletonrobotics.junction.LogTable;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
- * <h1>Report</h1>
- * c
- * <p>
+ * <h1>GyroscopeReport</h1>
+ * 
+ * @see Report
  * 
  * @author Cody Washington
  */
@@ -20,13 +20,13 @@ public class GyroscopeReport extends Report<Rotation3d> {
   @Override
   public void toLog(final LogTable Table) {
     super.toLog(Table);
-    Table.put(("VelocityRotationsMinute"), MeasurementVelocityRotationsMinute);
+    Table.put(("Velocity-Rotations-Minute"), MeasurementVelocityRotationsMinute);
   }
 
   @Override
   public void fromLog(final LogTable Table) {
     super.fromLog(Table);
-    MeasurementVelocityRotationsMinute = Table.get(("VelocityRotationsMinute"), MeasurementVelocityRotationsMinute);
+    MeasurementVelocityRotationsMinute = Table.get(("Measurement-Velocity-Rotations-Minute"), MeasurementVelocityRotationsMinute);
   }
 
   @Override

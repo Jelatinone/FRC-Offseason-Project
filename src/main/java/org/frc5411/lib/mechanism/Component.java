@@ -19,7 +19,10 @@ import lombok.NonNull;
 /**
  * <h1>Component</h1>
  * 
- * <p>
+ * <p>Describes any given mechanical system that one, can periodically produce a measurement, and two, can periodically produce a report object, which
+ * contains the latest measurement, and all the measurements that have occurred between calls to periodic,and lastly, close held resources, such as 
+ * motor controllers or encoders. This provides a base implementation of essentially any mechanical system that involves electrical components that produce
+ * values.
  * 
  * @author Cody Washington
  */

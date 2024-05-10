@@ -7,9 +7,9 @@ import org.frc5411.lib.mechanism.Report;
 import org.littletonrobotics.junction.LogTable;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
- * <h1>Report</h1>
- * c
- * <p>
+ * <h1>ModuleReport</h1>
+ * 
+ * @see Report
  * 
  * @author Cody Washington
  */

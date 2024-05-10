@@ -14,7 +14,8 @@ import java.util.Objects;
 /**
  * <h1>Module</h1>
  * 
- * <p>
+ * <p>Describes an abstract Swerve Module, i.e. any device that has one, a translational actuator and two, a rotational actuator, and can be commanded to a
+ * given reference of type {@link SwerveModuleState state}, and @{link Report report} back a {@link SwerveModulePosition position} from measured values. 
  * 
  * @author Cody Washington
  */

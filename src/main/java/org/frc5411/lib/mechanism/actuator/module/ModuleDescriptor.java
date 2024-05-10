@@ -11,9 +11,9 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N1;
 //----------------------------------------------------------------------[Declaration]----------------------------------------------------------------------//
 /**
- * <h1>Descriptor</h1>
- * c
- * <p>
+ * <h1>ModuleDescriptor</h1>
+ * 
+ * @see Descriptor
  * 
  * @author Cody Washington
  */
