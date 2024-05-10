@@ -266,4 +266,15 @@ tasks.withType(JavaCompile).configureEach {
   options.compilerArgs.add '-XDstringConcat=inline'
   options.encoding = 'UTF-8'
 }
+
+tasks.withType(Javadoc).configureEach {
+  dependsOn(spotlessGroovyGradle)
+  exclude ("org/frc${teamNumber}/robot${seasonYear}/**")
+  options.addStringOption('Xdoclint:none', '-quiet')
+  options.addStringOption("docencoding", "utf-8")
+  options.addStringOption("charset", "utf-8")
+  options.addStringOption("encoding", "utf-8")
+  destinationDir = layout.projectDirectory.dir("docs").asFile
+}
+
 sourceSets.main.java.srcDir(file("build/generated/sources/buildInfo/main/java/"))

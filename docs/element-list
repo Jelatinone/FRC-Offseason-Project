@@ -1,3 +1,5 @@
+org.frc5411.lib.control
+org.frc5411.lib.control.archetype
 org.frc5411.lib.external
 org.frc5411.lib.mechanism
 org.frc5411.lib.mechanism.actuator
@@ -6,5 +8,3 @@ org.frc5411.lib.mechanism.observer.gyroscope
 org.frc5411.lib.schema
 org.frc5411.lib.schema.thread
 org.frc5411.lib.utility
-org.frc5411.robot2024
-org.frc5411.robot2024.subsystems.drivebase

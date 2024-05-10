@@ -33,7 +33,7 @@ import org.frc5411.lib.mechanism.observer.gyroscope.Gyroscope;
  * 
  * 
  */
-public class DrivebaseSubsystem extends Subsystem<Named, State> {
+public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   private static final long serialVersionUID = 2571418245449373564L;
@@ -51,9 +51,8 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
-    MODULES.forEach((Module) -> {
-      addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module);
-    });    
+    MODULES.forEach((Module) -> 
+      addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));    
     addChild(("Gyroscope"), GYROSCOPE);
   } static {
     SUBSYSTEM_LOCK = new ReentrantLock((true));
