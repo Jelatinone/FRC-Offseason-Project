@@ -7,26 +7,69 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.sendable.SendableBuilder;
 
 import java.util.Objects;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Module</h1>
- * c
+ * 
  * <p>
  * 
  * @author Cody Washington
  */
-public abstract class Module<Placement extends Enum<?>> implements Actuatable<SwerveModuleState, SwerveModulePosition, Report> {
+public abstract class Module<Placement extends Enum<?>> implements Actuatable<SwerveModuleState, SwerveModulePosition> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  private final Descriptor<Placement> DESCRIPTION;
+  private final ModuleDescriptor<Placement> DESCRIPTION;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.
    * @param Description Real-world description of the system, contains relevant constants to the operation of the module
    */
-  protected Module(final Descriptor<Placement> Description) {
+  protected Module(final ModuleDescriptor<Placement> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
+  }
+  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//  
+  @Override
+  public synchronized void initSendable(final SendableBuilder Builder) {
+    final var Initializer = String.format(("Module-[%s]"), DESCRIPTION.WHEEL_PLACEMENT.name());
+    synchronized(Builder) {
+      Builder.addDoubleProperty(
+        (Initializer + "/Translational-Velocity"), 
+        this::getTranslationalVelocity, 
+        (final double Ignored) -> {});
+      Builder.addDoubleProperty(
+        (Initializer + "/Rotational-Velocity"), 
+        this::getRotationalVelocity, 
+        (final double Ignored) -> {});
+
+      Builder.addDoubleProperty(
+        (Initializer + "/Translational-Position"), 
+        this::getTranslationPosition, 
+        (final double Ignored) -> {});
+      Builder.addDoubleProperty(
+        (Initializer + "/Rotational-Position"), 
+        () -> getRotationalPosition().getRadians(), 
+        (final double Ignored) -> {});
+
+      Builder.addBooleanProperty(
+        (Initializer + "/Translational-Connection"), 
+        () -> ((ModuleReport) getReport()).TranslationalConnected, 
+        (final boolean Ignored) -> {});
+      Builder.addBooleanProperty(
+        (Initializer + "/Rotational-Connection"), 
+        () -> ((ModuleReport) getReport()).RotationalConnected, 
+        (final boolean Ignored) -> {});
+
+      Builder.addDoubleProperty(
+        (Initializer + "/Translational-Voltage"), 
+        () -> ((ModuleReport) getReport()).TranslationalAppliedVoltage, 
+        (final double Ignored) -> {});
+      Builder.addDoubleProperty(
+        (Initializer + "/Rotational-Voltage"), 
+        () -> ((ModuleReport) getReport()).RotationalAppliedVoltage, 
+        (final double Ignored) -> {});
+    }
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
   /**
@@ -59,7 +102,7 @@ public abstract class Module<Placement extends Enum<?>> implements Actuatable<Sw
    */
   public Double getTranslationalVelocity() {
     return Units.rotationsPerMinuteToRadiansPerSecond(
-      ((Report) getReport()).TranslationalVelocityRotationsMinute);
+      ((ModuleReport) getReport()).TranslationalVelocityRotationsMinute);
   }
 
   /**
@@ -68,7 +111,7 @@ public abstract class Module<Placement extends Enum<?>> implements Actuatable<Sw
    */
   public Double getRotationalVelocity() {
     return Units.rotationsPerMinuteToRadiansPerSecond(
-      ((Report) getReport()).RotationalVelocityRotationsMinute);
+      ((ModuleReport) getReport()).RotationalVelocityRotationsMinute);
   }
 
   /**
@@ -109,7 +152,7 @@ public abstract class Module<Placement extends Enum<?>> implements Actuatable<Sw
    * Provides the real-world description of the module, essentially an object makeup of the system's constants.
    * @return Description of this module
    */
-  public Descriptor<Placement> getDescriptor() {
+  public ModuleDescriptor<Placement> getDescriptor() {
     return DESCRIPTION;
   }
 

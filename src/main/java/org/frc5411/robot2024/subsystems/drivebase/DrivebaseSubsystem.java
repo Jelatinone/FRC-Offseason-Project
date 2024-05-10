@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
+
+import org.frc5411.lib.mechanism.actuator.module.Module;
+import org.frc5411.lib.mechanism.observer.gyroscope.Gyroscope;
 //------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -35,6 +38,10 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
   @Serial
   private static final long serialVersionUID = 2571418245449373564L;
   private static final Lock SUBSYSTEM_LOCK;
+  private static final List<Module<?>> MODULES = List.of(
+    
+  );
+  private static final Gyroscope GYROSCOPE = (null);
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   private static volatile DrivebaseSubsystem Instance;
   private static volatile State Mode;
@@ -44,6 +51,10 @@ public class DrivebaseSubsystem extends Subsystem<Named, State> {
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
+    MODULES.forEach((Module) -> {
+      addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module);
+    });    
+    addChild(("Gyroscope"), GYROSCOPE);
   } static {
     SUBSYSTEM_LOCK = new ReentrantLock((true));
     Mode = State.RELATIVE;

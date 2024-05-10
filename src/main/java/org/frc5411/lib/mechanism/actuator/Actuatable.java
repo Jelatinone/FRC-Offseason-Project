@@ -2,10 +2,8 @@
 package org.frc5411.lib.mechanism.actuator;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.mechanism.Component;
-import org.frc5411.lib.mechanism.Report;
 
-import edu.wpi.first.util.WPISerializable;
-
+import edu.wpi.first.util.struct.StructSerializable;
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
@@ -15,7 +13,7 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public interface Actuatable<@NonNull Reference, @NonNull Measurement extends WPISerializable, @NonNull Loggable extends Report<Measurement>> extends Component<Measurement, Loggable> {
+public interface Actuatable<@NonNull Reference, @NonNull Measurement extends StructSerializable> extends Component<Measurement> {
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**
    * Mutates the current demand state of the actuator to a different state, but does not immediately process the correct actuator effort required

@@ -3,6 +3,7 @@ package org.frc5411.lib.mechanism.observer.gyroscope;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import edu.wpi.first.math.geometry.Rotation3d;
 
+import org.frc5411.lib.mechanism.Report;
 import org.littletonrobotics.junction.LogTable;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
@@ -12,25 +13,26 @@ import org.littletonrobotics.junction.LogTable;
  * 
  * @author Cody Washington
  */
-public class Report extends org.frc5411.lib.mechanism.Report<Rotation3d> {
+public class GyroscopeReport extends Report<Rotation3d> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  public volatile Rotation3d VelocityRotationsMinute;
-  public volatile Double AppliedVoltage = (0d);
-  public volatile Double CurrentAmperage = (0d);
-  public volatile Double TemperatureCelsius = (0d);
+  volatile Rotation3d MeasurementVelocityRotationsMinute;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//  
   @Override
-  public void toLog(LogTable table) {
-    
+  public void toLog(final LogTable Table) {
+    super.toLog(Table);
+    Table.put(("VelocityRotationsMinute"), MeasurementVelocityRotationsMinute);
   }
 
   @Override
-  public void fromLog(LogTable table) {
-    
+  public void fromLog(final LogTable Table) {
+    super.fromLog(Table);
+    MeasurementVelocityRotationsMinute = Table.get(("VelocityRotationsMinute"), MeasurementVelocityRotationsMinute);
   }
 
   @Override
-  public Report clone() {
-    return (null);
+  public GyroscopeReport clone() {
+    final var Copy = (GyroscopeReport) super.clone();
+    Copy.MeasurementVelocityRotationsMinute = this.MeasurementVelocityRotationsMinute;
+    return Copy;
   }
 }

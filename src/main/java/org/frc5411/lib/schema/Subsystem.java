@@ -30,9 +30,20 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
   /**
    * Subsystem Constructor.
    * @param Lock Lock which ensures a blocking operation during {@link #periodic()} if a previous call has not yet ended.
+   * @param Name Referenceable name by which to refer the subsystem, this is an entirely objective value to programmer preferences
    */
   protected Subsystem(final Lock Lock, final String Name) {
     super(Objects.requireNonNull(Name));
+    OPERATION_LOCK = Objects.requireNonNull(Lock);
+    SUBSYSTEMS.add(this);
+  }
+
+  /**
+   * Subsystem Constructor.
+   * @param Lock Lock which ensures a blocking operation during {@link #periodic()} if a previous call has not yet ended.
+   */
+  protected Subsystem(final Lock Lock) {
+    super();
     OPERATION_LOCK = Objects.requireNonNull(Lock);
     SUBSYSTEMS.add(this);
   }

@@ -15,15 +15,15 @@ import java.util.Objects;
  * 
  * @author Cody Washington
  */
-public abstract class Gyroscope implements Component<Rotation3d, Report> {
+public abstract class Gyroscope implements Component<Rotation3d> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  private final Descriptor DESCRIPTION;
+  private final GyroscopeDescriptor DESCRIPTION;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.
    * @param Description Real-world description of the system, contains relevant constants to the operation of the module
    */
-  protected Gyroscope(final Descriptor Description) {
+  protected Gyroscope(final GyroscopeDescriptor Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
@@ -80,14 +80,14 @@ public abstract class Gyroscope implements Component<Rotation3d, Report> {
    * @return Velocity of the magnetic encoder of the gyroscope
    */
   public Rotation3d getVelocity() {
-    return ((Report) getReport()).VelocityRotationsMinute;
+    return ((GyroscopeReport) getReport()).MeasurementVelocityRotationsMinute;
   }
 
     /**
    * Provides the real-world description of the module, essentially an object makeup of the system's constants.
    * @return Description of this module
    */
-  public Descriptor getDescriptor() {
+  public GyroscopeDescriptor getDescriptor() {
     return DESCRIPTION;
   }
 }

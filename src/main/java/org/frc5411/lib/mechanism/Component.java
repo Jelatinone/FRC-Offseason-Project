@@ -4,9 +4,9 @@ package org.frc5411.lib.mechanism;
 import org.frc5411.lib.schema.thread.OdometryThread;
 
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.util.WPISerializable;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.util.struct.StructSerializable;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -23,14 +23,14 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public interface Component<@NonNull Measurement extends WPISerializable, @NonNull Loggable extends Report<Measurement>> extends Closeable, Sendable {
+public interface Component<@NonNull Measurement extends StructSerializable> extends Closeable, Sendable {
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**
    * Updates the Report of measurements to the most recent measurement data from hardware and {@link OdometryThread#register(Object) queue} sources
    * @param Report Loggable source of information, which is automatically logged with the {@link AutoLog} annotation
    * @see OdometryThread
    */
-  void update(final Loggable Report);
+  void update(final Report<Measurement> Report);
 
   /**
    * Performs any necessary logic that this device may need with each update, such as maintaining the position of itself using a controller, or 

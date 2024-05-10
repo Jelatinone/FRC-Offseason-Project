@@ -1,10 +1,11 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.mechanism;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import edu.wpi.first.util.WPISerializable;
 import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructSerializable;
 
 import org.littletonrobotics.junction.AutoLog;
+import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 import lombok.NonNull;
@@ -19,7 +20,7 @@ import lombok.NonNull;
  * @see LoggableInputs
  * @see Struct
  */
-public abstract class Report<@NonNull Measurement extends WPISerializable> implements LoggableInputs, Cloneable {
+public class Report<@NonNull Measurement extends StructSerializable> implements LoggableInputs, Cloneable {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   public volatile boolean Connected;
 
@@ -32,6 +33,30 @@ public abstract class Report<@NonNull Measurement extends WPISerializable> imple
   /**
    * Creates and returns a copy of this Report object, retaining all relevant information stored within, such as the
    * most-recent measurements, but is not the same specific instance.
+   * @return Copy of this object, but not the same instance
    */
-  public abstract Report<Measurement> clone();
+  @Override
+  public Report<Measurement> clone() {
+    final var Copy = new Report<Measurement>();
+    Copy.Connected = this.Connected;
+    Copy.Timestamps = this.Timestamps;
+    Copy.Measurement = this.Measurement;
+    Copy.Measurements = this.Measurements;
+    return Copy;
+  }
+
+  @Override
+  public void toLog(final LogTable Table) {
+    Table.put(("Connected"), Connected);
+    Table.put(("Timestamps"), Timestamps);
+    Table.put(("Measurement"), Measurement);
+    Table.put(("Measurements"), Measurements);
+  }
+  @Override
+  public void fromLog(final LogTable Table) {
+    Connected = Table.get(("Connected")).getBoolean();
+    Timestamps = Table.get(("Timestamps")).getDoubleArray();
+    Measurement = Table.get(("Measurement"), Measurement);
+    Measurements = Table.get(("Measurements"), Measurements);
+  }
 }
