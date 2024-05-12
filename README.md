@@ -36,7 +36,7 @@ The project is organized based on WPILib's command-based control structure modif
 ## Branch Nomenclature & Event Deploy
 
 The project utilizes [Mechanical Advantage's Event Deploy Plugin](https://github.com/Mechanical-Advantage/EventDeployExtension); deploying with a valid branch named: event_{branch_name}, will 
-automatically create a commit with time and date. This feature is intended for quick changes to be made at competitions that can be easily reversed. This feature can be removed by deleting the relevant lines (181-208) from the `build.gradle` file in the project's root directory, but is not reccomended.
+automatically create a commit with time and date. This feature is intended for quick changes to be made at competitions that can be easily reversed. This feature can be removed by deleting the relevant lines from the `build.gradle` file in the project's root directory, but is not reccomended.
 
 
 ## Gradle 
