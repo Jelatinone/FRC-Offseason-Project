@@ -1,13 +1,13 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
-package org.frc5411.lib.mechanism.actuator;
+package org.frc5411.lib.pattern.actuator;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import org.frc5411.lib.mechanism.Component;
+import org.frc5411.lib.pattern.Component;
 
 import edu.wpi.first.util.struct.StructSerializable;
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
- * <h1>Actuatable</h1>
+ * <h1>Actuator</h1>
  * 
  * <p>Describes any {@link Component} that can also be actuated, like a motor or pneumatic device. This is essentially any device that can be
  * actuated, i.e. controlling the Effort of the controller. This provides base implementation for essentially any system that can be moved 
@@ -15,7 +15,7 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public interface Actuatable<@NonNull Reference, @NonNull Measurement extends StructSerializable> extends Component<Measurement> {
+public interface Actuator<@NonNull Reference extends StructSerializable, @NonNull Measurement extends StructSerializable> extends Component<Measurement> {
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**
    * Mutates the current demand state of the actuator to a different state, but does not immediately process the correct actuator effort required
@@ -33,11 +33,17 @@ public interface Actuatable<@NonNull Reference, @NonNull Measurement extends Str
    * Provides the current reference state, in other words the Demand set by calling {@link #set(Object)}.
    * @return Struct of current state
    */
-  Reference getState();
+  @SuppressWarnings("unchecked")
+  default Reference getState() {
+    return ((Report<Reference,Measurement>) getReport()).getDemand();
+  }
 
   /**
    * Provides the current controller input to the actuator, in other words the controller effort updated internally each {@link #periodic()} call.
    * @return Struct of controller effort
    */
-  Reference getInput();  
+  @SuppressWarnings("unchecked")
+  default Reference getInput() {
+    return ((Report<Reference,Measurement>) getReport()).getEffort();
+  }
 }

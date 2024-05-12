@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
-package org.frc5411.lib.mechanism;
+package org.frc5411.lib.pattern;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.thread.OdometryThread;
 
@@ -13,6 +13,7 @@ import org.littletonrobotics.junction.AutoLog;
 import java.io.Closeable;
 import java.util.List;
 import java.util.stream.DoubleStream;
+import java.lang.CloneNotSupportedException;
 
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
@@ -26,39 +27,60 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public interface Component<@NonNull Measurement extends StructSerializable> extends Closeable, Sendable {
+public interface Component<@NonNull Measured extends StructSerializable> extends Closeable, Sendable, Cloneable {
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
+  /**
+   * Generates this Component instance from a relevant descriptor type. Descriptor contains the relevant mechanical constant information to 
+   * specify a unique component instance.
+   * @param Descriptor Container of a mechanical system's relevant mechanical constants.
+   * @return
+   */
+  static <@NonNull Measured extends StructSerializable> Component<Measured> from(final Descriptor<Component<Measured>> Descriptor) {
+    return Descriptor.complete();
+  }
+
+  /**
+   * Clones this component instance, throws an exception when this method is called because Component instances are always unique
+   * @return                            Nothing, an error is always thrown
+   * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
+   */
+  default Component<Measured> clone() throws CloneNotSupportedException {
+    throw new CloneNotSupportedException();
+  }
+
   /**
    * Updates the Report of measurements to the most recent measurement data from hardware and {@link OdometryThread#register(Object) queue} sources
    * @param Report Loggable source of information, which is automatically logged with the {@link AutoLog} annotation
    * @see OdometryThread
    */
-  void update(final Report<Measurement> Report);
+  void update(final Report<Measured> Record);
 
   /**
    * Performs any necessary logic that this device may need with each update, such as maintaining the position of itself using a controller, or 
    * updating relevant internal values.
    */
-  void periodic();
+  default void periodic() {}
 
   /**
    * Closes this instance immediately and performs locking-operations to ensure the complete closure of all hardware references. This renders any
    * references to this instance unusable, and should essentially only be done when robot-code has finished operations.
    */
-  void close();
+  default void close() {}
 
   /**
    * Initializes this component as a sendable object over {@link NetworkTable NetworkTables}, meaning the relevant values from {@link #update(Report)}
    * can be published to different dashboards for ease-of-access.
    */
-  void initSendable(final SendableBuilder Builder);
+  default void initSendable(final SendableBuilder Builder) {}
 
   /**
    * Provides a full {@link Report} of the measurements of this Component from the last {@link #update(Report)} cycle until now. If {@link #update(Report)}
    * has not been called for a significant amount of time, information may be stale, or out of date.
-   * @return Report of measurements
+   * @return Report of measurements, by default an Empty report.
    */
-  Report<Measurement> getReport();
+  default Report<Measured> getReport() {
+    return Report.empty();
+  }  
 
   /**
    * Provides the current status of connection to this instance's real-world hardware, if this robot is being simulated, then this should always be 
@@ -66,7 +88,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * @return Status of connection to hardware
    */
   default Boolean getConnection() {
-    return getReport().Connected;
+    return getReport().isConnected();
   }
 
   /**
@@ -76,7 +98,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * @see {@link OdometryThread#timestamp() timestamp queues}
    */
   default List<Double> getTimestamps() {
-    return DoubleStream.of(getReport().Timestamps).boxed().toList();
+    return DoubleStream.of(getReport().getTimestamps()).boxed().toList();
   }  
 
   /**
@@ -84,8 +106,9 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * has not been called for a significant amount of time.
    * @return Latest Measurement 
    */
-  default Measurement getMeasurement() {
-    return getReport().Measurement;
+  default Measured getMeasurement() {
+    final var Measured = getMeasurements();
+    return Measured.get(Measured.size() - (1));
   }  
 
   /**
@@ -95,7 +118,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * @return Latest list of measurements
    * @see {@link OdometryThread#register(Object) registering queues}
    */
-  default List<Measurement> getMeasurements() {
-    return List.of(getReport().Measurements);
+  default List<Measured> getMeasurements() {
+    return List.of(getReport().getMeasurements());
   }
 }
