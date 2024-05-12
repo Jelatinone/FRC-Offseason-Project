@@ -1,11 +1,9 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.pattern;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 
 import org.littletonrobotics.junction.AutoLog;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 import lombok.experimental.FieldDefaults;
 import lombok.AccessLevel;
@@ -20,18 +18,18 @@ import lombok.NonNull;
  * a changing-value updated {@link Component#update(Report) periodically}. Any types extending this class should be annotated with the relevant
  * {@link AutoLog}, and {@link Getter} annotations.
  * 
- * @see LoggableInputs
- * @see Struct
+ * @see StructSerializable
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Getter
 public abstract class Report<@NonNull Measured extends StructSerializable> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  @Getter volatile boolean Connected = (false);
+  volatile boolean Connected = (false);
+  
+  @NonNull volatile double[] Timestamps = {};
 
-  @Getter @NonNull volatile double[] Timestamps = {};
-
-  @Getter @NonNull volatile Measured[] Measurements;
-
+  @NonNull volatile Measured[] Measurements;
+  //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**
    * Shorthand for providing an empty instance of a report, with no relevant data stored inside.
    * @param <Measured> Type of the empty report, does not need to be specified in most cases

@@ -15,10 +15,12 @@ import lombok.experimental.FieldNameConstants;
  * annotation should be applied (though entirely unforced by this type) so that these properties can easily be defined through by making a builder. Down-stream
  * implementations should, but are not explicitly required to make use of the {@link FieldDefaults} and {@link FieldNameConstants} annotations.
  * 
+ * @see Cloneable
+ * 
  * @author Cody Washington
  */
 public interface Descriptor<@NonNull Described extends Component<?>> extends Cloneable {
-
+  //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**
    * Creates and returns a copy of this Report object, retaining all relevant information stored within, such as the
    * most-recent measurements, but is not the same specific instance.

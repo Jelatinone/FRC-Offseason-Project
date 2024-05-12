@@ -13,7 +13,6 @@ import org.littletonrobotics.junction.AutoLog;
 import java.io.Closeable;
 import java.util.List;
 import java.util.stream.DoubleStream;
-import java.lang.CloneNotSupportedException;
 
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
@@ -25,9 +24,12 @@ import lombok.NonNull;
  * motor controllers or encoders. This provides a base implementation of essentially any mechanical system that involves electrical components that produce
  * values.
  * 
+ * @see Descriptor
+ * @see Report
+ * 
  * @author Cody Washington
  */
-public interface Component<@NonNull Measured extends StructSerializable> extends Closeable, Sendable, Cloneable {
+public interface Component<@NonNull Measured extends StructSerializable> extends Closeable, Sendable {
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**
    * Generates this Component instance from a relevant descriptor type. Descriptor contains the relevant mechanical constant information to 
@@ -40,20 +42,21 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
   }
 
   /**
-   * Clones this component instance, throws an exception when this method is called because Component instances are always unique
-   * @return                            Nothing, an error is always thrown
-   * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
-   */
-  default Component<Measured> clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException();
-  }
-
-  /**
    * Updates the Report of measurements to the most recent measurement data from hardware and {@link OdometryThread#register(Object) queue} sources
    * @param Report Loggable source of information, which is automatically logged with the {@link AutoLog} annotation
    * @see OdometryThread
    */
   void update(final Report<Measured> Record);
+
+
+  /**
+   * Clones this component instance, throws an exception when this method is called because Component instances are always unique
+   * @return                            Nothing, an error is always thrown
+   * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
+   */
+  public default Component<Measured> clone() throws CloneNotSupportedException {
+    throw new CloneNotSupportedException();
+  }
 
   /**
    * Performs any necessary logic that this device may need with each update, such as maintaining the position of itself using a controller, or 
