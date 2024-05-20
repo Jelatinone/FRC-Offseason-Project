@@ -3,15 +3,21 @@ package org.frc5411.lib.pattern.actuator.module;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.pattern.actuator.Actuator;
 
-import lombok.NonNull;
-
-import java.util.Objects;
-import java.lang.CloneNotSupportedException;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+
+import org.littletonrobotics.junction.Logger;
+
+import java.util.Objects;
+import java.util.Optional;
+
+import lombok.AccessLevel;
+import lombok.NonNull;
+import lombok.experimental.FieldDefaults;
+
+import static org.frc5411.lib.utility.MathUtilities.*;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Module</h1>
@@ -21,9 +27,11 @@ import edu.wpi.first.math.util.Units;
  * 
  * @author Cody Washington
  */
+@FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
 public abstract class Module<@NonNull Placement extends Enum<?>> implements Actuator<SwerveModuleState, SwerveModulePosition> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  private final Descriptor<Placement> DESCRIPTION;
+  Descriptor<Placement> DESCRIPTION;
+  ReportAutoLogged STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.
@@ -31,11 +39,57 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    */
   protected Module(final Descriptor<Placement> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
+    STATUS = new ReportAutoLogged();
+    configure();
   }
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   @Override
-  public Module<Placement> clone() throws CloneNotSupportedException {
+  public final Module<Placement> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
+  }
+
+  /**
+   * Force re-configures the underlying module hardware to the standard specifications of this type. Ideally, a blocking operation is also performed which
+   * ensures correct, hardware-safe application of relevant configurations before Module operation.
+   */
+  public abstract void configure();
+
+  /**
+   * Force resets this module's measurements to absolute heading measurements, may fix issues with offsets and relative positions. Should ideally not 
+   * be called repeatedly or often.
+   */
+  public abstract void reset();
+
+  @Override
+  public synchronized void periodic() {
+    synchronized(STATUS) {
+      update(STATUS);
+      final var Reference = getState();
+      final var Position = getRotationalPosition();
+      if(getConnection() || Reference != (null)) {
+          if(Reference.angle != (null) && Position.isPresent()) {
+            setRotationalVoltage(unwrap(
+              DESCRIPTION.RotationalFeedback.calculate(wrap(
+                Position.get().getRadians(), 
+                Reference.angle.getRadians()))
+            ));
+          }
+          setTranslationalVoltage(unwrap(
+            DESCRIPTION.TranslationalFeedback.calculate(wrap(
+              getTranslationalVelocity(), 
+              Reference.speedMetersPerSecond * Math.cos(
+                unwrap(DESCRIPTION.RotationalFeedback.getError())) / DESCRIPTION.Radius
+            ))
+          ));
+      } else {
+        cease();
+      }
+    }
+    Logger.processInputs(
+      String.format(
+        ("Module-[%s]"), 
+        getPlacement().name()), 
+      STATUS);   
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
   /**
@@ -49,19 +103,17 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @param Demand Voltage sent to the controller object 
    */
   protected abstract void setRotationalVoltage(final double Demand);
-
-  /**
-   * Mutates the current state of the translational controller to lock rotational movement of the axis of rotation
-   * @param Locked Whether the translational axis is locked
-   */
-  protected abstract void setTranslationalLocked(final Boolean Locked);
-
-  /**
-   * Mutates the current state of the rotational controller to lock rotational movement of the axis of rotation
-   * @param Locked Whether the rotational axis is locked
-   */
-  protected abstract void setRotationalLocked(final Boolean Locked);
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+  @Override
+  public Report getReport() {
+    return STATUS;
+  }
+
+  @Override
+  public Boolean getConnection() {
+    return (STATUS.isConnected() && STATUS.isRotationalConnected() && STATUS.isTranslationalConnected());
+  }
+
   /**
    * Provides the current speed of the module, interpreted from the angular speed, omega.
    * @return Velocity of the translational controller's axis of rotation in meters/second
@@ -85,8 +137,9 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * within the {@link #update(org.frc5411.lib.mechanism.Report)}
    * @return Position of the rotational controller's axis of rotation in radians as a Rotation2d Object
    */
-  public Rotation2d getRotationalPosition() {
-    return getMeasurement().angle.minus(getRotationalOffset());
+  public Optional<Rotation2d> getRotationalPosition() {
+    final var Result = getMeasurement();
+    return Optional.ofNullable(Result.isPresent()? Result.get().angle.minus(getRotationalOffset()): (null));
   }
 
   /**
@@ -94,8 +147,9 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * recorded within the {@link #update(org.frc5411.lib.mechanism.Report)}
    * @return Position of the translational controller's axis of rotation in meters as a Double Object
    */
-  public Double getTranslationPosition() {
-    return getMeasurement().distanceMeters - getTranslationalOffset();
+  public Optional<Double> getTranslationPosition() {
+    final var Result = getMeasurement();
+    return Optional.ofNullable(Result.isPresent()? Result.get().distanceMeters - getTranslationalOffset(): (null));
   }
 
   /**

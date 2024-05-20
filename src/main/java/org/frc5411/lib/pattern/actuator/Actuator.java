@@ -4,6 +4,7 @@ package org.frc5411.lib.pattern.actuator;
 import org.frc5411.lib.pattern.Component;
 
 import edu.wpi.first.util.struct.StructSerializable;
+
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**

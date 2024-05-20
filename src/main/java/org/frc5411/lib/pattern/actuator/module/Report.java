@@ -1,10 +1,10 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.pattern.actuator.module;
-import org.littletonrobotics.junction.AutoLog;
-
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+
+import org.littletonrobotics.junction.AutoLog;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
@@ -16,9 +16,9 @@ import lombok.experimental.FieldDefaults;
  * 
  * @author Cody Washington
  */
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@AutoLog
+@FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
+@AutoLog
 public class Report extends org.frc5411.lib.pattern.actuator.Report<SwerveModuleState,SwerveModulePosition> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile double TranslationalVelocity;

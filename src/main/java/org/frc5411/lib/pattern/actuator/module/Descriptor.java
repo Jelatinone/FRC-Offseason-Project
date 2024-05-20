@@ -1,10 +1,15 @@
 //------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.pattern.actuator.module;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+import org.frc5411.lib.control.Controller;
+import org.frc5411.lib.pattern.Component;
+
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.FieldNameConstants;
 //----------------------------------------------------------------------[Declaration]----------------------------------------------------------------------//
 /**
  * <h1>Descriptor</h1>
@@ -15,19 +20,20 @@ import lombok.experimental.FieldNameConstants;
  */
 @Builder(toBuilder = true, setterPrefix = ("set"))
 @FieldDefaults(makeFinal = true)
-@FieldNameConstants(asEnum = true)
-public class Descriptor<@NonNull Placement extends Enum<?>> implements org.frc5411.lib.pattern.Descriptor<Module<Placement>> {
+public class Descriptor<@NonNull Placement extends Enum<?>> extends org.frc5411.lib.pattern.Descriptor<Component<SwerveModulePosition>> {
   
   Double TranslationalReduction;
   Double TranslationalOffset;
   Double TranslationalVelocity;
-  Boolean TranslationalInverted;
   Double TranslationalAcceleration;
-
+  Boolean TranslationalInverted;
+  Controller<N2,N1,N1> TranslationalFeedback;
+  
   Double RotationalReduction;
   Double RotationalOffset;
   Double RotationalVelocity;
   Boolean RotationalInverted;
+  Controller<N2,N1,N1> RotationalFeedback;
 
   Double Radius;
   Double Circumference;
@@ -39,15 +45,16 @@ public class Descriptor<@NonNull Placement extends Enum<?>> implements org.frc54
       TranslationalReduction, 
       TranslationalOffset, 
       TranslationalVelocity, 
-      TranslationalInverted, 
       TranslationalAcceleration, 
+      TranslationalInverted,
+      TranslationalFeedback, 
       RotationalReduction, 
       RotationalOffset, 
       RotationalVelocity, 
       RotationalInverted, 
+      RotationalFeedback,
       Radius, 
       Circumference, 
       Placement);
   }
-
 }

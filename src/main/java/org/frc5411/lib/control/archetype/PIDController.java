@@ -1,14 +1,14 @@
 //--------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.lib.control.archetype;
 //-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N2;
-
 import org.frc5411.lib.control.Controller;
 
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+
 import lombok.NonNull;
 //------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
@@ -27,7 +27,7 @@ public class PIDController extends edu.wpi.first.math.controller.PIDController i
    * @param Constants Container object of Relevant PID tuned constants: P(roptional), I(ntegral), D(erivative) 
    */
   public PIDController(final PIDConstants Constants) {
-    super(Constants.PROPORTIONAL_GAIN, Constants.INTEGRAL_GAIN, Constants.DERIVATIVE_GAIN);
+    super(Constants.ProportionalGain, Constants.IntegralGain, Constants.DerivativeGain);
   }
 
   /**

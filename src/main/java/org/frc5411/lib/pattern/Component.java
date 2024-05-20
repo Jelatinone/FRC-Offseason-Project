@@ -12,9 +12,11 @@ import org.littletonrobotics.junction.AutoLog;
 
 import java.io.Closeable;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.DoubleStream;
 
 import lombok.NonNull;
+import net.bytebuddy.utility.nullability.MaybeNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Component</h1>
@@ -77,6 +79,14 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
   default void initSendable(final SendableBuilder Builder) {}
 
   /**
+   * Provides the real-world description of the component, essentially an object makeup of the system's mechanical constants
+   * @return Descriptor of this component, null by default
+   */
+  default @MaybeNull Descriptor<Component<Measured>> getDescriptor() {
+    return Descriptor.empty();
+  }
+
+  /**
    * Provides a full {@link Report} of the measurements of this Component from the last {@link #update(Report)} cycle until now. If {@link #update(Report)}
    * has not been called for a significant amount of time, information may be stale, or out of date.
    * @return Report of measurements, by default an Empty report.
@@ -109,9 +119,9 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * has not been called for a significant amount of time.
    * @return Latest Measurement 
    */
-  default Measured getMeasurement() {
+  default Optional<Measured> getMeasurement() {
     final var Measured = getMeasurements();
-    return Measured.get(Measured.size() - (1));
+    return Optional.ofNullable(Measured.get(Measured.size() - (1)));
   }  
 
   /**

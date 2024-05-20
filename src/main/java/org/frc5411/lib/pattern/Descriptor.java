@@ -2,10 +2,10 @@
 package org.frc5411.lib.pattern;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import lombok.Builder;
-
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import net.bytebuddy.utility.nullability.MaybeNull;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * <h1>Descriptor</h1>
@@ -19,21 +19,32 @@ import lombok.experimental.FieldNameConstants;
  * 
  * @author Cody Washington
  */
-public interface Descriptor<@NonNull Described extends Component<?>> extends Cloneable {
+public abstract class Descriptor<@NonNull Described extends Component<?>> implements Cloneable {
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**
    * Creates and returns a copy of this Report object, retaining all relevant information stored within, such as the
    * most-recent measurements, but is not the same specific instance.
    * @return Copy of this object, but not the same instance
    */
-  Descriptor<Described> clone();
+  public Descriptor<Described> clone() {
+    return new Descriptor<Described>() {};
+  }
+
+  /**
+   * Shorthand for providing an empty instance of a report, with no relevant data stored inside.
+   * @param <Measured> Type of the empty report, does not need to be specified in most cases
+   * @return Empty report object
+   */
+  public static final <@NonNull Described extends Component<?>> Descriptor<Described> empty() {
+    return new Descriptor<Described>() {};
+  }
 
   /**
    * Completes this object and turns it into a the Described type by passing it into the constructor of the specified Described type, returns null by default to
    * support constructors that require more arguments than a Descriptor or abstract types.
    * @return Instance of a Described type
    */
-  default Described complete() {
+  public @MaybeNull Described complete() {
     return (null);
   }
   

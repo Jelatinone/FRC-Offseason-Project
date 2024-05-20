@@ -1,6 +1,8 @@
 //--------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+import org.frc5411.lib.pattern.Component;
+import org.frc5411.lib.pattern.actuator.module.Module;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 
@@ -15,10 +17,14 @@ import com.pathplanner.lib.auto.NamedCommands;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
+
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 //------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -30,20 +36,27 @@ import java.util.function.BiFunction;
  * 
  * 
  */
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
-  private static final long serialVersionUID = 2571418245449373564L;
-  private static final Lock SUBSYSTEM_LOCK;
+  final static long serialVersionUID = 2571418245449373564L;
+  final static Lock SUBSYSTEM_LOCK;
+  final static Component<Rotation2d> GYROSCOPE = (null);
+  final static Collection<Module<?>> MODULES = List.of(
+    
+  );
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  private static volatile DrivebaseSubsystem Instance;
-  private static volatile State Mode;
+  static volatile DrivebaseSubsystem Instance;
+  static volatile State Mode;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * DrivebaseSubsystem Constructor.
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
+    MODULES.forEach((Module) -> 
+      addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
   } static {
     SUBSYSTEM_LOCK = new ReentrantLock((true));
     Mode = State.RELATIVE;
@@ -94,6 +107,14 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   }
 
   /**
+   * Provides the current measured (gyroscope) rotation form it's most recent {@link Component#update(org.frc5411.lib.pattern.Report)} cycle
+   * @return Gyroscope's current rotation
+   */
+  public static Rotation2d getMeasuredRotation() {
+    return GYROSCOPE.getMeasurement().get();
+  }
+
+  /**
    * Retrieves the existing instance of this static utility class
    * @return Utility class's instance
    */
@@ -134,7 +155,7 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
       Translation.getX(), 
       Translation.getY(), 
       Rotation.getRadians(), 
-      null)
+      DrivebaseSubsystem.getMeasuredRotation())
   ),
 
   /**
@@ -146,7 +167,7 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
       Translation.getX(), 
       Translation.getY(), 
       Rotation.getRadians(), 
-      null)
+      DrivebaseSubsystem.getMeasuredRotation())
   );
 
   private final BiFunction<Translation2d, Rotation2d, ChassisSpeeds> FUNCTION;
