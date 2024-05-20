@@ -30,7 +30,7 @@ public final class Manager implements Singleton<Manager> {
   } static {
 
   }
-  //-----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
 
   @Serial
   @Override
@@ -61,7 +61,7 @@ public final class Manager implements Singleton<Manager> {
   public Object clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
-  //---------------------------------------------------------------------[Accessors]--------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
    * Retrieves the existing instance of this static utility class
    * @return Utility class's instance

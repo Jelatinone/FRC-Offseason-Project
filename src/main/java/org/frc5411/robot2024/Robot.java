@@ -1,6 +1,6 @@
-//--------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
 package org.frc5411.robot2024;
-//-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+//-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.thread.CTREOdometryThread;
 import org.frc5411.lib.schema.thread.OdometryThread;
@@ -29,7 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.HashMap;
 import java.util.Map;
-//------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
  *
@@ -132,14 +132,14 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
       Threads.setCurrentThreadPriority((true), (10));      
     }
   }
-  //--------------------------------------------------------------------[Simulation Scope]--------------------------------------------------------------------//
+  //--------------------------------------------------------------------[Simulation Scope]---------------------------------------------------------------------//
   @Override
   public synchronized void simulationInit() {}
 
   @Override
   public synchronized void simulationPeriodic() {}
 
-  //---------------------------------------------------------------------[Disabled Scope]--------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Disabled Scope]----------------------------------------------------------------------//
   @Override
   public synchronized void disabledInit() {
     CommandScheduler.getInstance().cancelAll();
@@ -153,7 +153,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   public synchronized void disabledExit() {
     setThreadsEnabled((true));
   } 
-  //--------------------------------------------------------------------[Autonomous Scope]-------------------------------------------------------------------//
+  //--------------------------------------------------------------------[Autonomous Scope]---------------------------------------------------------------------//
   
   @Override
   public synchronized void autonomousInit() {
@@ -171,7 +171,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   public synchronized void autonomousExit() {
 
   }
-  //-------------------------------------------------------------------[Teleoperated Scope]------------------------------------------------------------------//
+  //-------------------------------------------------------------------[Teleoperated Scope]--------------------------------------------------------------------//
   @Override
   public synchronized void teleopInit() {}
 
@@ -181,7 +181,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void teleopExit() {}
 
-  //-----------------------------------------------------------------------[Test Scope]-----------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Test Scope]------------------------------------------------------------------------//
   @Override
   public synchronized void testPeriodic() {}
 
@@ -190,7 +190,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
 
   @Override
   public synchronized void testExit() {}
-  //------------------------------------------------------------------------[Methods]------------------------------------------------------------------------//
+  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Serial
   @Override
   public synchronized Robot readResolve() {
@@ -230,7 +230,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Logger.recordOutput(String.format(("Commands/Unique/[%s]-[%s]"), Name, Integer.toHexString(Operation.hashCode())), Running);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]"),Name), Count > 0);
   }
-  //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
 
   /**
    * Mutates the current autonomous command to a different command, immediately ends any running commands if applicable.
@@ -254,7 +254,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
       CTREOdometryThread.getInstance().set(Enabled);
     }
   }
-  //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
    * Retrieves the existing instance of this static utility class
    * @return Utility class's instance

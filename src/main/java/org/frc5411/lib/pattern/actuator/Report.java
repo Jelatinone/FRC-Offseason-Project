@@ -1,13 +1,14 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.pattern.actuator;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.util.struct.StructSerializable;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Report</h1>
  * 
@@ -18,8 +19,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
 public abstract class Report<@NonNull Reference extends StructSerializable, @NonNull Measurement extends StructSerializable> extends org.frc5411.lib.pattern.Report<Measurement> {
-  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   @NonNull volatile Reference Effort;
 
-  @NonNull volatile Reference Demand; 
+  @NonNull @Setter volatile Reference Demand; 
 }

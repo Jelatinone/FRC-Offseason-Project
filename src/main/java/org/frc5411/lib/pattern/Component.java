@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.pattern;
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.thread.OdometryThread;
@@ -17,7 +17,7 @@ import java.util.stream.DoubleStream;
 
 import lombok.NonNull;
 import net.bytebuddy.utility.nullability.MaybeNull;
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Component</h1>
  * 
@@ -32,7 +32,7 @@ import net.bytebuddy.utility.nullability.MaybeNull;
  * @author Cody Washington
  */
 public interface Component<@NonNull Measured extends StructSerializable> extends Closeable, Sendable {
-  //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
+  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Generates this Component instance from a relevant descriptor type. Descriptor contains the relevant mechanical constant information to 
    * specify a unique component instance.

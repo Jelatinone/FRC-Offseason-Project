@@ -1,6 +1,6 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.pattern.actuator.module;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.actuator.Actuator;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -18,12 +18,12 @@ import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
 import static org.frc5411.lib.utility.MathUtilities.*;
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Module</h1>
  * 
  * <p>Describes an abstract Swerve Module, i.e. any device that has one, a translational actuator and two, a rotational actuator, and can be commanded to a
- * given reference of type {@link SwerveModuleState state}, and @{link Report report} back a {@link SwerveModulePosition position} from measured values. 
+ * given reference of type {@link SwerveModuleState state}, and {@link Report report} back a {@link SwerveModulePosition position} from measured values. 
  * 
  * @author Cody Washington
  */
@@ -42,10 +42,21 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
     STATUS = new ReportAutoLogged();
     configure();
   }
-  //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
+  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public final Module<Placement> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
+  }
+
+  @Override
+  public synchronized void cease() {
+    setRotationalVoltage((0d));
+    setTranslationalVoltage((0d));
+  }
+
+  @Override
+  public synchronized void set(final SwerveModuleState Demand) {
+    STATUS.setDemand(Demand);
   }
 
   /**
@@ -78,7 +89,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
             DESCRIPTION.TranslationalFeedback.calculate(wrap(
               getTranslationalVelocity(), 
               Reference.speedMetersPerSecond * Math.cos(
-                unwrap(DESCRIPTION.RotationalFeedback.getError())) / DESCRIPTION.Radius
+                unwrap(DESCRIPTION.RotationalFeedback.getError())) / DESCRIPTION.getRadius()
             ))
           ));
       } else {
@@ -157,7 +168,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @return Positional offset of the rotational controller
    */
   public Rotation2d getRotationalOffset() {
-    return Rotation2d.fromRadians(DESCRIPTION.RotationalOffset);
+    return Rotation2d.fromRadians(DESCRIPTION.getRotationalOffset());
   }
 
   /**
@@ -165,7 +176,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @return Positional offset of the translational controller
    */
   public Double getTranslationalOffset() {
-    return DESCRIPTION.TranslationalOffset; 
+    return DESCRIPTION.getTranslationalOffset(); 
   }
 
   /**
@@ -182,7 +193,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @return Placement of the module (wheel-base relative)
    */
   public Placement getPlacement() {
-    return DESCRIPTION.Placement;
+    return DESCRIPTION.getPlacement();
   }
 
 }
