@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.pattern;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.schema.thread.OdometryThread;
 
 import edu.wpi.first.networktables.NetworkTable;
@@ -14,6 +14,7 @@ import java.io.Closeable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.DoubleStream;
+import java.io.IOException;
 
 import lombok.NonNull;
 import net.bytebuddy.utility.nullability.MaybeNull;
@@ -69,8 +70,9 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
   /**
    * Closes this instance immediately and performs locking-operations to ensure the complete closure of all hardware references. This renders any
    * references to this instance unusable, and should essentially only be done when robot-code has finished operations.
+   * @throws IOException When a fatal exception has occurred during an input or output operation.
    */
-  default void close() {}
+  default void close() throws IOException {}
 
   /**
    * Initializes this component as a sendable object over {@link NetworkTable NetworkTables}, meaning the relevant values from {@link #update(Report)}

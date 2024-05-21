@@ -37,8 +37,8 @@ public final class Constants {
       case SIMBOT 
         -> Mode.SIMULATED;
     };
-    public static final Profile DRIVER = Profile.PLACEHOLDER_DRIVER;
-    public static final Profile OPERATOR = Profile.PLACEHOLDER_OPERATOR;
+    public static final Profile DRIVER =  TYPE.equals(Type.COMPBOT)? Profile.COMP_DRIVER: Profile.DEV_DRIVER;
+    public static final Profile OPERATOR = TYPE.equals(Type.COMPBOT)? Profile.COMP_OPERATOR: Profile.DEV_OPERATOR;
   }
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
@@ -78,7 +78,11 @@ enum Type {
  */
 enum Profile {
   
-  PLACEHOLDER_DRIVER,
+  DEV_DRIVER,
 
-  PLACEHOLDER_OPERATOR,
+  DEV_OPERATOR,
+
+  COMP_DRIVER,
+
+  COMP_OPERATOR,
 }

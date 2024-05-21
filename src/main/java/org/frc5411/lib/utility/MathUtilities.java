@@ -5,6 +5,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Num;
 import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.util.DoubleCircularBuffer;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * 
@@ -28,6 +29,35 @@ public class MathUtilities {
       SummativeSquareDifference += Math.pow((Number - Mean), (2));
     }
     return Math.sqrt(SummativeSquareDifference / Numbers.length - 1);
+  }
+
+  /**
+   * Transforms a circular buffer into an array of equivalent length and elements in the same order, but is not destructive to the original buffer. 
+   * i.e. the original elements of the buffer are retained.
+   * @param Source Buffer source to accept elements from into the new array
+   * @return Array with the same elements, in the same order
+   */
+  static double[] from(final DoubleCircularBuffer Source) {
+    final var Size = Source.size();
+    final var Array = new double[Size];
+    for(Integer Index = (0); Index < Size; Index++) {
+      Array[Index] = Source.get(Index);
+    }
+    return Array;
+  }
+
+  /**
+   * Transforms a circular array into an buffer of equivalent length and elements in the same order, but is not destructive to the original array. 
+   * i.e. the original elements of the array are retained.
+   * @param Source Array source to accept elements from into the new buffer
+   * @return Buffer with the same elements, in the same order
+   */
+  static DoubleCircularBuffer from(final double[] Source) {
+    final var Buffer = new DoubleCircularBuffer(Source.length);
+    for(final double Element: Source) {
+      Buffer.addLast(Element);
+    }
+    return Buffer;
   }
 
   /**

@@ -1,6 +1,6 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.schema;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.jcabi.aspects.Async;
@@ -11,10 +11,9 @@ import org.littletonrobotics.urcl.URCL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
-
+import java.util.concurrent.locks.ReadWriteLock;
 import lombok.NonNull;
-//----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Subsystem</h1>
  * 
@@ -23,16 +22,16 @@ import lombok.NonNull;
  * @author Cody Washington
  */
 public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull State extends Enum<?>> extends SubsystemBase implements Singleton<Subsystem<Defined, State>> {
-  //---------------------------------------------------------------------[Constants]-----------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Constants]---------------------------------------------------------------------------//
   private static final List<Subsystem<?,?>> SUBSYSTEMS = new ArrayList<>();
-  private final Lock OPERATION_LOCK;
-  //-------------------------------------------------------------------[Constructor(s)]--------------------------------------------------------------------//
+  private final ReadWriteLock OPERATION_LOCK;
+  //-------------------------------------------------------------------[Constructor(s)]------------------------------------------------------------------------//
   /**
    * Subsystem Constructor.
    * @param Lock Lock which ensures a blocking operation during {@link #periodic()} if a previous call has not yet ended.
    * @param Name Referenceable name by which to refer the subsystem, this is an entirely objective value to programmer preferences
    */
-  protected Subsystem(final Lock Lock, final String Name) {
+  protected Subsystem(final ReadWriteLock Lock, final String Name) {
     super(Objects.requireNonNull(Name));
     OPERATION_LOCK = Objects.requireNonNull(Lock);
     SUBSYSTEMS.add(this);
@@ -42,12 +41,12 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
    * Subsystem Constructor.
    * @param Lock Lock which ensures a blocking operation during {@link #periodic()} if a previous call has not yet ended.
    */
-  protected Subsystem(final Lock Lock) {
+  protected Subsystem(final ReadWriteLock Lock) {
     super();
     OPERATION_LOCK = Objects.requireNonNull(Lock);
     SUBSYSTEMS.add(this);
   }
-  //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
+  //----------------------------------------------------------------------[Methods]----------------------------------------------------------------------------//
   /**
    * Updates relevant {@link Logger loggable} values using {@link Logger#recordOutput(String, edu.wpi.first.util.WPISerializable)} that may have changed during runtime. This
    * is inclusive of values such as encoder values, motor outputs, etc., that are not automatically logged (such as {@link URCL}) that may be useful during
@@ -55,7 +54,7 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
    */
   @Async
   public abstract void update();
-
+  //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
    * Provides the list of enum values containing all the named commands registered under this subsystem instance
    * @return Enum of Named Commands
@@ -67,12 +66,11 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
    * @return State of this instance
    */
   public abstract State getState();
-  //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
   /**
    * Provides the lock member-variable of this subsystem used during it's {@link #periodic() periodic} operations.
    * @return Synchronization lock of this subsystem
    */
-  public final Lock getLock() {
+  public final ReadWriteLock getLock() {
     return OPERATION_LOCK;
   }
 

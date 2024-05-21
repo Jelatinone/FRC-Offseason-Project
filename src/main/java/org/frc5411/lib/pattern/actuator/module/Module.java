@@ -30,14 +30,14 @@ import static org.frc5411.lib.utility.MathUtilities.*;
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
 public abstract class Module<@NonNull Placement extends Enum<?>> implements Actuator<SwerveModuleState, SwerveModulePosition> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Descriptor<Placement> DESCRIPTION;
-  ReportAutoLogged STATUS;
+  Descriptor<Placement,?> DESCRIPTION;
+  protected ReportAutoLogged STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.
    * @param Description Real-world description of the system, contains relevant constants to the operation of the module
    */
-  protected Module(final Descriptor<Placement> Description) {
+  protected Module(final Descriptor<Placement,?> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
     STATUS = new ReportAutoLogged();
     configure();
@@ -50,8 +50,8 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
 
   @Override
   public synchronized void cease() {
-    setRotationalVoltage((0d));
-    setTranslationalVoltage((0d));
+    DESCRIPTION.TranslationalController.disable();
+    DESCRIPTION.RotationalController.disable();
   }
 
   @Override
@@ -69,7 +69,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * Force resets this module's measurements to absolute heading measurements, may fix issues with offsets and relative positions. Should ideally not 
    * be called repeatedly or often.
    */
-  public abstract void reset();
+  public void reset() {}
 
   @Override
   public synchronized void periodic() {
@@ -89,7 +89,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
             DESCRIPTION.TranslationalFeedback.calculate(wrap(
               getTranslationalVelocity(), 
               Reference.speedMetersPerSecond * Math.cos(
-                unwrap(DESCRIPTION.RotationalFeedback.getError())) / DESCRIPTION.getRadius()
+                unwrap(DESCRIPTION.RotationalFeedback.getError())) / DESCRIPTION.Radius
             ))
           ));
       } else {
@@ -107,13 +107,17 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * Mutates the current voltage applied to the module's translational motor controller
    * @param Demand Voltage sent to the controller object 
    */
-  protected abstract void setTranslationalVoltage(final double Demand);
+  protected void setTranslationalVoltage(final double Demand) {
+    DESCRIPTION.TranslationalController.set(Demand);
+  }
 
   /**
    * Mutates the current voltage applied to the module's rotational motor controller
    * @param Demand Voltage sent to the controller object 
    */
-  protected abstract void setRotationalVoltage(final double Demand);
+  protected void setRotationalVoltage(final double Demand) {
+    DESCRIPTION.RotationalController.set(Demand);
+  }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public Report getReport() {
@@ -168,7 +172,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @return Positional offset of the rotational controller
    */
   public Rotation2d getRotationalOffset() {
-    return Rotation2d.fromRadians(DESCRIPTION.getRotationalOffset());
+    return Rotation2d.fromRadians(DESCRIPTION.RotationalOffset);
   }
 
   /**
@@ -176,14 +180,14 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @return Positional offset of the translational controller
    */
   public Double getTranslationalOffset() {
-    return DESCRIPTION.getTranslationalOffset(); 
+    return DESCRIPTION.TranslationalOffset; 
   }
 
   /**
    * Provides the real-world description of the module, essentially an object makeup of the system's constants.
    * @return Description of this module
    */
-  public Descriptor<Placement> getDescriptor() {
+  public Descriptor<Placement,?> getDescriptor() {
     return DESCRIPTION;
   }
 
@@ -193,7 +197,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @return Placement of the module (wheel-base relative)
    */
   public Placement getPlacement() {
-    return DESCRIPTION.getPlacement();
+    return DESCRIPTION.Placement;
   }
 
 }

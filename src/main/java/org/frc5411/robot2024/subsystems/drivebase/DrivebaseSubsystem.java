@@ -19,8 +19,8 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiFunction;
 
 import lombok.AccessLevel;
@@ -36,16 +36,15 @@ import lombok.experimental.FieldDefaults;
  * 
  * 
  */
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
-  final static long serialVersionUID = 2571418245449373564L;
-  final static Lock SUBSYSTEM_LOCK;
-  final static Component<Rotation2d> GYROSCOPE = (null);
-  final static Collection<Module<?>> MODULES = List.of(
-    
-  );
+  static long serialVersionUID = 2571418245449373564L;
+  static ReadWriteLock SUBSYSTEM_LOCK;
+  //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
+  Component<Rotation2d> GYROSCOPE;
+  Collection<Module<?>> MODULES;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
   static volatile State Mode;
@@ -55,10 +54,15 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
+    MODULES = List.of(
+
+    );
+    GYROSCOPE = (null);
     MODULES.forEach((Module) -> 
       addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
+    addChild(("Gyroscope"), GYROSCOPE);
   } static {
-    SUBSYSTEM_LOCK = new ReentrantLock((true));
+    SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
     Mode = State.RELATIVE;
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
@@ -77,16 +81,27 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   @Override
   public synchronized void close() {
+    SUBSYSTEM_LOCK.writeLock().lock();
     synchronized(DrivebaseSubsystem.class) {
+      MODULES.forEach((Module) -> {
+        try {
+          Module.close();
+        } catch(final IOException Ignored) {}
+      });
+      try {
+        GYROSCOPE.close();
+      } catch (final IOException Ignored) {}
       Instance = (null);
+      Mode = (null);
+      SUBSYSTEM_LOCK.writeLock().unlock();
     }
   }
 
   @Override
   public synchronized void periodic() {
-    SUBSYSTEM_LOCK.lock();
+    synchronized(Instance) {
 
-    SUBSYSTEM_LOCK.unlock();
+    }
   }
 
   @Override
@@ -111,7 +126,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    * @return Gyroscope's current rotation
    */
   public static Rotation2d getMeasuredRotation() {
-    return GYROSCOPE.getMeasurement().get();
+    return Instance.GYROSCOPE.getMeasurement().get();
   }
 
   /**
@@ -143,7 +158,7 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
    * to game pieces and field elements.
    */
   OBJECTIVE((Translation, Rotation) ->
-    null
+    (null)
   ),
 
   /**

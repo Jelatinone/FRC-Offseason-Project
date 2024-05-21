@@ -1,6 +1,6 @@
-//------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.schema.thread;
-//-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.wpilibj.Notifier;
 
 import org.littletonrobotics.junction.Logger;
@@ -15,7 +15,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
-//------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
  *
@@ -62,7 +62,7 @@ public final class REVOdometryThread implements OdometryThread<Supplier<Number>>
     Enabled = (false);
     Frequency = STANDARD_FREQUENCY;
   }
-  //-----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Override
   public synchronized Queue<Double> register(final Supplier<Number> Signal) {
     Queue<Double> Queue = new ArrayBlockingQueue<>(STANDARD_QUEUE_SIZE);
@@ -151,7 +151,7 @@ public final class REVOdometryThread implements OdometryThread<Supplier<Number>>
       } catch (final Exception Ignored) {}      
     }
   }
-  //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
   
   @Override
   public synchronized void set(final Double Frequency) {
@@ -167,7 +167,7 @@ public final class REVOdometryThread implements OdometryThread<Supplier<Number>>
   public synchronized void set(final Boolean Enabled) {
     REVOdometryThread.Enabled = Enabled;
   }
-  //---------------------------------------------------------------------[Accessors]--------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   @Override
   public Lock getLock() {
     return ODOMETRY_LOCK;

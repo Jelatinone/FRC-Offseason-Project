@@ -1,6 +1,6 @@
-//--------------------------------------------------------------------------[Package]------------------------------------------------------------------------//
+//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
 package org.frc5411.lib.schema.thread;
-//-------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
+//-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-//------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
+//------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
  *
@@ -67,7 +67,7 @@ public final class CTREOdometryThread extends Thread implements OdometryThread<S
     Flexible = (false);
     Enabled = (false);
   }
-  //-----------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Override
   public synchronized void start() {
     if (TIMESTAMP_QUEUES.isEmpty()) {
@@ -181,7 +181,7 @@ public final class CTREOdometryThread extends Thread implements OdometryThread<S
       } catch (final Exception Ignored) {}         
     }
   }  
-  //---------------------------------------------------------------------[Mutators]------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
   /**
    * Mutates the current status of the can bus to determine if it supports flexible data rates.
    * @param Flexible If the CAN bus of devices is flexible
@@ -199,7 +199,7 @@ public final class CTREOdometryThread extends Thread implements OdometryThread<S
   public synchronized void set(final Double Frequency) {
     CTREOdometryThread.Frequency = Math.min(Frequency, (1000d));
   }
-  //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   @Override
   public Lock getLock() {
     return ODOMETRY_LOCK;

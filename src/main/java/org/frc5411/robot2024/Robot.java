@@ -68,7 +68,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Logger.recordMetadata(("VCS-Date"), Metadata.GIT_DATE);
     Logger.recordMetadata(("VCS-Branch"), Metadata.GIT_BRANCH);
     Logger.recordMetadata(("VCS-State"), switch(Metadata.DIRTY) {
-      case 0 -> "Committed"; case 1 -> "Changed"; default -> "Unknown";
+      case (0) -> "Committed"; case (1) -> "Changed"; default -> "Unknown";
     });
   }
   //----------------------------------------------------------------------[Robot Scope]------------------------------------------------------------------------//
