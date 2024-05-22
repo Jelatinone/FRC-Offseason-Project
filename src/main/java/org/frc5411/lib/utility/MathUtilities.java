@@ -6,6 +6,8 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Num;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.util.DoubleCircularBuffer;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  * 
@@ -16,7 +18,11 @@ import edu.wpi.first.util.DoubleCircularBuffer;
  * 
  * @author Cody Washington (@Jelatinone) 
  */
+@FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
 public class MathUtilities {
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  Double PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679D;
+  Double E = 2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274D;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Provides the standard deviation for a given set of numbers 
@@ -24,11 +30,11 @@ public class MathUtilities {
    * @return Standard deviation as a double value
    */
   public static double standardDeviation(final double... Numbers){
-    double Mean = mean(Numbers), SummativeSquareDifference = 0d;
-    for(double Number : Numbers){
-      SummativeSquareDifference += Math.pow((Number - Mean), (2));
+    double Mean = mean(Numbers), Sum = (0d);
+    for(final double Number : Numbers){
+      Sum += Math.pow((Number - Mean), (2));
     }
-    return Math.sqrt(SummativeSquareDifference / Numbers.length - 1);
+    return Math.sqrt(Sum / Numbers.length - 1);
   }
 
   /**
@@ -75,7 +81,7 @@ public class MathUtilities {
    * @return Mean as a double value
    */
   public static double mean(final double... Numbers) {
-    double Mean = 0d;
+    double Mean = (0d);
     for(double Number : Numbers){
       Mean += Number;
     }

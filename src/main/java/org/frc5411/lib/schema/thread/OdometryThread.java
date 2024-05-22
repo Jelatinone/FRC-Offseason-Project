@@ -17,6 +17,7 @@ import java.util.concurrent.locks.Lock;
  * @see REVOdometryThread
  * 
  */
+@Deprecated(forRemoval = (true), since = ("2024-1.22"))
 public sealed interface OdometryThread<Registrable> extends Runnable, Singleton<OdometryThread<Registrable>> permits CTREOdometryThread, REVOdometryThread {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double STANDARD_FREQUENCY = (250d);

@@ -34,12 +34,14 @@ import lombok.experimental.FieldDefaults;
  * <p>Utility class which controls the modules to achieve individual goal set points with an acceptable target range of accuracy and time
  * efficiency and providing an API for querying new goal states.<p>
  * 
+ * @see Subsystem
+ * @author Cody Washington
  * 
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  @Serial
+  @Serial 
   static long serialVersionUID = 2571418245449373564L;
   static ReadWriteLock SUBSYSTEM_LOCK;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
@@ -62,7 +64,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
     addChild(("Gyroscope"), GYROSCOPE);
   } static {
-    SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
+    SUBSYSTEM_LOCK = new ReentrantReadWriteLock(Boolean.TRUE);
     Mode = State.RELATIVE;
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
@@ -100,7 +102,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   @Override
   public synchronized void periodic() {
     synchronized(Instance) {
-
+      
     }
   }
 
@@ -148,8 +150,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 } 
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
 /**
- * Represents the named states of operation of the drivebase, which have distinct behavior that differentiate it from 
- * robot-oriented (Relative) control.
+ * Represents the named states of operation of the drivebase, which have distinct behavior that differentiate it from other modes of control, i.e.
+ * robot-oriented (Relative) control differs from field-oriented through the use of a gyroscope as the reference of rotation.
  */
 enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
 

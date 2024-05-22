@@ -34,6 +34,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Mechanical Advantage (Original)
  * 
  */
+
+@Deprecated(forRemoval = (true), since = ("2024-1.22"))
 public final class CTREOdometryThread extends Thread implements OdometryThread<StatusSignal<?>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial

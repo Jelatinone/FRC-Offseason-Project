@@ -1,12 +1,12 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.DoubleCircularBuffer;
+import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.Timer;
 
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.lang.Number;
 
 import org.frc5411.lib.schema.Registrable;
@@ -16,15 +16,15 @@ import org.frc5411.lib.utility.MathUtilities;
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>Thread</h1>
+ * <h1>Register</h1>
  * 
  * <p>
  * 
  * @author Cody Washington
  */
-public interface Thread<@NonNull Source, @NonNull State extends Struct<State>> extends Runnable, Singleton<Thread<Source,State>> {
+public interface Register<@NonNull Source, @NonNull Serial extends Struct<Report>> extends Runnable, Singleton<Register<Source,Serial>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Double STANDARD_FREQUENCY = (250d);
+  Double STANDARD_FREQUENCY_HERTZ = (250d);
   Integer STARTING_THREAD_PRIORITY = (1);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
@@ -90,17 +90,19 @@ public interface Thread<@NonNull Source, @NonNull State extends Struct<State>> e
    * Provides the current state of this Thread, which can be serialized as a struct value and sent over the network.
    * @return Current state, struct serializable.
    */
-  State getState();
+  default Report getState() {
+    return Report.empty();
+  }
 
   /**
    * Provides the lock responsible for locking state-update operations and signal and timestamp update operations.
    * @return Lock of signal buffers and timestamp buffers operations
    */
-  Lock getBufferLock();
+  ReadWriteLock getBufferLock();
 
   /**
    * Provides the lock responsible for locking {@link #register(Object) registration}, and wait operations
    * @return Lock of registration and wait operations
    */
-  Lock getSignalLock();
+  ReadWriteLock getSignalLock();
 }

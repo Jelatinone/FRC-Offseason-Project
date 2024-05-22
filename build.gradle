@@ -107,10 +107,10 @@ dependencies {
   implementation fileTree(dir: 'include/**', include: '**.jar')
 
   implementation group: 'gov.nist.math', name: 'jama', version: '1.0.3'
-
   implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0-alpha1'
   implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha1'
   implementation group: 'com.jcabi', name: 'jcabi-aspects', version: '0.25.1'
+  implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
 
   roborioDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.roborio)
   roborioDebug wpi.java.vendor.jniDebug(wpi.platforms.roborio)
@@ -145,6 +145,20 @@ spotless {
     importOrder("org.frc${teamNumber}.lib", "org.frc${teamNumber}.robot${seasonYear}", 'edu','com','org','java', '', '\\#').wildcardsLast()
     setEncoding(StandardCharsets.UTF_8)
     indentWithSpaces(2)
+    licenseHeader("""//------------------------------------------------------------------------[License]----------------------------------------------------------------------------//\n
+// Copyright 2024 Cody Washington\n
+//\n
+// Licensed under the Apache License, Version 2.0 (the "License");\n
+// you may not use this file except in compliance with the License.\n
+// You may obtain a copy of the License at\n
+//\n
+//     http://www.apache.org/licenses/LICENSE-2.0\n
+//\n
+// Unless required by applicable law or agreed to in writing, software\n
+// distributed under the License is distributed on an "AS IS" BASIS,\n
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n
+// See the License for the specific language governing permissions and\n
+// limitations under the License.""")
   }
   groovyGradle {
     target fileTree(".") {

@@ -105,6 +105,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     DriverStation.silenceJoystickConnectionWarning((true));
     PortForwarder.add((5800), ("photoemission.local"), (5800));
     setThreadsEnabled((true));
+    Manager.getInstance();
   }
 
   @Override
@@ -124,7 +125,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
         if (!Autonomous.isScheduled() && !Message) {
           System.out.printf(
             ("*** Auto %s in %.2f secs ***%n"),
-            (DriverStation.isAutonomousEnabled()? "finished": "cancelled"),
+            DriverStation.isAutonomousEnabled()? "finished": "cancelled",
             Logger.getRealTimestamp() / (1e6) - Timestamp);
           Message = (true);
         }
@@ -223,7 +224,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * @param Operation Command to be logged, can be in any state
    * @param Running   Whether this command is currently active
    */
-  private void log(final Command Operation, final Boolean Running) {
+  private static void log(final Command Operation, final Boolean Running) {
     final var Name = Operation.getName();
     final var Count = COMMANDS.getOrDefault(Running, (0)) + (Running? 1: -1);
     COMMANDS.put(Name, Count);
@@ -248,7 +249,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * through {@link OdometryThread#set(Boolean)}.
    * @param Enabled If this Thread is enabled or not
    */
-  public synchronized void setThreadsEnabled(final Boolean Enabled) {
+  private static synchronized void setThreadsEnabled(final Boolean Enabled) {
     synchronized(Instance) {
       REVOdometryThread.getInstance().set(Enabled);
       CTREOdometryThread.getInstance().set(Enabled);

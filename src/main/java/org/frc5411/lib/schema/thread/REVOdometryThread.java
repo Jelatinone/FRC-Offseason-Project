@@ -32,6 +32,7 @@ import java.util.function.Supplier;
  * @author Mechanical Advantage (Original)
  * 
  */
+@Deprecated(forRemoval = (true), since = ("2024-1.22"))
 public final class REVOdometryThread implements OdometryThread<Supplier<Number>> {  
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
