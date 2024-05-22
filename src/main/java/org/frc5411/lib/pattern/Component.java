@@ -1,4 +1,18 @@
-//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
+//------------------------------------------------------------------------[License]----------------------------------------------------------------------------//
+// Copyright 2024 Cody Washington
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
 package org.frc5411.lib.pattern;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.schema.thread.OdometryThread;
@@ -11,10 +25,10 @@ import edu.wpi.first.util.struct.StructSerializable;
 import org.littletonrobotics.junction.AutoLog;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.DoubleStream;
-import java.io.IOException;
 
 import lombok.NonNull;
 import net.bytebuddy.utility.nullability.MaybeNull;
