@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
@@ -95,16 +95,15 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
         Logger.addDataReceiver(new WPILOGWriter());
       case SIMULATED:
         Logger.addDataReceiver(new RLOGServer());
-        Logger.start();
         break;
       case REPLAY:
         setUseTiming((false));
         final var Path = LogFileUtil.findReplayLog();
         Logger.setReplaySource(new WPILOGReader(Path));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
-        Logger.start();
         break;
     }
+    Logger.start();
     CommandScheduler.getInstance()
         .onCommandInitialize(
             (Command Operation) -> log(Operation, (true)));

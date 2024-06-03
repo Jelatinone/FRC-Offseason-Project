@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import java.io.Serial;
@@ -20,6 +20,11 @@ import java.io.Serial;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>PhoenixRegister</h1>
@@ -33,6 +38,8 @@ public class PhoenixRegister extends Thread implements Register {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 55742622883094958L;
+  ReadWriteLock BUFFER_LOCK = new ReentrantReadWriteLock((true));
+  ReadWriteLock SIGNAL_LOCK = new ReentrantReadWriteLock((true));
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   @NonFinal static volatile PhoenixRegister Instance = (null);
   @NonFinal static volatile Serializable State;
@@ -47,7 +54,17 @@ public class PhoenixRegister extends Thread implements Register {
   @Override
   public synchronized void close() {
     synchronized(PhoenixRegister.class) {
+      
+    }
+  }
 
+  public synchronized void run() {
+    synchronized(Instance) {
+      while(isAlive() && !isInterrupted()) {
+        synchronized(PhoenixRegister.class) {
+
+        }
+      }
     }
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
@@ -69,6 +86,18 @@ public class PhoenixRegister extends Thread implements Register {
     }
     return Result;
   }
+
+  @Override
+  public ReadWriteLock getBufferLock() {
+    return BUFFER_LOCK;
+  }
+
+  @Override
+  public ReadWriteLock getSignalLock() {
+    return SIGNAL_LOCK;
+  }
+
+
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
 /**

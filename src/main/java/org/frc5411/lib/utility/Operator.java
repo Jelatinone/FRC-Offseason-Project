@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.utility;
 //-----------------------------------------------------------------------[Libraries]----------------------------------------------------------------------------//
 import java.util.function.BinaryOperator;
@@ -34,13 +34,13 @@ public class Operator<Type extends Number> implements Supplier<Type>, Consumer<T
   private final Supplier<Type> SOURCE;
   private final BinaryOperator<Type> OPERATOR;
   private final Type INITIAL;
+  //------------------------------------------------------------------------[Fields]----------------------------------------------------------------------------//
   /**
    * -- GETTER --
    *  Provides the previously saved value of this operator directly from the source
    *
    * @return Retained value based on the value of it's source
    */
-  //------------------------------------------------------------------------[Fields]----------------------------------------------------------------------------//
   @Getter
   private volatile Type Retained;
   /**

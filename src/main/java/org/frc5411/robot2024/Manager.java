@@ -12,11 +12,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
+
+import edu.wpi.first.wpilibj.Notifier; 
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -29,18 +31,19 @@ import java.io.Serial;
  *
  * <p>Utility class handling the declaration and usage of subsystems at runtime.
  */
-public final class Manager implements Singleton<Manager> {
+public final class Manager implements Singleton<Manager>, Runnable {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   private static final long serialVersionUID = 2389697764281159320L;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   private static volatile Manager Instance;
+  private static volatile Notifier Callback;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
    */
   private Manager() {
-
+    Callback = new Notifier(Instance);
   } static {
 
   }
@@ -67,7 +70,19 @@ public final class Manager implements Singleton<Manager> {
           Subsystem.close();
         } catch(final IOException Ignored) {}
       });      
+      Callback.close();
       Instance = (null);
+    }
+  }
+
+  /**
+   * Performs queued robot-wide actions at a higher frequency than a subsystem instance; such as robot-wide 
+   * odometry or specific sensor updates which require higher update frequencies, but should not be contained
+   * within their own {@link Notifier} or separate {@link Thread} instance(s).
+   */
+  public synchronized void run() {
+    synchronized(Manager.class) {
+
     }
   }
 

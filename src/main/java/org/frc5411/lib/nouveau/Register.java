@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Registrable;
@@ -35,7 +35,7 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public interface Register<@NonNull Source, @NonNull Serial extends Struct<Report>> extends Runnable, Singleton<Register<Source,Serial>> {
+public interface Register<@NonNull Source, @NonNull Serial extends Report> extends Runnable, Singleton<Register<Source,Serial>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double STANDARD_FREQUENCY_HERTZ = (250d);
   Integer STARTING_THREAD_PRIORITY = (1);
@@ -101,11 +101,18 @@ public interface Register<@NonNull Source, @NonNull Serial extends Struct<Report
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
    * Provides the current state of this Thread, which can be serialized as a struct value and sent over the network.
-   * @return Current state, struct serializable.
+   * @return Current state report
    */
-  default Report getState() {
-    return Report.empty();
+  @SuppressWarnings("unchecked")
+  default Serial getReport() {
+    return (Serial) Report.empty();
   }
+
+  /**
+   * Provides the serializable instance of the most recent state provided by {@link #getState()} 
+   * @return Current state, as a struct instance
+   */
+  Struct<Serial> getStruct();
 
   /**
    * Provides the lock responsible for locking state-update operations and signal and timestamp update operations.

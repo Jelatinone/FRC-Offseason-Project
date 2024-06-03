@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.wpilibj.RobotBase;
@@ -92,11 +92,30 @@ enum Type {
  */
 enum Profile {
   
-  DEV_DRIVER,
+  DEV_DRIVER((null)),
 
-  DEV_OPERATOR,
+  DEV_OPERATOR((null)),
 
-  COMP_DRIVER,
+  COMP_DRIVER((null)),
 
-  COMP_OPERATOR,
+  COMP_OPERATOR((null));
+
+  private final org.frc5411.lib.utility.Profile<?,?> PROFILE;
+
+  /**
+   * Profile Constructor
+   * @param Profile Individual's profile with selected preferences and keybindings which act as settings for different robot functionality
+   */
+  Profile(final org.frc5411.lib.utility.Profile<?,?> Profile) {
+    PROFILE = Profile;
+  }
+
+  /**
+   * Provides the retained operator profile (with settings and keybindings) as settings
+   * @return Retained profile instance
+   */
+  public final org.frc5411.lib.utility.Profile<?,?> getProfile() {
+    return PROFILE;
+  }
+  
 }

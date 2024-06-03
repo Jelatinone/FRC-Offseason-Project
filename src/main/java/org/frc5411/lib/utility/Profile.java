@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.utility;
 //-----------------------------------------------------------------------[Libraries]----------------------------------------------------------------------------//
 import edu.wpi.first.util.sendable.Sendable;
@@ -49,7 +49,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
    * Profile Constructor.
    */
   public Profile() {
-    NAME = "";
+    NAME = ("");
     KEYBINDING_MAP = new HashMap<>();
     PREFERENCE_MAP = new HashMap<>();
   }
