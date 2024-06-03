@@ -18,7 +18,7 @@ package org.frc5411.robot2024;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 
-import edu.wpi.first.wpilibj.Notifier; 
+import edu.wpi.first.wpilibj.Notifier;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

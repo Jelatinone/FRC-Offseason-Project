@@ -41,7 +41,7 @@ public class PIDController extends edu.wpi.first.math.controller.PIDController i
    * @param Constants Container object of Relevant PID tuned constants: P(roptional), I(ntegral), D(erivative) 
    */
   public PIDController(final PIDConstants Constants) {
-    super(Constants.ProportionalGain, Constants.IntegralGain, Constants.DerivativeGain);
+    super(Constants.getProportional(), Constants.getIntegral(), Constants.getDerivative());
   }
 
   /**

@@ -16,13 +16,12 @@
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import java.io.Serial;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
-
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//

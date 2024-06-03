@@ -110,6 +110,7 @@ dependencies {
   implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0-alpha1'
   implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha1'
   implementation group: 'com.jcabi', name: 'jcabi-aspects', version: '0.25.1'
+  implementation group: 'org.checkerframework', name: 'checker-qual', version: '+'
   implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
 
   roborioDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.roborio)

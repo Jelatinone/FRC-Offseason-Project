@@ -14,14 +14,14 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.control.archetype;
-//-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-//------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
+//----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>Component</h1>
+ * <h1>PIDConstants</h1>
  * 
  * <p>
  * 
@@ -30,14 +30,14 @@ import lombok.experimental.FieldDefaults;
 
  @Builder(toBuilder = (true), setterPrefix = ("set"))
  @Getter
- @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
+ @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class PIDConstants {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  public final Double ProportionalGain;
+  Double Proportional;
 
-  public final Double IntegralGain;
+  Double Integral;
 
-  public final Double DerivativeGain;
+  Double Derivative;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Transforms the relevant PID Constants stored within this object into a 'tuned' controller object
