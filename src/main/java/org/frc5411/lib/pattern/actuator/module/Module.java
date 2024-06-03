@@ -45,7 +45,7 @@ import static org.frc5411.lib.utility.MathUtilities.*;
 public abstract class Module<@NonNull Placement extends Enum<?>> implements Actuator<SwerveModuleState, SwerveModulePosition> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Descriptor<Placement,?> DESCRIPTION;
-  protected ReportAutoLogged STATUS;
+  ReportAutoLogged STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.

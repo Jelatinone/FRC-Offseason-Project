@@ -15,17 +15,17 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.annotation;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.units.qual.UnknownUnits;
+import org.checkerframework.framework.qual.SubtypeOf;
+import org.checkerframework.framework.qual.TypeKind;
+import org.checkerframework.framework.qual.UpperBoundFor;
+
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.annotation.Documented;
-
-import org.checkerframework.framework.qual.SubtypeOf;
-import org.checkerframework.framework.qual.TypeKind;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.units.qual.UnknownUnits;
-import org.checkerframework.framework.qual.UpperBoundFor;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Unit</h1>
@@ -79,5 +79,7 @@ public @interface Unit {
     VOLUME,
     AREA,
     TIME,
+    VOLTAGE,
+    AMPERAGE,
   }  
 }

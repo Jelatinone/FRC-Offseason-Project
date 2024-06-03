@@ -16,9 +16,6 @@
 package org.frc5411.robot2024;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
-import org.frc5411.lib.schema.thread.CTREOdometryThread;
-import org.frc5411.lib.schema.thread.OdometryThread;
-import org.frc5411.lib.schema.thread.REVOdometryThread;
 
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -68,8 +65,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * Robot Constructor.
    */
   private Robot() {} static {
-    REVOdometryThread.getInstance();
-    CTREOdometryThread.getInstance();
     OpenCVHelp.forceLoadOpenCV();
     Logger.recordMetadata(("Robot-Type"), Constants.Robot.TYPE.name());
     Logger.recordMetadata(("Robot-Mode"), Constants.Robot.MODE.name());
@@ -117,7 +112,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Logger.registerURCL(URCL.startExternal());
     DriverStation.silenceJoystickConnectionWarning((true));
     PortForwarder.add((5800), ("photoemission.local"), (5800));
-    setThreadsEnabled((true));
     Manager.getInstance();
   }
 
@@ -157,16 +151,13 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void disabledInit() {
     CommandScheduler.getInstance().cancelAll();
-    setThreadsEnabled((false));
   }
 
   @Override
   public synchronized void disabledPeriodic() {}
 
   @Override
-  public synchronized void disabledExit() {
-    setThreadsEnabled((true));
-  } 
+  public synchronized void disabledExit() {} 
   //--------------------------------------------------------------------[Autonomous Scope]---------------------------------------------------------------------//
   
   @Override
@@ -250,23 +241,11 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * Mutates the current autonomous command to a different command, immediately ends any running commands if applicable.
    * @param Operation Command to be executed, can be in any state, will be run as {@link Command#asProxy() proxy}
    */
-  public synchronized void setAutonomousCommand(final Command Operation) {
+  public synchronized void set(final Command Operation) {
     if(Autonomous != null) {
       Autonomous.cancel();
     }
     Autonomous = Operation.asProxy();
-  }
-
-  /**
-   * Mutates the current state of the running {@link OdometryThread OdometryThreads} to control if they are enabled
-   * through {@link OdometryThread#set(Boolean)}.
-   * @param Enabled If this Thread is enabled or not
-   */
-  private static synchronized void setThreadsEnabled(final Boolean Enabled) {
-    synchronized(Instance) {
-      REVOdometryThread.getInstance().set(Enabled);
-      CTREOdometryThread.getInstance().set(Enabled);
-    }
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**

@@ -164,6 +164,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 } 
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
 /**
+ * <h1>State</h1>
+ * 
  * Represents the named states of operation of the drivebase, which have distinct behavior that differentiate it from other modes of control, i.e.
  * robot-oriented (Relative) control differs from field-oriented through the use of a gyroscope as the reference of rotation.
  */
@@ -223,6 +225,8 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
 }
 
 /**
+ * <h1>Named</h1>
+ * 
  * Represents the named, Pathplanner registrable, commands of this subsystem to run along specific points of an .auto PathPlanner file.
  * These are referred to externally in PathPlanner by their {@link #name() enum name}.
  */
@@ -243,7 +247,7 @@ enum Named implements Registrable {
     NAMED_COMMAND = Command;
     final var Instance = DrivebaseSubsystem.getInstance();
     if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
-      NAMED_COMMAND.addRequirements(DrivebaseSubsystem.getInstance());
+      NAMED_COMMAND.addRequirements(Instance);
     }
     register();
   }

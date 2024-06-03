@@ -15,7 +15,7 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.pattern;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.schema.thread.OdometryThread;
+import org.frc5411.lib.nouveau.Register;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.util.sendable.Sendable;
@@ -59,9 +59,9 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
   }
 
   /**
-   * Updates the Report of measurements to the most recent measurement data from hardware and {@link OdometryThread#register(Object) queue} sources
+   * Updates the Report of measurements to the most recent measurement data from hardware and {@link Register#register(Object) queue} sources
    * @param Report Loggable source of information, which is automatically logged with the {@link AutoLog} annotation
-   * @see OdometryThread
+   * @see Register
    */
   void update(final Report<Measured> Record);
 
@@ -122,9 +122,9 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
 
   /**
    * Provides a list of all the timestamps at which {@link #getMeasurements() measurements} have been Reported during the last {@link #update(Report)}
-   * cycle until now. This is most often sourced through a queue from a relevant {@link OdometryThread} updated asynchronously of the main-robot thread.
+   * cycle until now. This is most often sourced through a queue from a relevant {@link Register} updated asynchronously of the main-robot thread.
    * @return Latest list of measurement timestamps
-   * @see {@link OdometryThread#timestamp() timestamp queues}
+   * @see {@link Register#timestamp() timestamp queues}
    */
   default List<Double> getTimestamps() {
     return DoubleStream.of(getReport().getTimestamps()).boxed().toList();
@@ -142,10 +142,10 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
 
   /**
    * Provides a list of all measurement (more specifically the different between the positions, deltas, in most cases) that have occurred from the last
-   * {@link #update(Report)} cycle until now. This is most often sourced through a queue from a relevant {@link OdometryThread} updated asynchronously
+   * {@link #update(Report)} cycle until now. This is most often sourced through a queue from a relevant {@link Register} updated asynchronously
    *  of the main-robot thread.
    * @return Latest list of measurements
-   * @see {@link OdometryThread#register(Object) registering queues}
+   * @see {@link Register#register(Object) registering queues}
    */
   default List<Measured> getMeasurements() {
     return List.of(getReport().getMeasurements());

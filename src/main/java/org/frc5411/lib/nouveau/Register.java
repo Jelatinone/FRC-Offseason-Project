@@ -20,7 +20,6 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.utility.MathUtilities;
 
 import edu.wpi.first.util.DoubleCircularBuffer;
-import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -62,14 +61,14 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    * to ensure that it can be used repeatedly in conjunction with {@link #start()}.
    * @param Timeout Milliseconds to wait before joining the thread
    */
-  void stop(final Long Timeout);
+  void halt(final Long Timeout);
 
   /**
    * Waits for 'zero' milliseconds and attempts to join this thread into the calling thread. Should provide logic
    * to ensure that it can be used repeatedly in conjunction with {@link #start()}.
    */
-  default void stop() {
-    stop((0L));
+  default void halt() {
+    halt((0L));
   }
 
   /**
@@ -107,12 +106,6 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
   default Serial getReport() {
     return (Serial) Report.empty();
   }
-
-  /**
-   * Provides the serializable instance of the most recent state provided by {@link #getState()} 
-   * @return Current state, as a struct instance
-   */
-  Struct<Serial> getStruct();
 
   /**
    * Provides the lock responsible for locking state-update operations and signal and timestamp update operations.
