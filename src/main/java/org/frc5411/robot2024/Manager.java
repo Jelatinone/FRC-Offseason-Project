@@ -17,8 +17,13 @@ package org.frc5411.robot2024;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
+import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
+import org.littletonrobotics.junction.Logger;
+import org.photonvision.estimation.OpenCVHelp;
 
 import edu.wpi.first.wpilibj.Notifier;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -31,21 +36,25 @@ import java.io.Serial;
  *
  * <p>Utility class handling the declaration and usage of subsystems at runtime.
  */
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public final class Manager implements Singleton<Manager>, Runnable {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
-  private static final long serialVersionUID = 2389697764281159320L;
+  static long serialVersionUID = 2389697764281159320L;
+  final Notifier CALLBACK;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  private static volatile Manager Instance;
-  private static volatile Notifier Callback;
+  static volatile Manager Instance;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
    */
   private Manager() {
-    Callback = new Notifier(Instance);
+    CALLBACK = new Notifier(this);
+    CALLBACK.setName(("Robot-Manager"));
+    CALLBACK.startPeriodic((1/100D));
+    DrivebaseSubsystem.getInstance();
   } static {
-
+    OpenCVHelp.forceLoadOpenCV();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
 
@@ -70,7 +79,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
           Subsystem.close();
         } catch(final IOException Ignored) {}
       });      
-      Callback.close();
+      CALLBACK.close();
       Instance = (null);
     }
   }
@@ -82,12 +91,14 @@ public final class Manager implements Singleton<Manager>, Runnable {
    */
   public synchronized void run() {
     synchronized(Manager.class) {
-
+      Subsystem.getSubsystems().forEach((Subsystem) -> {
+        Logger.recordOutput((Subsystem.getName() + "/State"),Subsystem.getState().name());
+      });
     }
   }
 
   @Override
-  public Object clone() throws CloneNotSupportedException {
+  public Manager clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//

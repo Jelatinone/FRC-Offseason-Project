@@ -90,7 +90,7 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
   }
 
   @Override
-  public final Object clone() throws CloneNotSupportedException {
+  public final Subsystem<Defined,State> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
 

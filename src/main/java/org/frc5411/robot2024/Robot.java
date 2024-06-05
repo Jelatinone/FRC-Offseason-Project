@@ -23,8 +23,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -33,7 +37,6 @@ import org.littletonrobotics.junction.rlog.RLOGServer;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
-import org.photonvision.estimation.OpenCVHelp;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -50,22 +53,24 @@ import java.util.Map;
  *
  * @see Manager
  */
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
-  private static final long serialVersionUID = 9197360083967213848L;
-  private static final Map<String,Integer> COMMANDS = new HashMap<>();
+  static long serialVersionUID = 9197360083967213848L;
+  Map<String,Integer> COMMANDS;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  private static volatile Robot Instance;
-  private static volatile Command Autonomous;
-  private static volatile Boolean Message;
-  private static volatile Double Timestamp;
+  static volatile Robot Instance;
+  @NonFinal volatile Command Autonomous;
+  @NonFinal volatile Boolean Message;
+  @NonFinal volatile Double Timestamp;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Robot Constructor.
    */
-  private Robot() {} static {
-    OpenCVHelp.forceLoadOpenCV();
+  private Robot() {
+    COMMANDS = new HashMap<>();
+  } static {
     Logger.recordMetadata(("Robot-Type"), Constants.Robot.TYPE.name());
     Logger.recordMetadata(("Robot-Mode"), Constants.Robot.MODE.name());
     Logger.recordMetadata(("Runtime-Type"), getRuntimeType().name());
@@ -84,21 +89,22 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void robotInit() {
     switch(Constants.Robot.MODE) {
-      case ANONYMOUS:
-        break;
       case ACTUAL:
         Logger.addDataReceiver(new WPILOGWriter());
       case SIMULATED:
         Logger.addDataReceiver(new RLOGServer());
+        Logger.start();
         break;
       case REPLAY:
         setUseTiming((false));
         final var Path = LogFileUtil.findReplayLog();
         Logger.setReplaySource(new WPILOGReader(Path));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
+        Logger.start();
         break;
+      case ANONYMOUS:
+        break;      
     }
-    Logger.start();
     CommandScheduler.getInstance()
         .onCommandInitialize(
             (Command Operation) -> log(Operation, (true)));
@@ -108,6 +114,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     CommandScheduler.getInstance()
         .onCommandInterrupt(
             (Command Operation) -> log(Operation, (false)));
+    Shuffleboard.startRecording();        
     DataLogManager.start();
     Logger.registerURCL(URCL.startExternal());
     DriverStation.silenceJoystickConnectionWarning((true));
@@ -219,7 +226,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   }
 
   @Override
-  public Object clone() throws CloneNotSupportedException {
+  public Robot clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
 
@@ -230,10 +237,10 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    */
   private static void log(final Command Operation, final Boolean Running) {
     final var Name = Operation.getName();
-    final var Count = COMMANDS.getOrDefault(Running, (0)) + (Running? 1: -1);
-    COMMANDS.put(Name, Count);
+    final var Count = Instance.COMMANDS.getOrDefault(Running, (0)) + (Running? 1: -1);
+    Instance.COMMANDS.put(Name, Count);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]-[%s]"), Name, Integer.toHexString(Operation.hashCode())), Running);
-    Logger.recordOutput(String.format(("Commands/Unique/[%s]"),Name), Count > 0);
+    Logger.recordOutput(String.format(("Commands/Unique/[%s]"), Name), Count > 0);
   }
   //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
 
@@ -242,7 +249,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * @param Operation Command to be executed, can be in any state, will be run as {@link Command#asProxy() proxy}
    */
   public synchronized void set(final Command Operation) {
-    if(Autonomous != null) {
+    if(Autonomous != (null)) {
       Autonomous.cancel();
     }
     Autonomous = Operation.asProxy();

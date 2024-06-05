@@ -41,7 +41,7 @@ public final class Constants {
   }
   //----------------------------------------------------------------------[Internal]---------------------------------------------------------------------------//
   public static final class Robot {
-    private static final Type DESIRED_TYPE = Type.DEVBOT;
+    private static final Type DESIRED_TYPE = Type.SIMBOT;
     public static final Type TYPE = RobotBase.isReal()? DESIRED_TYPE: Type.SIMBOT;
     public static final Mode MODE = switch(TYPE) {
       case DEVBOT, COMPBOT 

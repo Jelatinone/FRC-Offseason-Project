@@ -19,14 +19,18 @@ import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.pattern.actuator.module.Module;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
+import org.frc5411.lib.utility.Operator;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.pathplanner.lib.auto.NamedCommands;
+
+import org.littletonrobotics.junction.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -61,8 +65,10 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Component<Rotation2d> GYROSCOPE;
   Collection<Module<?>> MODULES;
+  Operator<Double> DISCRETE_OPERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
+  static volatile Double Time;
   static volatile State Mode;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -71,9 +77,13 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
     MODULES = List.of(
-
+      
     );
     GYROSCOPE = (null);
+    DISCRETE_OPERATOR = new Operator<>(
+      Timer::getFPGATimestamp, 
+      (Retained, Source) -> Source - Retained, 
+      Timer.getFPGATimestamp());
     MODULES.forEach((Module) -> 
       addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
     addChild(("Gyroscope"), GYROSCOPE);
@@ -116,7 +126,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   @Override
   public synchronized void periodic() {
     synchronized(Instance) {
-      
+      Time = DISCRETE_OPERATOR.get();
+      Logger.recordOutput(("DiscreteTime"), Time);
     }
   }
 
@@ -223,7 +234,6 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
     return FUNCTION.apply(Translation, Rotation);
   }
 }
-
 /**
  * <h1>Named</h1>
  * 

@@ -67,7 +67,7 @@ public interface Singleton<@NonNull Type> extends Serializable, Closeable, Clone
    * @return                            Nothing, an error is always thrown
    * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
    */
-  default Object clone() throws CloneNotSupportedException {
+  default Type clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
 }

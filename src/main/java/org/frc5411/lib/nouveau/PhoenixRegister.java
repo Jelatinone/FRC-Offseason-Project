@@ -96,7 +96,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   }
 
   @Override
-  public final Object clone() throws CloneNotSupportedException {
+  public final PhoenixRegister clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
   }
 
@@ -174,18 +174,18 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
  * 
  */
 final class Serializable extends Report {
-  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Constants]---------------------------------------------------------------------------//
   public static final SerializableStruct STRUCT = new SerializableStruct(); 
-  //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
+  //----------------------------------------------------------------------[Fields]-----------------------------------------------------------------------------//
   protected volatile int Failed = Integer.MIN_VALUE;
-  //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
+  //---------------------------------------------------------------------[Internal]----------------------------------------------------------------------------//
   /**
    * <h1>SerializableStruct</h1>
    * 
    * <p>Describes a struct serializable instance of a {@link Serializable} instance, which can be sent over the network as a struct.
    */
   static final class SerializableStruct implements Struct<Serializable> {
-    //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
+    //---------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
     @Override
     public Serializable unpack(final ByteBuffer Buffer) {
       final var State = new Serializable();
@@ -207,7 +207,7 @@ final class Serializable extends Report {
       Buffer.putDouble(Value.Timestamp);
       Buffer.putDouble((byte) (Value.Running? (1): (0)));
     }
-    //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+    //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
     @Override
     public Class<Serializable> getTypeClass() {
       return Serializable.class;
@@ -215,11 +215,11 @@ final class Serializable extends Report {
 
     @Override
     public String getTypeString() {
-      return "STRUCT:PhoenixRegister.Serializable"; // TODO
+      return "STRUCT:Serializable"; // TODO
     }
 
     @Override
-    public int getSize() {
+    public int getSize() { 
       return kSizeBool + kSizeInt32 * (3) + kSizeDouble * (2);
     }
 
