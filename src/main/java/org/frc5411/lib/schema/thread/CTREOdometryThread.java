@@ -148,7 +148,7 @@ public final class CTREOdometryThread extends Thread implements OdometryThread<S
   }
 
   @Override
-  public Object clone() throws CloneNotSupportedException {
+  public CTREOdometryThread clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(("Singleton Instances Cannot Be Cloned"));
   }
 

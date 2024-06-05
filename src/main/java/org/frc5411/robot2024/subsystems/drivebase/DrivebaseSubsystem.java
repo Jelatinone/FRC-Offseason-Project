@@ -25,12 +25,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.pathplanner.lib.auto.NamedCommands;
-
-import org.littletonrobotics.junction.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -56,6 +55,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  * 
  */
+@SuppressWarnings("unused")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
@@ -68,7 +68,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   Operator<Double> DISCRETE_OPERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
-  static volatile Double Time;
   static volatile State Mode;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -88,7 +87,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
     addChild(("Gyroscope"), GYROSCOPE);
   } static {
-    SUBSYSTEM_LOCK = new ReentrantReadWriteLock(Boolean.TRUE);
+    SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
     Mode = State.RELATIVE;
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
@@ -125,10 +124,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   @Override
   public synchronized void periodic() {
-    synchronized(Instance) {
-      Time = DISCRETE_OPERATOR.get();
-      Logger.recordOutput(("DiscreteTime"), Time);
-    }
+    synchronized(Instance) {}
   }
 
   @Override

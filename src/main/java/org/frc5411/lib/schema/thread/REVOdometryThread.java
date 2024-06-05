@@ -137,7 +137,7 @@ public final class REVOdometryThread implements OdometryThread<Supplier<Number>>
   }
 
   @Override
-  public final Object clone() throws CloneNotSupportedException {
+  public final REVOdometryThread clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(("Singleton Instances Cannot Be Cloned"));
   }
 

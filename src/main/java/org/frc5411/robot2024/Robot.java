@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import lombok.AccessLevel;
@@ -33,7 +34,7 @@ import lombok.experimental.NonFinal;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.rlog.RLOGServer;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
@@ -89,21 +90,22 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void robotInit() {
     switch(Constants.Robot.MODE) {
+      case ANONYMOUS:
+        break;          
       case ACTUAL:
         Logger.addDataReceiver(new WPILOGWriter());
       case SIMULATED:
-        Logger.addDataReceiver(new RLOGServer());
-        Logger.start();
+        Logger.addDataReceiver(new NT4Publisher());
         break;
       case REPLAY:
         setUseTiming((false));
         final var Path = LogFileUtil.findReplayLog();
         Logger.setReplaySource(new WPILOGReader(Path));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
-        Logger.start();
         break;
-      case ANONYMOUS:
-        break;      
+    }
+    if(!Constants.Robot.MODE.equals(Mode.ANONYMOUS)) {
+      Logger.start();
     }
     CommandScheduler.getInstance()
         .onCommandInitialize(
@@ -113,13 +115,13 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
             (Command Operation) -> log(Operation, (false)));
     CommandScheduler.getInstance()
         .onCommandInterrupt(
-            (Command Operation) -> log(Operation, (false)));
-    Shuffleboard.startRecording();        
+            (Command Operation) -> log(Operation, (false)));     
     DataLogManager.start();
     Logger.registerURCL(URCL.startExternal());
-    DriverStation.silenceJoystickConnectionWarning((true));
-    PortForwarder.add((5800), ("photoemission.local"), (5800));
     Manager.getInstance();
+    Shuffleboard.startRecording();
+    DriverStation.silenceJoystickConnectionWarning((true));
+    PortForwarder.add((5800), ("photonvision.local"), (5800));
   }
 
   @Override
@@ -127,14 +129,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     synchronized(Instance) {
       Threads.setCurrentThreadPriority((true), (99));
       CommandScheduler.getInstance().run();
-      if(isReal()) {
-        final var CAN = RobotController.getCANStatus();
-        Logger.recordOutput(("CAN/Bus-Off-Count"), CAN.busOffCount);
-        Logger.recordOutput(("CAN/Percent-Utilization"), CAN.percentBusUtilization);
-        Logger.recordOutput(("CAN/Receive-Error-Count"), CAN.receiveErrorCount);
-        Logger.recordOutput(("CAN/Transmit-Error-Count"), CAN.transmitErrorCount);
-        Logger.recordOutput(("CAN/TX-Count"), CAN.txFullCount);
-      }
+      SmartDashboard.updateValues();
       if (Autonomous != (null)) {
         if (!Autonomous.isScheduled() && !Message) {
           System.out.printf(
@@ -153,7 +148,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
 
   @Override
   public synchronized void simulationPeriodic() {}
-
   //---------------------------------------------------------------------[Disabled Scope]----------------------------------------------------------------------//
   @Override
   public synchronized void disabledInit() {
