@@ -149,7 +149,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    */
   public Double getTranslationalVelocity() {
     return Units.rotationsPerMinuteToRadiansPerSecond(
-      ((Report) getReport()).getTranslationalVelocity());
+      getReport().getTranslationalVelocity());
   }
 
   /**
@@ -158,22 +158,22 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    */
   public Double getRotationalVelocity() {
     return Units.rotationsPerMinuteToRadiansPerSecond(
-      ((Report) getReport()).getRotationalVelocity());
+      getReport().getRotationalVelocity());
   }
 
   /**
    * Provides the current position (angular displacement) of the module's rotational axis with an offset, interpreted from the current measurement of the system recorded
-   * within the {@link #update(org.frc5411.lib.mechanism.Report)}
+   * within the {@link #update(org.frc5411.lib.pattern.Report)}
    * @return Position of the rotational controller's axis of rotation in radians as a Rotation2d Object
    */
   public Optional<Rotation2d> getRotationalPosition() {
     final var Result = getMeasurement();
-    return Optional.ofNullable(Result.isPresent()? Result.get().angle.minus(getRotationalOffset()): (null));
+    return Result.map(swerveModulePosition -> swerveModulePosition.angle.minus(getRotationalOffset()));
   }
 
   /**
    * Provides the current position (translational displacement) of the module's translational axis with an offset, interpreted from the current measurement of the system
-   * recorded within the {@link #update(org.frc5411.lib.mechanism.Report)}
+   * recorded within the {@link #update(org.frc5411.lib.pattern.Report)}
    * @return Position of the translational controller's axis of rotation in meters as a Double Object
    */
   public Optional<Double> getTranslationPosition() {

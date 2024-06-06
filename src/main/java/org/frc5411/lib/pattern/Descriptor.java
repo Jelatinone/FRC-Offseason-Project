@@ -41,20 +41,22 @@ public abstract class Descriptor<@NonNull Described extends Component<?>> implem
    * @return Copy of this object, but not the same instance
    */
   public Descriptor<Described> clone() {
-    return new Descriptor<Described>() {};
+    return new Descriptor<>() {
+    };
   }
 
   /**
    * Shorthand for providing an empty instance of a report, with no relevant data stored inside.
-   * @param <Measured> Type of the empty report, does not need to be specified in most cases
+   * @param <Described> Type of the empty report, does not need to be specified in most cases
    * @return Empty report object
    */
-  public static final <@NonNull Described extends Component<?>> Descriptor<Described> empty() {
-    return new Descriptor<Described>() {};
+  public static <@NonNull Described extends Component<?>> Descriptor<Described> empty() {
+    return new Descriptor<>() {
+    };
   }
 
   /**
-   * Completes this object and turns it into a the Described type by passing it into the constructor of the specified Described type, returns null by default to
+   * Completes this object and turns it into a Described type by passing it into the constructor of the specified Described type, returns null by default to
    * support constructors that require more arguments than a Descriptor or abstract types.
    * @return Instance of a Described type
    */

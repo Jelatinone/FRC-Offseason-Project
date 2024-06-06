@@ -52,7 +52,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * Generates this Component instance from a relevant descriptor type. Descriptor contains the relevant mechanical constant information to 
    * specify a unique component instance.
    * @param Descriptor Container of a mechanical system's relevant mechanical constants.
-   * @return
+   * @return Component created from descriptor of this type
    */
   static <@NonNull Measured extends StructSerializable> Component<Measured> from(final Descriptor<Component<Measured>> Descriptor) {
     return Descriptor.complete();
@@ -60,7 +60,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
 
   /**
    * Updates the Report of measurements to the most recent measurement data from hardware and {@link Register#register(Object) queue} sources
-   * @param Report Loggable source of information, which is automatically logged with the {@link AutoLog} annotation
+   * @param Record Loggable source of information, which is automatically logged with the {@link AutoLog} annotation
    * @see Register
    */
   void update(final Report<Measured> Record);
@@ -71,7 +71,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * @return                            Nothing, an error is always thrown
    * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
    */
-  public default Component<Measured> clone() throws CloneNotSupportedException {
+  default Component<Measured> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
   }
 
@@ -124,7 +124,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * Provides a list of all the timestamps at which {@link #getMeasurements() measurements} have been Reported during the last {@link #update(Report)}
    * cycle until now. This is most often sourced through a queue from a relevant {@link Register} updated asynchronously of the main-robot thread.
    * @return Latest list of measurement timestamps
-   * @see {@link Register#timestamp() timestamp queues}
+   * @see Register#timestamp() timestamp queues
    */
   default List<Double> getTimestamps() {
     return DoubleStream.of(getReport().getTimestamps()).boxed().toList();
@@ -145,7 +145,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * {@link #update(Report)} cycle until now. This is most often sourced through a queue from a relevant {@link Register} updated asynchronously
    *  of the main-robot thread.
    * @return Latest list of measurements
-   * @see {@link Register#register(Object) registering queues}
+   * @see Register#register(Object) registering queues
    */
   default List<Measured> getMeasurements() {
     return List.of(getReport().getMeasurements());

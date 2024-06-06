@@ -56,7 +56,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
 
   /**
    * Profile Constructor.
-   * @param Name Referenceable name to display this profile as
+   * @param Name Referencable name to display this profile as
    */
   public Profile(final String Name) {
     NAME = Name;
@@ -174,9 +174,9 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
 
   /**
    * Provides optionally a reference to the keybinding value, if present, of a preference within the keybinding map, null if not present
-   * @param Keybinding Key to pull the value from as an Trigger
+   * @param Keybinding Key to pull the value from as a Trigger
    * @return {@link Optional} reference to a keybinding, if it exists or else it is {@link Optional#empty()}
-   * @see {@link Optional}
+   * @see Optional
    */
   public Optional<Trigger> getKeybinding(final Keybindings Keybinding) {
     return Optional.ofNullable(KEYBINDING_MAP.get(Keybinding));

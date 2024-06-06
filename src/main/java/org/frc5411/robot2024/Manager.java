@@ -94,9 +94,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
    */
   public synchronized void run() {
     synchronized(Manager.class) {
-      Subsystem.getSubsystems().forEach((Subsystem) -> {
-        Logger.recordOutput((Subsystem.getName() + "/State"),Subsystem.getState().name());
-      });
+      Subsystem.getSubsystems().forEach((Subsystem) ->
+        Logger.recordOutput((Subsystem.getName() + "/State"),Subsystem.getState().name()));
     }
   }
 

@@ -44,7 +44,7 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
   /**
    * Subsystem Constructor.
    * @param Lock Lock which ensures a blocking operation during {@link #periodic()} if a previous call has not yet ended.
-   * @param Name Referenceable name by which to refer the subsystem, this is an entirely objective value to programmer preferences
+   * @param Name Referencable name by which to refer the subsystem, this is an entirely objective value to programmer preferences
    */
   protected Subsystem(final ReadWriteLock Lock, final String Name) {
     super(Objects.requireNonNull(Name));

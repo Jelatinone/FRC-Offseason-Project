@@ -43,7 +43,7 @@ public abstract class Report<@NonNull Measured extends StructSerializable> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile boolean Connected = (false);
 
-  @NonNull volatile double[] Timestamps = {};
+  volatile double[] Timestamps = {};
 
   @NonNull volatile Measured[] Measurements;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
@@ -52,7 +52,7 @@ public abstract class Report<@NonNull Measured extends StructSerializable> {
    * @param <Measured> Type of the empty report, does not need to be specified in most cases
    * @return Empty report object
    */
-  public static final <@NonNull Measured extends StructSerializable> Report<Measured> empty() {
-    return new Report<Measured>() {};
+  public static <@NonNull Measured extends StructSerializable> Report<Measured> empty() {
+    return new Report<>() {};
   }
 }

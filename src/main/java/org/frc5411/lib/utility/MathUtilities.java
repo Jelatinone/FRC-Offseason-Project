@@ -34,6 +34,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington (@Jelatinone) 
  */
 @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
+@SuppressWarnings("unused")
 public class MathUtilities {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679D;
@@ -61,14 +62,14 @@ public class MathUtilities {
   static double[] from(final DoubleCircularBuffer Source) {
     final var Size = Source.size();
     final var Array = new double[Size];
-    for(Integer Index = (0); Index < Size; Index++) {
+    for(int Index = (0); Index < Size; Index++) {
       Array[Index] = Source.get(Index);
     }
     return Array;
   }
 
   /**
-   * Transforms a circular array into an buffer of equivalent length and elements in the same order, but is not destructive to the original array. 
+   * Transforms a circular array into a buffer of equivalent length and elements in the same order, but is not destructive to the original array.
    * i.e. the original elements of the array are retained.
    * @param Source Array source to accept elements from into the new buffer
    * @return Buffer with the same elements, in the same order

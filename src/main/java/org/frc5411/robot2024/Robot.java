@@ -232,7 +232,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    */
   private static void log(final Command Operation, final Boolean Running) {
     final var Name = Operation.getName();
-    final var Count = Instance.COMMANDS.getOrDefault(Running, (0)) + (Running? 1: -1);
+    final var Count = Instance.COMMANDS.getOrDefault(Name, (0)) + (Running? 1: -1);
     Instance.COMMANDS.put(Name, Count);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]-[%s]"), Name, Integer.toHexString(Operation.hashCode())), Running);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]"), Name), Count > 0);

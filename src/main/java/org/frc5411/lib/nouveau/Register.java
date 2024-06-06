@@ -15,18 +15,15 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.schema.Registrable;
-import org.frc5411.lib.schema.Singleton;
-import org.frc5411.lib.utility.MathUtilities;
-
 import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import lombok.NonNull;
+import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.utility.MathUtilities;
 
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
-
-import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Register</h1>
@@ -42,7 +39,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * <p>Runs the main-loop of the underlying thread, updating {@link Queue Queues} mapped to signals that have been 
-   * {@link #register(Registrable) registered}, and updating {@link Queue Queues} from the current system {@link Timer#getFPGATimeStamp timestamp}.
+   * {@link #register(Object) registered}, and updating {@link Queue Queues} from the current system {@link Timer#getFPGATimestamp() timestamp}.
    * Additionally, synchronization operations should occur to ensure multi-threading safety through the use of {@link #getSignalLock()  signal locks}.
    * 
    * <p>Should only be called once via {@link #start()}, as the method contains an internal while-loop that continues as long as the Reporter is alive, and
@@ -53,7 +50,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
   /**
    * <p>Makes a call to {@link #run()} and begins updating values appropriately. Ideally, calls to this method are only made once, but the method should contain
    * logic to prevent multiple calls to {@link #run()} concurrently. 
-   * <p>However, this method should be capable of being used repeatedly with multiple calls to {@link #start()} and {@link #stop()}
+   * <p>However, this method should be capable of being used repeatedly with multiple calls to start and {@link #halt()}
    */
   void start();
 
@@ -77,7 +74,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    * Queue, where the most recently provided element is the last element in the Queue. 
    * 
    * <p> Note that this is done concurrently with updating {@link #timestamp()} Queues, so each update-cycle of {@link #run()} creates a pair of
-   * signal-values and timestamps that can be used to better interpolate values as opposed to a standard 20 millisecond cycle provided by 
+   * signal-values and timestamps that can be used to better interpolate values as opposed to a standard 20-millisecond cycle provided by
    * {@link SubsystemBase#periodic()}, which provides lower accuracy.
    * 
    * @param Signal Supplier of Numerical values which can be parsed as a double.
@@ -88,10 +85,10 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
 
   /**
    * Creates a new Queue of standard size, and adds it to the collection of timestamp Queues. Each timestamp Queue contains the timestamp from a 
-   * {@link Timer#getFPGATimeStamp timestamp} of a {@link #run() run-cycle}, where the last element in the Queue is the most recent timestamp.
+   * {@link Timer#getFPGATimestamp() timestamp} of a {@link #run() run-cycle}, where the last element in the Queue is the most recent timestamp.
    * 
    * <p> Note that this is done concurrently with updating {@link #timestamp()} Queues, so each update-cycle of {@link #run()} creates a pair of
-   * signal-values and timestamps that can be used to better interpolate values as opposed to a standard 20 millisecond cycle provided by 
+   * signal-values and timestamps that can be used to better interpolate values as opposed to a standard 20-millisecond cycle provided by
    * {@link SubsystemBase#periodic()}, which provides lower accuracy.
    * 
    * @return Queue, should be retained and used to collect values periodically. 

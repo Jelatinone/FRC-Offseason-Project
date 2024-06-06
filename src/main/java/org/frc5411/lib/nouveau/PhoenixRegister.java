@@ -15,6 +15,7 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.frc5411.lib.utility.Operator;
 
 import edu.wpi.first.wpilibj.Timer;
@@ -160,7 +161,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
 
   /**
    * Adds a Request-Client pair to be managed by the register; client endpoints receive the latest state of the request via the register on faster
-   * timing than the robot-main thread's standard 20 millisecond cycle provided by{@link SubsystemBase#periodic()}, providing better control accuracy.
+   * timing than the robot-main thread's standard 20-millisecond cycle provided by{@link SubsystemBase#periodic()}, providing better control accuracy.
    * 
    * <p> Note that management of ControlRequests is done concurrently with updating {@link #timestamp() timestamp} and {@link #register(StatusSignal) signal} Queues, so if used
    * in tandem, Request-Client pairs also receive the most 'up-to-date' refreshed signal state as feedback.
@@ -182,7 +183,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
 
   /**
    * Refreshes a Request-Client pair to be managed by the register; client endpoints receive the latest state of the request via the register on faster
-   * timing than the robot-main thread's standard 20 millisecond cycle provided by{@link SubsystemBase#periodic()}, providing better control accuracy.
+   * timing than the robot-main thread's standard 20-millisecond cycle provided by{@link SubsystemBase#periodic()}, providing better control accuracy.
    * 
    * <p>Refreshes the current control request with the next control request, returns immediately if the control request does not exist within the
    * current map of Request-Client pairs or is equivalent to the previous request.
@@ -210,7 +211,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
       QUEUE_LOCK.writeLock().lock();
       TIMESTAMPS.add(Buffer);
     } finally {
-      QUEUE_LOCK.writeLock().unlock();;
+      QUEUE_LOCK.writeLock().unlock();
     }
     return Buffer;
   }
@@ -262,8 +263,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
             }
             try {
               REQUEST_LOCK.readLock().lock();
-              CLIENTS.entrySet().forEach((Entry) -> 
-                Entry.getValue().accept(REQUESTS.get(Entry.getKey())));
+              CLIENTS.forEach((key, value) -> value.accept(REQUESTS.get(key)));
             } finally {
               REQUEST_LOCK.readLock().unlock();
             }
@@ -302,7 +302,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   }
 
   @Override
-  public Article getReport() {
+  public Report getReport() {
     try {
       SIGNAL_LOCK.readLock().lock();
       return State;
@@ -317,7 +317,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
  * 
  * <p>Struct serializable instance of a report
  * 
- * @see SerializableStruct
+ * @see Report
  * 
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)

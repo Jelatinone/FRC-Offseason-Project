@@ -39,7 +39,6 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   private static final Vector<Object,N0> EMPTY = new Vector<>(Nat.N0());
   private final @NotNull @Array Type[] VECTOR;
-  private final @NotNull Nat<Elements> ELEMENTS;
 
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   /**
@@ -52,7 +51,7 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
   @SuppressWarnings("unchecked")
   public Vector(final Nat<Elements> Elements, final Type... Vector) throws BoundaryException {
     try {
-      assert Objects.requireNonNull(Elements.getNum()) == Objects.requireNonNull(Vector).length;
+      assert Elements.getNum() == Objects.requireNonNull(Vector).length;
     } catch(final AssertionError Ignored) {
       throw new BoundaryException(
         String.format(
@@ -61,7 +60,6 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
           Vector.length));
     }
     VECTOR = Objects.requireNonNull(Vector);
-    ELEMENTS = Objects.requireNonNull(Elements);
   }
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**

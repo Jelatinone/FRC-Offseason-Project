@@ -146,7 +146,7 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
       QUEUE_LOCK.writeLock().lock();
       TIMESTAMPS.add(Buffer);
     } finally {
-      QUEUE_LOCK.writeLock().unlock();;
+      QUEUE_LOCK.writeLock().unlock();
     }
     return Buffer;
   }

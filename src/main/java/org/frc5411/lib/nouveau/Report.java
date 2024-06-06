@@ -45,7 +45,7 @@ public class Report {
    * Shorthand for providing an empty instance of a report, with no relevant data stored inside.
    * @return Empty report object
    */
-  public static final Report empty() {
+  public static Report empty() {
     return new Report() {};
   }
 }

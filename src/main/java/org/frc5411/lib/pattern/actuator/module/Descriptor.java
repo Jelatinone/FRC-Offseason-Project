@@ -59,21 +59,21 @@ public class Descriptor<@NonNull Placement extends Enum<?>, @NonNull Actuator ex
 
   @Override
   public Descriptor<Placement,Actuator> clone() {
-    return new Descriptor<Placement,Actuator>(
-      TranslationalReduction, 
-      TranslationalOffset, 
-      TranslationalVelocity, 
-      TranslationalAcceleration, 
-      TranslationalInverted, 
-      TranslationalController, 
-      TranslationalFeedback, 
-      RotationalReduction, 
-      RotationalOffset, 
-      RotationalVelocity, 
-      RotationalInverted, 
-      RotationalController, 
-      RotationalFeedback, 
-      Radius, 
+    return new Descriptor<>(
+      TranslationalReduction,
+      TranslationalOffset,
+      TranslationalVelocity,
+      TranslationalAcceleration,
+      TranslationalInverted,
+      TranslationalController,
+      TranslationalFeedback,
+      RotationalReduction,
+      RotationalOffset,
+      RotationalVelocity,
+      RotationalInverted,
+      RotationalController,
+      RotationalFeedback,
+      Radius,
       Placement
     );
   }
