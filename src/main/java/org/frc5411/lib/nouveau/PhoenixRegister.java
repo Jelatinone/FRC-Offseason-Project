@@ -88,8 +88,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
     REQUESTS = new HashMap<>();
     DISCRETE_OPERATOR = new Operator<>(
       Timer::getFPGATimestamp, 
-      (Previous, Current) -> Current - Previous, 
-      Timer.getFPGATimestamp());
+      (Previous, Current) -> Current - Previous);
     REQUEST_LOCK = new ReentrantReadWriteLock((true));
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));  
@@ -146,7 +145,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   }
 
   @Override
-  public Queue<Double> register(final @NonNull StatusSignal<?> Signal) {
+  public synchronized Queue<Double> register(final @NonNull StatusSignal<?> Signal) {
     final var Buffer = new ArrayDeque<Double>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
@@ -170,7 +169,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
    * @param Request Specified control demand to the end-point (device)
    * @param Client  End-point consumer of the most-recent control request
    */
-  public void register(final ParentDevice Device, final ControlRequest Request, final Consumer<ControlRequest> Client) {
+  public synchronized void register(final ParentDevice Device, final ControlRequest Request, final Consumer<ControlRequest> Client) {
     final var Hash = Device.getDeviceHash();
     try {
       REQUEST_LOCK.writeLock().unlock();
@@ -191,7 +190,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
    * @param Device  End-point of the control request, essentially what is being controlled via a request
    * @param Request Specified control demand to the end-point (device)
    */
-  public void update(final ParentDevice Device, final ControlRequest Request) {
+  public synchronized void update(final ParentDevice Device, final ControlRequest Request) {
     final var Hash = Device.getDeviceHash();
     if(REQUESTS.get(Hash) == Request) {
       return;
@@ -205,7 +204,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   }
 
   @Override
-  public Queue<Double> timestamp() {
+  public synchronized Queue<Double> timestamp() {
     final var Buffer = new ArrayDeque<Double>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();

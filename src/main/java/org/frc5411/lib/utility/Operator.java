@@ -81,7 +81,7 @@ public class Operator<Type extends Number> implements Supplier<Type>, Consumer<T
    * shorthand for {@link #accept(Type)} where {@link #getInitial()} is the argument
    */
   public synchronized void reset() {
-    synchronized(Retained) {
+    synchronized(this) {
       Retained = INITIAL;
     }
   }
@@ -90,7 +90,7 @@ public class Operator<Type extends Number> implements Supplier<Type>, Consumer<T
    * @param Retained Saved value from source, being directly modified
    */
   public synchronized void accept(final Type Retained) {
-    synchronized(this.Retained) {
+    synchronized(this) {
       this.Retained = Retained;
     }
   }
@@ -110,7 +110,7 @@ public class Operator<Type extends Number> implements Supplier<Type>, Consumer<T
    * @return Operated value based on the evaluation of it's expression
    */
   public synchronized Type get() {
-    synchronized(Retained) {
+    synchronized(this) {
       return (Operated = OPERATOR.apply(Retained, Retained = SOURCE.get()));
     }
   }

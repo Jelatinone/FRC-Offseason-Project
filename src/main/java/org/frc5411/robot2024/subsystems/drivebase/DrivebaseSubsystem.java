@@ -81,8 +81,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     GYROSCOPE = (null);
     DISCRETE_OPERATOR = new Operator<>(
       Timer::getFPGATimestamp, 
-      (Previous, Current) -> Current - Previous, 
-      Timer.getFPGATimestamp());
+      (Previous, Current) -> Current - Previous);
     MODULES.forEach((Module) -> 
       addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
     addChild(("Gyroscope"), GYROSCOPE);

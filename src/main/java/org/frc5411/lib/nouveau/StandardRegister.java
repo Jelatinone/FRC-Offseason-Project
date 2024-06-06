@@ -75,8 +75,7 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
     SIGNALS = new ArrayList<>();
     DISCRETE_OPERATOR = new Operator<>(
       Timer::getFPGATimestamp, 
-      (Previous, Current) -> Current - Previous, 
-      Timer.getFPGATimestamp());
+      (Previous, Current) -> Current - Previous);
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
     CALLBACK.setName(getClass().getCanonicalName());
@@ -128,7 +127,7 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
   }
 
   @Override
-  public Queue<Double> register(final @NonNull Supplier<Double> Signal) {
+  public synchronized Queue<Double> register(final @NonNull Supplier<Double> Signal) {
     final var Buffer = new ArrayDeque<Double>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
@@ -141,7 +140,7 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
   }
 
   @Override
-  public Queue<Double> timestamp() {
+  public synchronized Queue<Double> timestamp() {
     final var Buffer = new ArrayDeque<Double>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
