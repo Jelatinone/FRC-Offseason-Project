@@ -25,7 +25,6 @@ import org.littletonrobotics.junction.AutoLog;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
@@ -35,9 +34,8 @@ import lombok.experimental.FieldDefaults;
  * 
  * @author Cody Washington
  */
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
-@Setter(value = AccessLevel.PROTECTED)
 @AutoLog
 public class Report extends org.frc5411.lib.pattern.actuator.Report<SwerveModuleState,SwerveModulePosition> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//

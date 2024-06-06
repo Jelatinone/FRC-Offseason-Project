@@ -15,37 +15,34 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import edu.wpi.first.util.struct.Struct;
+import org.frc5411.lib.utility.Operator;
+
 import edu.wpi.first.wpilibj.Timer;
 
-import java.util.concurrent.atomic.AtomicReference;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.hardware.ParentDevice;
 
+import org.littletonrobotics.junction.AutoLog;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 import java.util.ArrayDeque;
-
-import org.frc5411.lib.utility.Operator;
-
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
-
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -57,7 +54,7 @@ import lombok.experimental.NonFinal;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,Serializable> {
+public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,Article> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 55742622883094958L;
@@ -78,13 +75,13 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   Operator<Double> DISCRETE_OPERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   @NonFinal static volatile PhoenixRegister Instance = (null);
-  @NonFinal static volatile Serializable State;
+  @NonFinal static volatile Article State;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Phoenix Register Constructor.
    */
   private PhoenixRegister() {
-    State = new Serializable();
+    State = new Article();
     TIMESTAMPS = new ArrayList<>();
     RESPONSES = new ArrayList<>();
     SIGNALS = new ArrayList<>();
@@ -233,11 +230,12 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
             try {
               SIGNAL_LOCK.writeLock().lock();
               final var Providers = SIGNALS.iterator();
-              final var Timestamp = new AtomicReference<>(Timer.getFPGATimestamp());
-              Timestamp.accumulateAndGet(SIGNALS.stream().mapToDouble(
-                (Signal) -> 
-                  Signal.getTimestamp().getLatency()).average().getAsDouble(), 
-                (Retained, Next) -> Retained - Next);
+              final Double Timestamp = Timer.getFPGATimestamp() - SIGNALS
+                .stream()
+                .mapToDouble((Signal) -> 
+                  Signal.getTimestamp().getLatency())
+                .average()
+                .getAsDouble();
               RESPONSES.forEach((final Queue<Double> Queue) -> {
                 synchronized(Queue) {
                   Queue.offer(Providers.next().getValueAsDouble());
@@ -245,15 +243,15 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
               });
               TIMESTAMPS.forEach((final Queue<Double> Queue) ->  {
                 synchronized(Queue) {
-                  Queue.offer(Timestamp.get());
+                  Queue.offer(Timestamp);
                 }
               });
-              State.setPriority(getPriority()); 
-              State.setStatus(Status.value);
-              State.setPeriod(DISCRETE_OPERATOR.get()); 
-              State.setTimestamp(DISCRETE_OPERATOR.getRetained());
-              State.setSamples(SIGNALS.size()); 
-              State.setFailed(Status.isError()? 1: 0);
+              State.Priority = getPriority(); 
+              State.Status = Status.value;
+              State.Period = DISCRETE_OPERATOR.get(); 
+              State.Timestamp = DISCRETE_OPERATOR.getRetained();
+              State.Registered = SIGNALS.size(); 
+              State.Failed = Status.isError()? 1: 0;
             } finally {
               SIGNAL_LOCK.writeLock().unlock();
             }
@@ -302,7 +300,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   }
 
   @Override
-  public Serializable getReport() {
+  public Article getReport() {
     try {
       SIGNAL_LOCK.readLock().lock();
       return State;
@@ -320,63 +318,11 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
  * @see SerializableStruct
  * 
  */
-@Setter(value = AccessLevel.PROTECTED)
-final class Serializable extends Report {
-  //---------------------------------------------------------------------[Constants]---------------------------------------------------------------------------//
-  public static final SerializableStruct STRUCT = new SerializableStruct(); 
+@FieldDefaults(level = AccessLevel.PROTECTED)
+@AutoLog
+@Getter
+class Article extends Report {
   //----------------------------------------------------------------------[Fields]-----------------------------------------------------------------------------//
-  private volatile int Failed = (0);
-  private volatile int Status = (0);
-  //---------------------------------------------------------------------[Internal]----------------------------------------------------------------------------//
-  /**
-   * <h1>SerializableStruct</h1>
-   * 
-   * <p>Describes a struct serializable instance of a {@link Serializable} instance, which can be sent over the network as a struct.
-   */
-  static final class SerializableStruct implements Struct<Serializable> {
-    //---------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
-    @Override
-    public Serializable unpack(final ByteBuffer Buffer) {
-      final var State = new Serializable();
-      State.Failed = Buffer.getInt();
-      State.Status = Buffer.getInt();
-      State.Samples = Buffer.getInt();
-      State.Priority = Buffer.getInt();
-      State.Period = Buffer.getDouble();
-      State.Timestamp = Buffer.getDouble();
-      State.Running = Buffer.get() != (0);
-      return State;
-    }
-
-    @Override
-    public void pack(final ByteBuffer Buffer, final Serializable Value) {
-      Buffer.putInt(Value.Failed);
-      Buffer.putInt(Value.Status);
-      Buffer.putInt(Value.Samples);
-      Buffer.putInt(Value.Priority);
-      Buffer.putDouble(Value.Period);
-      Buffer.putDouble(Value.Timestamp);
-      Buffer.putDouble((byte) (Value.Running? (1): (0)));
-    }
-    //---------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
-    @Override
-    public Class<Serializable> getTypeClass() {
-      return Serializable.class;
-    }
-
-    @Override
-    public String getTypeString() {
-      return "STRUCT:Serializable";
-    }
-
-    @Override
-    public int getSize() { 
-      return kSizeBool + kSizeInt32 * (4) + kSizeDouble * (2);
-    }
-
-    @Override
-    public String getSchema() {
-      return "int32 Failed;int32 Status;int32 Samples;int32 Priority;double Period;double Timestamp;bool Running";
-    }
-  }
+  volatile int Failed = (0);
+  volatile int Status = (0);
 }

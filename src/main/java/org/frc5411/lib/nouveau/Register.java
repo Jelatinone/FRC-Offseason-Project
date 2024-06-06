@@ -23,7 +23,6 @@ import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 

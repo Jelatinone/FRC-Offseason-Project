@@ -17,17 +17,20 @@ package org.frc5411.robot2024;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
+
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
-import org.littletonrobotics.junction.Logger;
-import org.photonvision.estimation.OpenCVHelp;
 
 import edu.wpi.first.wpilibj.Notifier;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
+
+import org.littletonrobotics.junction.Logger;
+import org.photonvision.estimation.OpenCVHelp;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
+
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *

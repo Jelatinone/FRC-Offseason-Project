@@ -27,9 +27,6 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -44,6 +41,10 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
