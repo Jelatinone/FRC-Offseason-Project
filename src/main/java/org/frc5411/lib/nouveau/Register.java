@@ -23,6 +23,8 @@ import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+
+import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import lombok.NonNull;
@@ -40,8 +42,8 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
   Integer STARTING_THREAD_PRIORITY = (1);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
-   * <p>Runs the main-loop of the underlying thread, updating {@link DoubleCircularBuffer buffers} mapped to signals that have been 
-   * {@link #register(Registrable) registered}, and updating {@link DoubleCircularBuffer buffers} from the current system {@link Timer#getFPGATimeStamp timestamp}.
+   * <p>Runs the main-loop of the underlying thread, updating {@link Queue Queues} mapped to signals that have been 
+   * {@link #register(Registrable) registered}, and updating {@link Queue Queues} from the current system {@link Timer#getFPGATimeStamp timestamp}.
    * Additionally, synchronization operations should occur to ensure multi-threading safety through the use of {@link #getSignalLock()  signal locks}.
    * 
    * <p>Should only be called once via {@link #start()}, as the method contains an internal while-loop that continues as long as the Reporter is alive, and
@@ -73,30 +75,30 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
 
   /**
    * Adds a signal to the collection of signals, these signals act as a source for associated {@link Number numerical} values which are provided back via a
-   * Buffer, where the most recently provided element is the last element in the buffer. 
+   * Queue, where the most recently provided element is the last element in the Queue. 
    * 
-   * <p> Note that this is done concurrently with updating {@link #timestamp()} buffers, so each update-cycle of {@link #run()} creates a pair of
+   * <p> Note that this is done concurrently with updating {@link #timestamp()} Queues, so each update-cycle of {@link #run()} creates a pair of
    * signal-values and timestamps that can be used to better interpolate values as opposed to a standard 20 millisecond cycle provided by 
    * {@link SubsystemBase#periodic()}, which provides lower accuracy.
    * 
    * @param Signal Supplier of Numerical values which can be parsed as a double.
-   * @return Buffer, should be retained and used to collect values periodically. 
+   * @return Queue, should be retained and used to collect values periodically. 
    * @see MathUtilities#from(DoubleCircularBuffer)
    */
-  DoubleCircularBuffer register(final Source Signal);
+  Queue<Double> register(final Source Signal);
 
   /**
-   * Creates a new buffer of standard size, and adds it to the collection of timestamp buffers. Each timestamp buffer contains the timestamp from a 
-   * {@link Timer#getFPGATimeStamp timestamp} of a {@link #run() run-cycle}, where the last element in the buffer is the most recent timestamp.
+   * Creates a new Queue of standard size, and adds it to the collection of timestamp Queues. Each timestamp Queue contains the timestamp from a 
+   * {@link Timer#getFPGATimeStamp timestamp} of a {@link #run() run-cycle}, where the last element in the Queue is the most recent timestamp.
    * 
-   * <p> Note that this is done concurrently with updating {@link #timestamp()} buffers, so each update-cycle of {@link #run()} creates a pair of
+   * <p> Note that this is done concurrently with updating {@link #timestamp()} Queues, so each update-cycle of {@link #run()} creates a pair of
    * signal-values and timestamps that can be used to better interpolate values as opposed to a standard 20 millisecond cycle provided by 
    * {@link SubsystemBase#periodic()}, which provides lower accuracy.
    * 
-   * @return Buffer, should be retained and used to collect values periodically. 
+   * @return Queue, should be retained and used to collect values periodically. 
    * @see MathUtilities#from(DoubleCircularBuffer)
    */
-  DoubleCircularBuffer timestamp(); 
+  Queue<Double> timestamp(); 
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
    * Provides the current state of this Thread, which can be serialized as a struct value and sent over the network.
@@ -104,14 +106,19 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    */
   @SuppressWarnings("unchecked")
   default Serial getReport() {
-    return (Serial) Report.empty();
+    try {
+      getQueueLock().readLock().lock();
+      return (Serial) Report.empty();
+    } finally {
+      getQueueLock().readLock().unlock();
+    }
   }
 
   /**
    * Provides the lock responsible for locking state-update operations and signal and timestamp update operations.
-   * @return Lock of signal buffers and timestamp buffers operations
+   * @return Lock of signal Queues and timestamp Queues operations
    */
-  ReadWriteLock getBufferLock();
+  ReadWriteLock getQueueLock();
 
   /**
    * Provides the lock responsible for locking {@link #register(Object) registration}, and wait operations

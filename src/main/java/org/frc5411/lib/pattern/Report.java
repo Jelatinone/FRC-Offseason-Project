@@ -22,6 +22,7 @@ import org.littletonrobotics.junction.AutoLog;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
@@ -37,8 +38,9 @@ import lombok.experimental.FieldDefaults;
  * 
  * @see StructSerializable
  */
-@FieldDefaults(level = AccessLevel.PROTECTED)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
+@Setter(value = AccessLevel.PROTECTED)
 public abstract class Report<@NonNull Measured extends StructSerializable> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile boolean Connected = (false);

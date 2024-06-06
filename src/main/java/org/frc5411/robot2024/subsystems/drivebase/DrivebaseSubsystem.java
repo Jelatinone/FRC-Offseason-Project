@@ -42,6 +42,7 @@ import java.util.function.BiFunction;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
@@ -68,7 +69,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   Operator<Double> DISCRETE_OPERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
-  static volatile State Mode;
+  @NonFinal volatile State Mode;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * DrivebaseSubsystem Constructor.
@@ -81,14 +82,14 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     GYROSCOPE = (null);
     DISCRETE_OPERATOR = new Operator<>(
       Timer::getFPGATimestamp, 
-      (Retained, Source) -> Source - Retained, 
+      (Previous, Current) -> Current - Previous, 
       Timer.getFPGATimestamp());
     MODULES.forEach((Module) -> 
       addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
     addChild(("Gyroscope"), GYROSCOPE);
+    Mode = State.RELATIVE;
   } static {
     SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
-    Mode = State.RELATIVE;
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Serial
@@ -105,7 +106,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   }
 
   @Override
-  public synchronized void close() {
+  public synchronized void close() throws IOException {
     SUBSYSTEM_LOCK.writeLock().lock();
     synchronized(DrivebaseSubsystem.class) {
       MODULES.forEach((Module) -> {

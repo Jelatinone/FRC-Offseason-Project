@@ -41,7 +41,7 @@ import static org.frc5411.lib.utility.MathUtilities.*;
  * 
  * @author Cody Washington
  */
-@FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
+@FieldDefaults(makeFinal = (true), level = AccessLevel.PROTECTED)
 public abstract class Module<@NonNull Placement extends Enum<?>> implements Actuator<SwerveModuleState, SwerveModulePosition> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Descriptor<Placement,?> DESCRIPTION;

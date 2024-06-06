@@ -19,6 +19,7 @@ import edu.wpi.first.util.struct.StructSerializable;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
@@ -31,13 +32,14 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
+@Setter(value = AccessLevel.PROTECTED)
 public abstract class Report implements StructSerializable {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  volatile int Samples = Integer.MIN_VALUE;
-  volatile int Priority = Thread.MIN_PRIORITY;
-  volatile double Period = Double.MIN_VALUE;  
-  volatile double Timestamp = Double.MIN_VALUE;
-  volatile boolean Running = Boolean.FALSE;
+  volatile int Samples = (0);
+  volatile int Priority = (0);
+  volatile double Period = (-1D);  
+  volatile double Timestamp = (-1D);
+  volatile boolean Running = (false);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Shorthand for providing an empty instance of a report, with no relevant data stored inside.

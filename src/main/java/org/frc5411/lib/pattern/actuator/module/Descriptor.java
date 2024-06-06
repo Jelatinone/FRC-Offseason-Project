@@ -45,14 +45,14 @@ public class Descriptor<@NonNull Placement extends Enum<?>, @NonNull Actuator ex
   Double TranslationalAcceleration;
   Boolean TranslationalInverted;
   Actuator TranslationalController;
-  public Controller<N2,N1,N1> TranslationalFeedback;
+  Controller<N2,N1,N1> TranslationalFeedback;
   
   Double RotationalReduction;
   Double RotationalOffset;
   Double RotationalVelocity;
   Boolean RotationalInverted;
   Actuator RotationalController;
-  public Controller<N2,N1,N1> RotationalFeedback;
+  Controller<N2,N1,N1> RotationalFeedback;
 
   Double Radius;
   Placement Placement;
