@@ -14,8 +14,9 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.util.struct.StructSerializable;
+
+import org.littletonrobotics.junction.AutoLog;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -31,7 +32,8 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
-public abstract class Report {
+@AutoLog
+public class Report {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile int Registered = (0);
   volatile int Priority = (0);

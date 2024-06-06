@@ -44,7 +44,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>PhoenixRegister</h1>
@@ -74,14 +73,14 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
 
   Operator<Double> DISCRETE_OPERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  @NonFinal static volatile PhoenixRegister Instance = (null);
-  @NonFinal static volatile Article State;
+  static volatile PhoenixRegister Instance = (null);
+  static volatile ArticleAutoLogged State;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Phoenix Register Constructor.
    */
   private PhoenixRegister() {
-    State = new Article();
+    State = new ArticleAutoLogged();
     TIMESTAMPS = new ArrayList<>();
     RESPONSES = new ArrayList<>();
     SIGNALS = new ArrayList<>();
@@ -114,6 +113,8 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
 
   @Override
   public synchronized void close() {
+    REQUEST_LOCK.writeLock().lock();
+    QUEUE_LOCK.writeLock().lock();
     halt();
     synchronized(PhoenixRegister.class) {
       TIMESTAMPS.forEach(Queue::clear);
@@ -125,6 +126,8 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
       REQUESTS.clear();
       State = (null);
       Instance = (null);
+      REQUEST_LOCK.writeLock().unlock();
+      QUEUE_LOCK.writeLock().unlock();
     }
   }
 
@@ -215,15 +218,18 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
 
   @Override
   public synchronized void run() {
-    State.Running = (true);
     synchronized(Instance) {
       while(isAlive() && !isInterrupted()) {
+        State.Running = (true);
         synchronized(PhoenixRegister.class) {
           if(!SIGNALS.isEmpty()) {
             final StatusCode Status;
             try {
               QUEUE_LOCK.writeLock().lock();
-              Status = BaseStatusSignal.waitForAll((2D / UPDATE_FREQUENCY), SIGNALS.toArray(BaseStatusSignal[]::new));
+              Status = BaseStatusSignal.waitForAll(
+                2D/UPDATE_FREQUENCY, 
+                SIGNALS.toArray(
+                  BaseStatusSignal[]::new));
             } finally {
               QUEUE_LOCK.writeLock().unlock();
             }
@@ -264,13 +270,10 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
             }
           }
         }
+        State.Running = (false);
       }
     }
-    State.Running = (false);
   }
-  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
-
-  
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   /**
    * Retrieves the existing instance of this static utility class
