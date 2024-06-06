@@ -302,7 +302,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   }
 
   @Override
-  public Report getReport() {
+  public Article getReport() {
     try {
       SIGNAL_LOCK.readLock().lock();
       return State;
