@@ -16,6 +16,7 @@
 package org.frc5411.robot2024;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.apriltag.AprilTagFields;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  *
@@ -53,6 +54,10 @@ public final class Constants {
     };
     public static final Profile DRIVER =  TYPE.equals(Type.COMPBOT)? Profile.COMP_DRIVER: Profile.DEV_DRIVER;
     public static final Profile OPERATOR = TYPE.equals(Type.COMPBOT)? Profile.COMP_OPERATOR: Profile.DEV_OPERATOR;
+  }
+
+  public static final class Field {
+    public static final AprilTagFields FIELD = AprilTagFields.k2024Crescendo;
   }
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//

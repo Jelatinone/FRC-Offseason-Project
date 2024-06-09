@@ -15,11 +15,13 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.utility.Operator;
+import org.frc5411.lib.utility.Aggregator;
 
+import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.hal.ThreadsJNI;
+import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.Timer;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -55,11 +57,14 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
   List<Queue<Double>> RESPONSES;
   List<Supplier<Double>> SIGNALS;
 
+  MedianFilter PEAK_REMOVER;
+  LinearFilter LOW_PASS;
+
   ReadWriteLock QUEUE_LOCK;
   ReadWriteLock SIGNAL_LOCK;  
 
   Notifier CALLBACK;
-  Operator<Double> DISCRETE_OPERATOR;
+  Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile StandardRegister Instance = (null);
   static volatile ReportAutoLogged State;
@@ -73,8 +78,10 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
     TIMESTAMPS = new ArrayList<>();
     RESPONSES = new ArrayList<>();
     SIGNALS = new ArrayList<>();
-    DISCRETE_OPERATOR = new Operator<>(
-      Timer::getFPGATimestamp, 
+    PEAK_REMOVER = new MedianFilter((3));
+    LOW_PASS = LinearFilter.movingAverage((50));
+    DISCRETE_AGGREGATOR = new Aggregator<>(
+      () -> HALUtil.getFPGATime() / 1e6, 
       (Previous, Current) -> Current - Previous);
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
@@ -163,7 +170,7 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
       try {
         SIGNAL_LOCK.readLock().lock();
         final var Providers = SIGNALS.iterator();
-        final var Timestamp = Timer.getFPGATimestamp();
+        final var Timestamp = HALUtil.getFPGATime() / 1e6;
         RESPONSES.forEach((final Queue<Double> Queue) -> {
           synchronized(Queue) {
             Queue.offer(Providers.next().get());
@@ -174,8 +181,10 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
             Queue.offer(Timestamp);
           }
         });
-        State.Period = DISCRETE_OPERATOR.get();
-        State.Timestamp = DISCRETE_OPERATOR.getRetained();
+        State.Period = DISCRETE_AGGREGATOR.aggregate();
+        State.Average = LOW_PASS.calculate(
+          PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated()));
+        State.Timestamp = DISCRETE_AGGREGATOR.getRetained();
         State.Priority = ThreadsJNI.getCurrentThreadPriority();
         State.Registered = SIGNALS.size();
       } finally {

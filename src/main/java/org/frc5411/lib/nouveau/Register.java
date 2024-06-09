@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.NonNull;
 import org.frc5411.lib.schema.Singleton;
-import org.frc5411.lib.utility.MathUtilities;
+import org.frc5411.lib.utility.Utilities;
 
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -79,7 +79,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    * 
    * @param Signal Supplier of Numerical values which can be parsed as a double.
    * @return Queue, should be retained and used to collect values periodically. 
-   * @see MathUtilities#from(DoubleCircularBuffer)
+   * @see Utilities#from(DoubleCircularBuffer)
    */
   Queue<Double> register(final Source Signal);
 
@@ -92,7 +92,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    * {@link SubsystemBase#periodic()}, which provides lower accuracy.
    * 
    * @return Queue, should be retained and used to collect values periodically. 
-   * @see MathUtilities#from(DoubleCircularBuffer)
+   * @see Utilities#from(DoubleCircularBuffer)
    */
   Queue<Double> timestamp(); 
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//

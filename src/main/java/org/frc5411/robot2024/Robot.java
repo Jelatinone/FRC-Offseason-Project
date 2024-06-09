@@ -16,7 +16,9 @@
 package org.frc5411.robot2024;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.utility.Aggregator;
 
+import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -39,6 +41,8 @@ import org.littletonrobotics.urcl.URCL;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,6 +65,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Serial
   static long serialVersionUID = 9197360083967213848L;
   Map<String,Integer> COMMANDS;
+  Collection<Callback> CALLBACKS;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Robot Instance;
   @NonFinal volatile Command Autonomous;
@@ -72,6 +77,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    */
   private Robot() {
     COMMANDS = new HashMap<>();
+    CALLBACKS = new ArrayList<>();
   } static {
     Logger.recordMetadata(("Robot-Type"), Constants.Robot.TYPE.name());
     Logger.recordMetadata(("Robot-Mode"), Constants.Robot.MODE.name());
@@ -131,6 +137,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
       Threads.setCurrentThreadPriority((true), (99));
       CommandScheduler.getInstance().run();
       SmartDashboard.updateValues();
+      CALLBACKS.forEach(Callback::attempt);  
       if (Autonomous != (null)) {
         if (!Autonomous.isScheduled() && !Message) {
           System.out.printf(
@@ -139,7 +146,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
             Logger.getRealTimestamp() / (1e6) - Timestamp);
           Message = (true);
         }
-      }  
+      }
       Threads.setCurrentThreadPriority((true), (10));      
     }
   }
@@ -216,6 +223,8 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     super.close();
     Manager.getInstance().close();
     synchronized(Robot.class) {
+      CALLBACKS.clear();
+      COMMANDS.clear();
       Instance = (null);
     }
   }
@@ -223,6 +232,17 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public Robot clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
+  }
+
+  /**
+   * Inserts a new periodic runnable operation into the callbacks being managed by this Robot instance
+   * @param Callback Periodic operation to perform at an interval
+   * @param Period   Time interval (discrete time, period, etc) upon which the operation is scheduled to run at
+   */
+  public static void add(final Runnable Callback, final Double Period) {
+    synchronized(Instance) {
+      Instance.CALLBACKS.add(new Callback(Callback, Period));
+    }
   }
 
   /**
@@ -238,7 +258,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Logger.recordOutput(String.format(("Commands/Unique/[%s]"), Name), Count > 0);
   }
   //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
-
   /**
    * Mutates the current autonomous command to a different command, immediately ends any running commands if applicable.
    * @param Operation Command to be executed, can be in any state, will be run as {@link Command#asProxy() proxy}
@@ -265,5 +284,45 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
       }
     }
     return Result;
+  }
+}
+//-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
+/**
+ * <h1>Callback</h1>
+ * 
+ * 
+ */
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
+final class Callback {
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  Runnable PROCEDURE;
+  Aggregator<Double> DISCRETE_AGGREGATOR;
+  Double PERIOD;
+  //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
+  /**
+   * Callback Constructor.
+   * @param Procedure Runnable operation that requires periodic calls to itself
+   * @param Period    Period on which to perform the procedure
+   */
+  public Callback(final Runnable Procedure, final Double Period) {
+    PROCEDURE = Procedure;
+    PERIOD = Period;
+    DISCRETE_AGGREGATOR = new Aggregator<>(
+      () -> HALUtil.getFPGATime() / 1e6, 
+      (Previous, Current) -> Current - Previous);
+  }
+  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  /**
+   * Tries (attempts) to perform the underlying operation if the difference in time since last operation it is greater than, or equal to the period on which
+   * this operation should occur. 
+   */
+  public synchronized void attempt() {
+    synchronized(this) {
+      if(DISCRETE_AGGREGATOR.acquire() >= PERIOD) {
+        DISCRETE_AGGREGATOR.retain(
+          DISCRETE_AGGREGATOR.getRetained() + DISCRETE_AGGREGATOR.getAggregated());
+        PROCEDURE.run();
+      }
+    }
   }
 }

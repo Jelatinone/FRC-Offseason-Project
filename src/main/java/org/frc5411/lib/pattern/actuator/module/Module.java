@@ -31,7 +31,7 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
-import static org.frc5411.lib.utility.MathUtilities.*;
+import static org.frc5411.lib.utility.Utilities.*;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Module</h1>

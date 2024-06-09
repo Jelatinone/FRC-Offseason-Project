@@ -36,7 +36,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @Builder(toBuilder = true, setterPrefix = ("set"))
-@FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
+@FieldDefaults(level = AccessLevel.PROTECTED, makeFinal = (true))
 public class Descriptor<@NonNull Placement extends Enum<?>, @NonNull Actuator extends MotorController> extends org.frc5411.lib.pattern.Descriptor<Component<SwerveModulePosition>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double TranslationalReduction;

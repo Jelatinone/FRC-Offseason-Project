@@ -29,10 +29,12 @@ import java.util.Optional;
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//
 /**
+ * <h1>Profile</h1>
  * 
+ * <p>Simple wrapper type for storing maps of a given robot operator's setting preferences for robot operation. 
  * 
- * <h1>Difference</h1>
- * 
+ * <p>Calls should be made to {@link #add(Enum, Object)}, and {@link #add(Enum, Trigger)} to add preferences and keybindings respectively (this can also be chained);
+ * and retrieved at an API end-point via the {@link #getPreference(Enum)}, and {@link #getKeybinding(Enum)} methods.
  * 
  * @author Cody Washington (@Jelatinone) 
  */

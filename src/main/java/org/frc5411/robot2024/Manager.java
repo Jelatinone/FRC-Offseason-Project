@@ -17,12 +17,10 @@ package org.frc5411.robot2024;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
-
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
 import edu.wpi.first.wpilibj.Notifier;
 
-import org.littletonrobotics.junction.Logger;
 import org.photonvision.estimation.OpenCVHelp;
 
 import java.io.IOException;
@@ -44,7 +42,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   static long serialVersionUID = 2389697764281159320L;
-  final Notifier CALLBACK;
+  Notifier CALLBACK;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
@@ -94,8 +92,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
    */
   public synchronized void run() {
     synchronized(Manager.class) {
-      Subsystem.getSubsystems().forEach((Subsystem) ->
-        Logger.recordOutput((Subsystem.getName() + "/State"),Subsystem.getState().name()));
+      
     }
   }
 

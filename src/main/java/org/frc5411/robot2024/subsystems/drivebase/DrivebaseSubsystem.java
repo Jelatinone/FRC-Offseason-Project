@@ -14,17 +14,18 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
-//-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.pattern.actuator.module.Module;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
-import org.frc5411.lib.utility.Operator;
+import org.frc5411.lib.utility.Aggregator;
 
+import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
@@ -41,7 +42,6 @@ import java.util.function.BiFunction;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
@@ -55,39 +55,39 @@ import lombok.experimental.NonFinal;
  * @author Cody Washington
  * 
  */
-@SuppressWarnings("unused")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 2571418245449373564L;
   static ReadWriteLock SUBSYSTEM_LOCK;
+  static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Component<Rotation2d> GYROSCOPE;
   Collection<Module<?>> MODULES;
-  Operator<Double> DISCRETE_OPERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
-  @NonFinal volatile State Mode;
+  static volatile State Mode;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * DrivebaseSubsystem Constructor.
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
+    DISCRETE_AGGREGATOR.reset(HALUtil.getFPGATime() / 1e6);
     MODULES = List.of(
       
     );
     GYROSCOPE = (null);
-    DISCRETE_OPERATOR = new Operator<>(
-      Timer::getFPGATimestamp, 
-      (Previous, Current) -> Current - Previous);
     MODULES.forEach((Module) -> 
       addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
     addChild(("Gyroscope"), GYROSCOPE);
     Mode = State.RELATIVE;
   } static {
     SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
+    DISCRETE_AGGREGATOR = new Aggregator<>(
+      () -> HALUtil.getFPGATime() / 1e6, 
+      (Previous, Current) -> Current - Previous);
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Serial
@@ -122,16 +122,30 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   }
 
   @Override
-  public synchronized void periodic() {
-    synchronized(Instance) {}
+  public synchronized void update() {
+    
   }
 
   @Override
-  public synchronized void update() {
-
+  public synchronized void periodic() {
+    try {
+      SUBSYSTEM_LOCK.writeLock().lock();
+      synchronized(Instance) {
+        MODULES.forEach((Module) -> {
+          Module.periodic();
+          if(DriverStation.isDisabled()) {
+            Module.cease();
+          }
+        });
+        GYROSCOPE.periodic();
+      }
+      update();
+    } finally {
+      SUBSYSTEM_LOCK.writeLock().unlock();
+    }
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
-  
+
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public List<Named> getCommands() {
@@ -140,15 +154,12 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   @Override
   public State getState() {
-    return Mode;
-  }
-
-  /**
-   * Provides the current measured (gyroscope) rotation form it's most recent {@link Component#update(org.frc5411.lib.pattern.Report)} cycle
-   * @return Gyroscope's current rotation
-   */
-  public static Rotation2d getMeasuredRotation() {
-    return Instance.GYROSCOPE.getMeasurement().get();
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return Mode;
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
   }
 
   /**
@@ -194,7 +205,7 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
       Translation.getX(), 
       Translation.getY(), 
       Rotation.getRadians(), 
-      DrivebaseSubsystem.getMeasuredRotation())
+      (null))
   ),
 
   /**
@@ -206,7 +217,7 @@ enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
       Translation.getX(), 
       Translation.getY(), 
       Rotation.getRadians(), 
-      DrivebaseSubsystem.getMeasuredRotation())
+      (null))
   );
 
   private final BiFunction<Translation2d, Rotation2d, ChassisSpeeds> FUNCTION;

@@ -48,6 +48,7 @@ public interface Actuator<@NonNull Reference extends StructSerializable, @NonNul
    * Provides the current reference state, in other words the Demand set by calling {@link #set(Object)}.
    * @return Struct of current state
    */
+  @SuppressWarnings("unchecked")
   default Reference getState() {
     return ((Report<Reference,Measurement>) getReport()).getDemand();
   }
@@ -56,6 +57,7 @@ public interface Actuator<@NonNull Reference extends StructSerializable, @NonNul
    * Provides the current controller input to the actuator, in other words the controller effort updated internally each {@link #periodic()} call.
    * @return Struct of controller effort
    */
+  @SuppressWarnings("unchecked")
   default Reference getInput() {
     return ((Report<Reference,Measurement>) getReport()).getEffort();
   }

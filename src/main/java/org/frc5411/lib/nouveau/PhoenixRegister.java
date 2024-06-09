@@ -16,9 +16,11 @@
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.frc5411.lib.utility.Operator;
+import org.frc5411.lib.utility.Aggregator;
 
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.hal.HALUtil;
+import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.MedianFilter;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
@@ -67,12 +69,15 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
 
   Map<Long,Consumer<ControlRequest>> CLIENTS;
   Map<Long,ControlRequest> REQUESTS;
+
+  MedianFilter PEAK_REMOVER;
+  LinearFilter LOW_PASS;
   
   ReadWriteLock REQUEST_LOCK;
   ReadWriteLock QUEUE_LOCK;
   ReadWriteLock SIGNAL_LOCK;  
 
-  Operator<Double> DISCRETE_OPERATOR;
+  Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile PhoenixRegister Instance = (null);
   static volatile ArticleAutoLogged State;
@@ -87,8 +92,10 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
     SIGNALS = new ArrayList<>();
     CLIENTS = new HashMap<>();
     REQUESTS = new HashMap<>();
-    DISCRETE_OPERATOR = new Operator<>(
-      Timer::getFPGATimestamp, 
+    PEAK_REMOVER = new MedianFilter((3));
+    LOW_PASS = LinearFilter.movingAverage((50));
+    DISCRETE_AGGREGATOR = new Aggregator<>(
+      () -> HALUtil.getFPGATime() / 1e6, 
       (Previous, Current) -> Current - Previous);
     REQUEST_LOCK = new ReentrantReadWriteLock((true));
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
@@ -236,7 +243,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
             try {
               SIGNAL_LOCK.writeLock().lock();
               final var Providers = SIGNALS.iterator();
-              final Double Timestamp = Timer.getFPGATimestamp() - SIGNALS
+              final Double Timestamp = (HALUtil.getFPGATime() / 1e6) - SIGNALS
                 .stream()
                 .mapToDouble((Signal) -> 
                   Signal.getTimestamp().getLatency())
@@ -254,8 +261,10 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
               });
               State.Priority = getPriority(); 
               State.Status = Status.value;
-              State.Period = DISCRETE_OPERATOR.get(); 
-              State.Timestamp = DISCRETE_OPERATOR.getRetained();
+              State.Period = DISCRETE_AGGREGATOR.aggregate(); 
+              State.Average = LOW_PASS.calculate(
+                PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated()));
+              State.Timestamp = DISCRETE_AGGREGATOR.getRetained();
               State.Registered = SIGNALS.size(); 
               State.Failed = Status.isError()? 1: 0;
             } finally {
@@ -302,7 +311,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   }
 
   @Override
-  public Report getReport() {
+  public Article getReport() {
     try {
       SIGNAL_LOCK.readLock().lock();
       return State;
