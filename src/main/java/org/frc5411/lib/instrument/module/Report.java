@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.pattern.actuator.module;
+package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.annotation.Unit;
 import org.frc5411.lib.annotation.Unit.Measured;
@@ -37,7 +37,7 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
-@Setter(value = AccessLevel.PACKAGE)
+@Setter
 @AutoLog
 public class Report extends org.frc5411.lib.pattern.actuator.Report<SwerveModuleState,SwerveModulePosition> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//

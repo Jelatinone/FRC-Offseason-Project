@@ -18,10 +18,13 @@ package org.frc5411.lib.nouveau;
 import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import lombok.NonNull;
+
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.utility.Utilities;
 
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -81,7 +84,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    * @return Queue, should be retained and used to collect values periodically. 
    * @see Utilities#from(DoubleCircularBuffer)
    */
-  Queue<Double> register(final Source Signal);
+  Queue<Optional<Number>> register(final Source Signal);
 
   /**
    * Creates a new Queue of standard size, and adds it to the collection of timestamp Queues. Each timestamp Queue contains the timestamp from a 

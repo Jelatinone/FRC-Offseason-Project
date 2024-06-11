@@ -40,7 +40,7 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
-@Setter(value = AccessLevel.PACKAGE)
+@Setter
 public abstract class Report<@NonNull Measured extends StructSerializable> implements Cloneable {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile boolean Connected = (false);

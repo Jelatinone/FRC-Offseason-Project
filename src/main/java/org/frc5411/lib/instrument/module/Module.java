@@ -13,9 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.pattern.actuator.module;
+package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.actuator.Actuator;
+import org.frc5411.lib.pattern.actuator.module.ReportAutoLogged;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -163,7 +164,7 @@ public abstract class Module<@NonNull Controller extends MotorController, @NonNu
    * Provides the real-world description of the module, essentially an object makeup of the system's constants.
    * @return Description of this module
    */
-  public Descriptor<?,?> getDescriptor() {
+  public Descriptor<Controller,Encoder> getDescriptor() {
     return DESCRIPTION;
   }
 

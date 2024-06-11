@@ -42,6 +42,7 @@ import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -56,7 +57,12 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,Article> {
+public class PhoenixRegister extends Thread implements Register<StatusSignal<Number>,Article> {
+  /*
+   * TODO:
+   *    CAN-FD
+   *    Multi-Network
+   */
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 55742622883094958L;
@@ -64,8 +70,8 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   static Integer UPDATE_FREQUENCY = (100);
 
   List<Queue<Double>> TIMESTAMPS;  
-  List<Queue<Double>> RESPONSES;
-  List<StatusSignal<?>> SIGNALS;
+  List<Queue<Optional<Number>>> RESPONSES;
+  List<StatusSignal<Number>> SIGNALS;
 
   Map<Long,Consumer<ControlRequest>> CLIENTS;
   Map<Long,ControlRequest> REQUESTS;
@@ -153,8 +159,8 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
   }
 
   @Override
-  public synchronized Queue<Double> register(final @NonNull StatusSignal<?> Signal) {
-    final var Buffer = new ArrayDeque<Double>(QUEUE_SIZE);
+  public synchronized Queue<Optional<Number>> register(final @NonNull StatusSignal<Number> Signal) {
+    final var Buffer = new ArrayDeque<Optional<Number>>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
       Signal.setUpdateFrequency(UPDATE_FREQUENCY);
@@ -249,9 +255,9 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<?>,
                   Signal.getTimestamp().getLatency())
                 .average()
                 .getAsDouble();
-              RESPONSES.forEach((final Queue<Double> Queue) -> {
+              RESPONSES.forEach((final Queue<Optional<Number>> Queue) -> {
                 synchronized(Queue) {
-                  Queue.offer(Providers.next().getValueAsDouble());
+                  Queue.offer(Optional.ofNullable(Providers.next().getValue()));
                 }
               });
               TIMESTAMPS.forEach((final Queue<Double> Queue) ->  {

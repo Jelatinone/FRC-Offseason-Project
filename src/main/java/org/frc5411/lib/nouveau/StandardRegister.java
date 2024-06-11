@@ -33,6 +33,7 @@ import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
+import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -46,7 +47,11 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class StandardRegister implements Register<Supplier<Double>, Report>{
+public class StandardRegister implements Register<Supplier<Optional<Number>>, Report>{
+  /*
+   * TODO:
+   *    Optional-Support/Requirement
+   */
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 84309938899889961L;
@@ -54,8 +59,8 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
   static Integer UPDATE_FREQUENCY = (100);
 
   List<Queue<Double>> TIMESTAMPS;  
-  List<Queue<Double>> RESPONSES;
-  List<Supplier<Double>> SIGNALS;
+  List<Queue<Optional<Number>>> RESPONSES;
+  List<Supplier<Optional<Number>>> SIGNALS;
 
   MedianFilter PEAK_REMOVER;
   LinearFilter LOW_PASS;
@@ -134,8 +139,8 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
   }
 
   @Override
-  public synchronized Queue<Double> register(final @NonNull Supplier<Double> Signal) {
-    final var Buffer = new ArrayDeque<Double>(QUEUE_SIZE);
+  public synchronized Queue<Optional<Number>> register(final @NonNull Supplier<Optional<Number>> Signal) {
+    final var Buffer = new ArrayDeque<Optional<Number>>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
       SIGNALS.add(Signal);
@@ -171,7 +176,7 @@ public class StandardRegister implements Register<Supplier<Double>, Report>{
         SIGNAL_LOCK.readLock().lock();
         final var Providers = SIGNALS.iterator();
         final var Timestamp = HALUtil.getFPGATime() / 1e6;
-        RESPONSES.forEach((final Queue<Double> Queue) -> {
+        RESPONSES.forEach((final Queue<Optional<Number>> Queue) -> {
           synchronized(Queue) {
             Queue.offer(Providers.next().get());
           }

@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.pattern.actuator.module;
+package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.control.Controller;
 import org.frc5411.lib.pattern.Component;
