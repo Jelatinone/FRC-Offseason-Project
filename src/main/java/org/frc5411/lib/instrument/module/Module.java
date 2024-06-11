@@ -41,22 +41,22 @@ import static org.frc5411.lib.utility.Utilities.*;
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public abstract class Module<@NonNull Controller> implements Actuator<SwerveModuleState, SwerveModulePosition> {
+public abstract class Module<@NonNull Controller, @NonNull Encoder> implements Actuator<SwerveModuleState, SwerveModulePosition> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Descriptor<Controller> DESCRIPTION;
+  Descriptor<Controller,Encoder> DESCRIPTION;
   ReportAutoLogged STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.
    * @param Description Real-world description of the system, contains relevant constants to the operation of the module
    */
-  protected Module(final Descriptor<Controller> Description) {
+  protected Module(final Descriptor<Controller,Encoder> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
     STATUS = new ReportAutoLogged();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public final Module<Controller> clone() throws CloneNotSupportedException {
+  public final Module<Controller,Encoder> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
   }
 
@@ -151,7 +151,7 @@ public abstract class Module<@NonNull Controller> implements Actuator<SwerveModu
    * Provides the real-world description of the module, essentially an object makeup of the system's constants.
    * @return Description of this module
    */
-  public Descriptor<Controller> getDescriptor() {
+  public Descriptor<Controller,Encoder> getDescriptor() {
     return DESCRIPTION;
   }
 

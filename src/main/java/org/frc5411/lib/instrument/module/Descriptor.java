@@ -36,7 +36,7 @@ import lombok.experimental.FieldDefaults;
  */
 @Builder(toBuilder = true, setterPrefix = ("with"))
 @FieldDefaults(level = AccessLevel.PROTECTED, makeFinal = (true))
-public class Descriptor<@NonNull Actuator> extends org.frc5411.lib.pattern.Descriptor<Component<SwerveModulePosition>> {
+public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411.lib.pattern.Descriptor<Component<SwerveModulePosition>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double TranslationalReduction;
   Double TranslationalOffset;
@@ -44,13 +44,14 @@ public class Descriptor<@NonNull Actuator> extends org.frc5411.lib.pattern.Descr
   Double TranslationalAcceleration;
   Boolean TranslationalInverted;
   Actuator TranslationalController;
-  
+
   Controller<N2,N1,N1> TranslationalFeedback;
   
   Double RotationalReduction;
   Double RotationalOffset;
   Double RotationalVelocity;
   Boolean RotationalInverted;
+  Encoder RotationalEncoder;
   Actuator RotationalController;
   Controller<N2,N1,N1> RotationalFeedback;
 
@@ -58,7 +59,7 @@ public class Descriptor<@NonNull Actuator> extends org.frc5411.lib.pattern.Descr
   Enum<?> Placement;
 
   @Override
-  public Descriptor<Actuator> clone() {
+  public Descriptor<Actuator,Encoder> clone() {
     return new Descriptor<>(
       TranslationalReduction,
       TranslationalOffset,
@@ -71,6 +72,7 @@ public class Descriptor<@NonNull Actuator> extends org.frc5411.lib.pattern.Descr
       RotationalOffset,
       RotationalVelocity,
       RotationalInverted,
+      RotationalEncoder,
       RotationalController,
       RotationalFeedback,
       Radius,

@@ -46,36 +46,35 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public class SparkModule extends Module<CANSparkBase> {
+public class SparkModule extends Module<CANSparkBase,CANcoder> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Queue<Optional<Number>> TRANSLATIONAL_POSITIONS;
   RelativeEncoder TRANSLATIONAL_ENCODER;
   
   Queue<Optional<Number>> ROTATIONAL_POSITIONS;
-  CANcoder ROTATIONAL_ENCODER;
 
   Queue<Double> UPDATE_TIMESTAMPS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Spark Module Constructor.
    * @param Descriptor Real-world getDescriptor() of the system, contains relevant constants to the operation of the module
-   * @param Encoder    Azimuth absolute encoder to base measurements from, specific
    */
-  public SparkModule(final Descriptor<CANSparkBase> Descriptor, final CANcoder Encoder) {
+  public SparkModule(final Descriptor<CANSparkBase,CANcoder> Descriptor) {
     super(Descriptor);
 
     TRANSLATIONAL_ENCODER = getDescriptor().TranslationalController.getEncoder();
     TRANSLATIONAL_POSITIONS = StandardRegister
       .getInstance()
-      .register(() -> Optional.ofNullable(getConnection()? 
+      .register(() -> Optional.ofNullable(
+        getConnection()? 
         TRANSLATIONAL_ENCODER.getPosition(): 
         null));
-      
-    ROTATIONAL_ENCODER = Encoder;    
+    
     ROTATIONAL_POSITIONS = StandardRegister
       .getInstance()
-      .register(() -> Optional.ofNullable(getConnection()? 
-        ROTATIONAL_ENCODER.getAbsolutePosition().refresh().getValue(): 
+      .register(() -> Optional.ofNullable(
+        getConnection()? 
+        Descriptor.RotationalEncoder.getAbsolutePosition().refresh().getValue(): 
         null));
         
     UPDATE_TIMESTAMPS = StandardRegister
@@ -113,10 +112,10 @@ public class SparkModule extends Module<CANSparkBase> {
         getDescriptor().RotationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
       }
 
-      ROTATIONAL_ENCODER.getConfigurator()
+      getDescriptor().RotationalEncoder.getConfigurator()
         .apply(new MagnetSensorConfigs().withAbsoluteSensorRange(AbsoluteSensorRangeValue.Unsigned_0To1));
-      ROTATIONAL_ENCODER.getAbsolutePosition().setUpdateFrequency((25D));
-      ROTATIONAL_ENCODER.optimizeBusUtilization();
+      getDescriptor().RotationalEncoder.getAbsolutePosition().setUpdateFrequency((25D));
+      getDescriptor().RotationalEncoder.optimizeBusUtilization();
 
       getDescriptor().TranslationalController.burnFlash();
       getDescriptor().RotationalController.burnFlash();
@@ -139,7 +138,7 @@ public class SparkModule extends Module<CANSparkBase> {
     getDescriptor().TranslationalController.close();
     getDescriptor().RotationalController.close();
 
-    ROTATIONAL_ENCODER.close();
+    getDescriptor().RotationalEncoder.close();
 
     TRANSLATIONAL_POSITIONS.clear();
     ROTATIONAL_POSITIONS.clear();
@@ -158,7 +157,7 @@ public class SparkModule extends Module<CANSparkBase> {
 
       Article.setRotationalVoltage(getDescriptor().RotationalController.getBusVoltage() * getDescriptor().RotationalController.getAppliedOutput());
       Article.setRotationalAmperage(getDescriptor().RotationalController.getOutputCurrent());
-      Article.setRotationalVelocity(ROTATIONAL_ENCODER.getVelocity().refresh().getValue() / getDescriptor().RotationalReduction);
+      Article.setRotationalVelocity(getDescriptor().RotationalEncoder.getVelocity().refresh().getValue() / getDescriptor().RotationalReduction);
       Article.setRotationalConnected(getDescriptor().RotationalController.getLastError().equals(REVLibError.kOk));   
 
       Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());

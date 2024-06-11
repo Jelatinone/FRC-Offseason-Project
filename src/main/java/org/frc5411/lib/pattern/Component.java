@@ -124,6 +124,16 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
   }
 
   /**
+   * Provides the current timestamp Reported during the last {@link #update(Report)} cycle, which means it may be out-of-date if {@link #update(Report)}
+   * has not been called for a significant amount of time.
+   * @return Latest Timestamp 
+   */
+  default Optional<Double> getTimestamp() {
+    final var Timestamps = getTimestamps();
+    return Optional.ofNullable(Timestamps.get(Timestamps.size() - (1)));
+  }
+
+  /**
    * Provides a list of all the timestamps at which {@link #getMeasurements() measurements} have been Reported during the last {@link #update(Report)}
    * cycle until now. This is most often sourced through a queue from a relevant {@link Register} updated asynchronously of the main-robot thread.
    * @return Latest list of measurement timestamps
@@ -139,8 +149,8 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * @return Latest Measurement 
    */
   default Optional<Measured> getMeasurement() {
-    final var Measured = getMeasurements();
-    return Optional.ofNullable(Measured.get(Measured.size() - (1)));
+    final var Measurements = getMeasurements();
+    return Optional.ofNullable(Measurements.get(Measurements.size() - (1)));
   }  
 
   /**
