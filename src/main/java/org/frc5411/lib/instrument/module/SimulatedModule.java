@@ -15,21 +15,21 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import lombok.AccessLevel;
-import lombok.NonNull;
+import org.frc5411.lib.nouveau.StandardRegister;
+import org.frc5411.lib.utility.Aggregator;
+
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
-import java.util.stream.IntStream;
-import java.util.Queue;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.stream.IntStream;
 
-import org.frc5411.lib.nouveau.StandardRegister;
-import org.frc5411.lib.utility.Aggregator;
-
+import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**

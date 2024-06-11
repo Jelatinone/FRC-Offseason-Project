@@ -16,13 +16,13 @@
 package org.frc5411.lib.utility;
 //-----------------------------------------------------------------------[Libraries]----------------------------------------------------------------------------//
 
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
-
-import java.util.function.Supplier;
-import java.util.function.BinaryOperator;
 
 //----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//
 /**

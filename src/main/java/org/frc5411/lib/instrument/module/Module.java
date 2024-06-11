@@ -16,7 +16,6 @@
 package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.actuator.Actuator;
-import org.frc5411.lib.pattern.actuator.module.ReportAutoLogged;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;

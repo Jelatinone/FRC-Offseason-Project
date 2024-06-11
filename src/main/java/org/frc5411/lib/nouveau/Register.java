@@ -15,18 +15,18 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.utility.Utilities;
+
 import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import lombok.NonNull;
-
-import org.frc5411.lib.schema.Singleton;
-import org.frc5411.lib.utility.Utilities;
-
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
+
+import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Register</h1>

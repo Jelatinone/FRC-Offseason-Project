@@ -15,28 +15,27 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import lombok.AccessLevel;
-import lombok.NonNull;
-
-import com.ctre.phoenix6.configs.MagnetSensorConfigs;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
-import com.revrobotics.CANSparkBase;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
-import com.revrobotics.REVLibError;
+import org.frc5411.lib.control.archetype.PIDController;
+import org.frc5411.lib.nouveau.StandardRegister;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
-import java.util.stream.IntStream;
-import java.util.Queue;
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
+import com.revrobotics.CANSparkBase;
+import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
+import com.revrobotics.REVLibError;
+import com.revrobotics.RelativeEncoder;
+
 import java.util.Optional;
+import java.util.Queue;
+import java.util.stream.IntStream;
 
-import org.frc5411.lib.control.archetype.PIDController;
-import org.frc5411.lib.nouveau.StandardRegister;
-
+import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**

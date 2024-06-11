@@ -15,12 +15,12 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.frc5411.lib.utility.Aggregator;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.MedianFilter;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
@@ -38,11 +38,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
-import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.Getter;

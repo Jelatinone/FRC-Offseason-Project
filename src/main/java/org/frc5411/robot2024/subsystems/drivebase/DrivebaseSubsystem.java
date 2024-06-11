@@ -15,11 +15,11 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
-import org.frc5411.lib.instrument.module.Module;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
