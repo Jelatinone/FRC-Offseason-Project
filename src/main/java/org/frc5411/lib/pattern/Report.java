@@ -22,6 +22,7 @@ import org.littletonrobotics.junction.AutoLog;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
@@ -39,13 +40,14 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
-public abstract class Report<@NonNull Measured extends StructSerializable> {
+@Setter(value = AccessLevel.PACKAGE)
+public abstract class Report<@NonNull Measured extends StructSerializable> implements Cloneable {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile boolean Connected = (false);
 
   volatile double[] Timestamps = {};
 
-  @NonNull volatile Measured[] Measurements;
+  volatile Measured @NonNull[] Measurements;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Shorthand for providing an empty instance of a report, with no relevant data stored inside.
@@ -55,4 +57,14 @@ public abstract class Report<@NonNull Measured extends StructSerializable> {
   public static <@NonNull Measured extends StructSerializable> Report<Measured> empty() {
     return new Report<>() {};
   }
+
+  /**
+   * Creates and returns a copy of this Report object, retaining all relevant information stored within, such as the
+   * most-recent measurements, but is not the same specific instance.
+   * @return Copy of this object, but not the same instance
+   */
+  public Report<Measured> clone() {
+    return new Report<>() {};
+  }
+
 }

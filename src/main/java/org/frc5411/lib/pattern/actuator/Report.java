@@ -31,10 +31,12 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
+@NonNull
 @Getter
+@Setter
 public abstract class Report<@NonNull Reference extends StructSerializable, @NonNull Measurement extends StructSerializable> extends org.frc5411.lib.pattern.Report<Measurement> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  @NonNull volatile Reference Effort;
+  volatile Reference Effort;
 
-  @NonNull @Setter volatile Reference Demand; 
+  volatile Reference Demand; 
 }

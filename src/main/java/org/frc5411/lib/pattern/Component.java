@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.stream.DoubleStream;
 
 import lombok.NonNull;
-import net.bytebuddy.utility.nullability.MaybeNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Component</h1>
@@ -98,14 +97,18 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * Provides the real-world description of the component, essentially an object makeup of the system's mechanical constants
    * @return Descriptor of this component, null by default
    */
-  default @MaybeNull Descriptor<Component<Measured>> getDescriptor() {
+  default Descriptor<Component<Measured>> getDescriptor() {
     return Descriptor.empty();
   }
 
   /**
-   * Provides a full {@link Report} of the measurements of this Component from the last {@link #update(Report)} cycle until now. If {@link #update(Report)}
+   * <p> Provides a full {@link Report} of the measurements of this Component from the last {@link #update(Report)} cycle until now. If {@link #update(Report)}
    * has not been called for a significant amount of time, information may be stale, or out of date.
-   * @return Report of measurements, by default an Empty report.
+   * 
+   * <p>Ideally, the provided Report is never a {@link #clone() cloned} copy of the original report instance, this prevents unnecessary copies being created by internal caused
+   * used throughout the Component framework. However, downstream implementations when calling {@link #getReport()} should call {@link Report#clone()} <p>
+   * 
+   * @return Report of measurements, by default an empty report.
    */
   default Report<Measured> getReport() {
     return Report.empty();

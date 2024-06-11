@@ -36,8 +36,8 @@ import net.bytebuddy.utility.nullability.MaybeNull;
 public abstract class Descriptor<@NonNull Described extends Component<?>> implements Cloneable {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
-   * Creates and returns a copy of this Report object, retaining all relevant information stored within, such as the
-   * most-recent measurements, but is not the same specific instance.
+   * Creates and returns a copy of this Descriptor object, retaining all relevant information stored within, such as the
+   * relevant constants, but is not the same specific instance.
    * @return Copy of this object, but not the same instance
    */
   public Descriptor<Described> clone() {

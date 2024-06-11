@@ -17,10 +17,11 @@ package org.frc5411.lib.pattern.actuator.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.actuator.Actuator;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -41,24 +42,23 @@ import static org.frc5411.lib.utility.Utilities.*;
  * 
  * @author Cody Washington
  */
-@FieldDefaults(makeFinal = (true), level = AccessLevel.PROTECTED)
-public abstract class Module<@NonNull Placement extends Enum<?>> implements Actuator<SwerveModuleState, SwerveModulePosition> {
+@FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
+public abstract class Module<@NonNull Controller extends MotorController, @NonNull Encoder> implements Actuator<SwerveModuleState, SwerveModulePosition> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Descriptor<Placement,?> DESCRIPTION;
+  Descriptor<Controller,Encoder> DESCRIPTION;
   ReportAutoLogged STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.
    * @param Description Real-world description of the system, contains relevant constants to the operation of the module
    */
-  protected Module(final Descriptor<Placement,?> Description) {
+  protected Module(final Descriptor<Controller,Encoder> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
     STATUS = new ReportAutoLogged();
-    configure();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public final Module<Placement> clone() throws CloneNotSupportedException {
+  public final Module<Controller,Encoder> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
   }
 
@@ -77,7 +77,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * Force re-configures the underlying module hardware to the standard specifications of this type. Ideally, a blocking operation is also performed which
    * ensures correct, hardware-safe application of relevant configurations before Module operation.
    */
-  public abstract void configure();
+  public void configure() {}
 
   /**
    * Force resets this module's measurements to absolute heading measurements, may fix issues with offsets and relative positions. Should ideally not 
@@ -90,25 +90,28 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
     synchronized(STATUS) {
       update(STATUS);
       final var Reference = getState();
-      final var Position = getRotationalPosition();
+      final var Effort = new SwerveModuleState();
       if(getConnection() || Reference != (null)) {
-          if(Reference.angle != (null) && Position.isPresent()) {
-            setRotationalVoltage(unwrap(
-              DESCRIPTION.RotationalFeedback.calculate(wrap(
-                Position.get().getRadians(), 
-                Reference.angle.getRadians()))
-            ));
-          }
-          setTranslationalVoltage(unwrap(
+          setTranslationalVoltage(Effort.speedMetersPerSecond = unwrap(
             DESCRIPTION.TranslationalFeedback.calculate(wrap(
-              getTranslationalVelocity(), 
+              STATUS.getTranslationalVelocity(), 
               Reference.speedMetersPerSecond * Math.cos(
                 unwrap(DESCRIPTION.RotationalFeedback.getError())) / DESCRIPTION.Radius
             ))
           ));
+          final var Position = getRotationalPosition();
+          if(Reference.angle != (null) && Position.isPresent()) {
+            setRotationalVoltage((
+              Effort.angle = Rotation2d.fromRotations(unwrap(
+              DESCRIPTION.RotationalFeedback.calculate(wrap(
+                Position.get().getRadians(), 
+                Reference.angle.getRadians()))))
+            ).getRotations());
+          }          
       } else {
         cease();
       }
+      STATUS.setEffort(Effort);
     }
     Logger.processInputs(
       String.format(
@@ -122,7 +125,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @param Demand Voltage sent to the controller object 
    */
   protected void setTranslationalVoltage(final double Demand) {
-    DESCRIPTION.TranslationalController.set(Demand);
+    DESCRIPTION.TranslationalController.set(MathUtil.clamp(Demand, (-12D), (12D)));
   }
 
   /**
@@ -130,35 +133,12 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @param Demand Voltage sent to the controller object 
    */
   protected void setRotationalVoltage(final double Demand) {
-    DESCRIPTION.RotationalController.set(Demand);
+    DESCRIPTION.RotationalController.set(MathUtil.clamp(Demand, (-12D), (12D)));
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public Report getReport() {
     return STATUS;
-  }
-
-  @Override
-  public Boolean getConnection() {
-    return (STATUS.isConnected() && STATUS.isRotationalConnected() && STATUS.isTranslationalConnected());
-  }
-
-  /**
-   * Provides the current speed of the module, interpreted from the angular speed, omega.
-   * @return Velocity of the translational controller's axis of rotation in meters/second
-   */
-  public Double getTranslationalVelocity() {
-    return Units.rotationsPerMinuteToRadiansPerSecond(
-      getReport().getTranslationalVelocity());
-  }
-
-  /**
-   * Provides the current speed of the module, interpreted from the angular speed, omega.
-   * @return Velocity of the rotational controller's axis of rotation in meters/second
-   */
-  public Double getRotationalVelocity() {
-    return Units.rotationsPerMinuteToRadiansPerSecond(
-      getReport().getRotationalVelocity());
   }
 
   /**
@@ -167,8 +147,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @return Position of the rotational controller's axis of rotation in radians as a Rotation2d Object
    */
   public Optional<Rotation2d> getRotationalPosition() {
-    final var Result = getMeasurement();
-    return Result.map(swerveModulePosition -> swerveModulePosition.angle.minus(getRotationalOffset()));
+    return getMeasurement().map(Measurement -> Measurement.angle.minus(Rotation2d.fromRadians(DESCRIPTION.RotationalOffset)));
   }
 
   /**
@@ -177,31 +156,14 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * @return Position of the translational controller's axis of rotation in meters as a Double Object
    */
   public Optional<Double> getTranslationPosition() {
-    final var Result = getMeasurement();
-    return Optional.ofNullable(Result.isPresent()? Result.get().distanceMeters - getTranslationalOffset(): (null));
-  }
-
-  /**
-   * Provides the constant rotational angular displacement offset of the rotational controller's offset of the encoder feedback
-   * @return Positional offset of the rotational controller
-   */
-  public Rotation2d getRotationalOffset() {
-    return Rotation2d.fromRadians(DESCRIPTION.RotationalOffset);
-  }
-
-  /**
-   * Provides the constant translational angular displacement offset of the translational controller's offset of the encoder feedback
-   * @return Positional offset of the translational controller
-   */
-  public Double getTranslationalOffset() {
-    return DESCRIPTION.TranslationalOffset; 
+    return getMeasurement().map(Measurement -> Measurement.distanceMeters - DESCRIPTION.TranslationalOffset);
   }
 
   /**
    * Provides the real-world description of the module, essentially an object makeup of the system's constants.
    * @return Description of this module
    */
-  public Descriptor<Placement,?> getDescriptor() {
+  public Descriptor<?,?> getDescriptor() {
     return DESCRIPTION;
   }
 
@@ -210,7 +172,7 @@ public abstract class Module<@NonNull Placement extends Enum<?>> implements Actu
    * no effect on the operations, but is instead used to make the modules distinct from one-another.
    * @return Placement of the module (wheel-base relative)
    */
-  public Placement getPlacement() {
+  public Enum<?> getPlacement() {
     return DESCRIPTION.Placement;
   }
 
