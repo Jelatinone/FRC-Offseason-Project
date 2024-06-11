@@ -18,11 +18,9 @@ package org.frc5411.lib.instrument.module;
 import org.frc5411.lib.pattern.actuator.Actuator;
 import org.frc5411.lib.pattern.actuator.module.ReportAutoLogged;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -44,29 +42,23 @@ import static org.frc5411.lib.utility.Utilities.*;
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public abstract class Module<@NonNull Controller extends MotorController, @NonNull Encoder> implements Actuator<SwerveModuleState, SwerveModulePosition> {
+public abstract class Module<@NonNull Controller> implements Actuator<SwerveModuleState, SwerveModulePosition> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Descriptor<Controller,Encoder> DESCRIPTION;
+  Descriptor<Controller> DESCRIPTION;
   ReportAutoLogged STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Module Constructor.
    * @param Description Real-world description of the system, contains relevant constants to the operation of the module
    */
-  protected Module(final Descriptor<Controller,Encoder> Description) {
+  protected Module(final Descriptor<Controller> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
     STATUS = new ReportAutoLogged();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public final Module<Controller,Encoder> clone() throws CloneNotSupportedException {
+  public final Module<Controller> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
-  }
-
-  @Override
-  public synchronized void cease() {
-    DESCRIPTION.TranslationalController.disable();
-    DESCRIPTION.RotationalController.disable();
   }
 
   @Override
@@ -125,17 +117,13 @@ public abstract class Module<@NonNull Controller extends MotorController, @NonNu
    * Mutates the current voltage applied to the module's translational motor controller
    * @param Demand Voltage sent to the controller object 
    */
-  protected void setTranslationalVoltage(final double Demand) {
-    DESCRIPTION.TranslationalController.set(MathUtil.clamp(Demand, (-12D), (12D)));
-  }
+  protected abstract void setTranslationalVoltage(final double Demand);
 
   /**
    * Mutates the current voltage applied to the module's rotational motor controller
    * @param Demand Voltage sent to the controller object 
    */
-  protected void setRotationalVoltage(final double Demand) {
-    DESCRIPTION.RotationalController.set(MathUtil.clamp(Demand, (-12D), (12D)));
-  }
+  protected abstract void setRotationalVoltage(final double Demand);
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public Report getReport() {
@@ -164,7 +152,7 @@ public abstract class Module<@NonNull Controller extends MotorController, @NonNu
    * Provides the real-world description of the module, essentially an object makeup of the system's constants.
    * @return Description of this module
    */
-  public Descriptor<Controller,Encoder> getDescriptor() {
+  public Descriptor<Controller> getDescriptor() {
     return DESCRIPTION;
   }
 

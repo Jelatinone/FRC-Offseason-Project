@@ -64,7 +64,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Component<Rotation2d> GYROSCOPE;
-  Collection<Module<?,?>> MODULES;
+  Collection<Module<?>> MODULES;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
   static volatile State Mode;
