@@ -40,6 +40,8 @@ public class Report {
   volatile double Period = (-1D);  
   volatile double Average = (-1D);
   volatile double Timestamp = (-1D);
+  volatile int Failed = (0);
+  volatile int Status = (0);
   volatile boolean Running = (false);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**

@@ -58,11 +58,6 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class PhoenixRegister extends Thread implements Register<StatusSignal<Number>,Article> {
-  /*
-   * TODO:
-   *    CAN-FD
-   *    Multi-Network
-   */
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 55742622883094958L;
@@ -249,12 +244,12 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
             try {
               SIGNAL_LOCK.writeLock().lock();
               final var Providers = SIGNALS.iterator();
-              final Double Timestamp = (HALUtil.getFPGATime() / 1e6) - SIGNALS
+              final var Timestamp = (HALUtil.getFPGATime() / 1e6) - SIGNALS
                 .stream()
                 .mapToDouble((Signal) -> 
                   Signal.getTimestamp().getLatency())
                 .average()
-                .getAsDouble();
+                .orElse((0D));
               RESPONSES.forEach((final Queue<Optional<Number>> Queue) -> {
                 synchronized(Queue) {
                   Queue.offer(Optional.ofNullable(Providers.next().getValue()));
@@ -278,7 +273,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
             }
             try {
               REQUEST_LOCK.readLock().lock();
-              CLIENTS.forEach((key, value) -> value.accept(REQUESTS.get(key)));
+              CLIENTS.forEach((Hash, Applicator) -> Applicator.accept(REQUESTS.get(Hash)));
             } finally {
               REQUEST_LOCK.readLock().unlock();
             }
@@ -329,11 +324,11 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
 /**
  * <h1>Serializable</h1>
- * 
+ *
  * <p>Struct serializable instance of a report
- * 
+ *
  * @see Report
- * 
+ *
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @AutoLog

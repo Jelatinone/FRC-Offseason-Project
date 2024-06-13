@@ -94,13 +94,24 @@ public class Aggregator<Aggregates> {
   }
 
   /**
-   * Aggregates (operates) and sets the value of {@link #getAggregated() aggregated} via the Aggregator operator by providing the first argument as the most
+   * Acquires (operates) and sets the value of {@link #getAggregated() aggregated} via the Aggregator operator by providing the first argument as the most
    * recent value of the origin supplier, and using the previous value as the second argument. 
    * @return the value of {@link #getAggregated() aggregated}
    */
   public synchronized Aggregates acquire() {
     synchronized(this) {
       return (Aggregated = AGGREGATOR.apply(Retained, ORIGIN.get()));
+    }
+  }
+
+  /**
+   * Attains the current value provided by the origin, this is dissimilar to {@link #acquire()} and {@link #aggregate()} which make use of the origin to set the 
+   * values or {@link #getAggregated() aggregated} (and or {@link #getRetained() retained}). 
+   * @return the current value of the origin supplier
+   */
+  public synchronized Aggregates attain() {
+    synchronized(this) {
+      return ORIGIN.get();
     }
   }
 

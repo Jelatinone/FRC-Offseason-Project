@@ -18,8 +18,8 @@ package org.frc5411.lib.nouveau;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.utility.Utilities;
 
+import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.util.DoubleCircularBuffer;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.Optional;
@@ -42,7 +42,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * <p>Runs the main-loop of the underlying thread, updating {@link Queue Queues} mapped to signals that have been 
-   * {@link #register(Object) registered}, and updating {@link Queue Queues} from the current system {@link Timer#getFPGATimestamp() timestamp}.
+   * {@link #register(Object) registered}, and updating {@link Queue Queues} from the current system {@link HALUtil#getFPGATime() timestamp}.
    * Additionally, synchronization operations should occur to ensure multi-threading safety through the use of {@link #getSignalLock()  signal locks}.
    * 
    * <p>Should only be called once via {@link #start()}, as the method contains an internal while-loop that continues as long as the Reporter is alive, and
@@ -88,7 +88,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
 
   /**
    * Creates a new Queue of standard size, and adds it to the collection of timestamp Queues. Each timestamp Queue contains the timestamp from a 
-   * {@link Timer#getFPGATimestamp() timestamp} of a {@link #run() run-cycle}, where the last element in the Queue is the most recent timestamp.
+   * {@link HALUtil#getFPGATime() timestamp} of a {@link #run() run-cycle}, where the last element in the Queue is the most recent timestamp.
    * 
    * <p> Note that this is done concurrently with updating {@link #timestamp()} Queues, so each update-cycle of {@link #run()} creates a pair of
    * signal-values and timestamps that can be used to better interpolate values as opposed to a standard 20-millisecond cycle provided by

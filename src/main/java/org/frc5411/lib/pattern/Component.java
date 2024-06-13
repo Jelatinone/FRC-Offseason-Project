@@ -106,7 +106,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * has not been called for a significant amount of time, information may be stale, or out of date.
    * 
    * <p>Ideally, the provided Report is never a {@link #clone() cloned} copy of the original report instance, this prevents unnecessary copies being created by internal caused
-   * used throughout the Component framework. However, downstream implementations when calling {@link #getReport()} should call {@link Report#clone()} <p>
+   * used throughout the Component framework. However, downstream implementations when calling this method should also call {@link Report#clone()} <p>
    * 
    * @return Report of measurements, by default an empty report.
    */

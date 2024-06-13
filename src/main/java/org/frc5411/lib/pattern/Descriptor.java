@@ -41,8 +41,7 @@ public abstract class Descriptor<@NonNull Described extends Component<?>> implem
    * @return Copy of this object, but not the same instance
    */
   public Descriptor<Described> clone() {
-    return new Descriptor<>() {
-    };
+    return new Descriptor<>() {};
   }
 
   /**

@@ -48,10 +48,6 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class StandardRegister implements Register<Supplier<Optional<Number>>, Report>{
-  /*
-   * TODO:
-   *    Optional-Support/Requirement
-   */
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 84309938899889961L;

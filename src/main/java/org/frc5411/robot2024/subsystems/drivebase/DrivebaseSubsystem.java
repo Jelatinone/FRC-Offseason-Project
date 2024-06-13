@@ -74,7 +74,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
-    DISCRETE_AGGREGATOR.reset(HALUtil.getFPGATime() / 1e6);
+    DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
     MODULES = List.of(
       
     );

@@ -162,13 +162,12 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
 
       Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());
 
-      //May include bad measurements :(
       final double[] Translations, Rotations;
       synchronized(TRANSLATIONAL_POSITIONS) {
         Translations = TRANSLATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.get().doubleValue() / getDescriptor().TranslationalReduction * getDescriptor().Radius - getDescriptor().TranslationalOffset)
+            Position.orElse(Double.NaN).doubleValue() / getDescriptor().TranslationalReduction * getDescriptor().Radius - getDescriptor().TranslationalOffset)
           .toArray();
         TRANSLATIONAL_POSITIONS.clear();
       }
@@ -176,7 +175,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         Rotations = ROTATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.get().doubleValue() / getDescriptor().RotationalReduction - getDescriptor().RotationalOffset)
+            Position.orElse(Double.NaN).doubleValue() / getDescriptor().RotationalReduction - getDescriptor().RotationalOffset)
             .toArray();
         ROTATIONAL_POSITIONS.clear();
       }
