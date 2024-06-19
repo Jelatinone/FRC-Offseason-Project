@@ -29,7 +29,6 @@ import com.jcabi.aspects.Immutable.Array;
 import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.Collection;
-
 import java.util.function.Consumer;
 //----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//
 /**
@@ -145,6 +144,17 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
     for(final var Element: VECTOR) {
       Action.accept(Element);
     }
+  }
+
+  /**
+   * Returns the number of elements in this list.  If this list contains
+   * more than {@code Integer.MAX_VALUE} elements, returns
+   * {@code Integer.MAX_VALUE}.
+   *
+   * @return the number of elements in this list
+   */
+  public int size() {
+    return VECTOR.length;
   }
   //-----------------------------------------------------------------------[Accessors]------------------------------------------------------------------------//
   /**

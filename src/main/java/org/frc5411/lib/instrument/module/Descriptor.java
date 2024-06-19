@@ -18,7 +18,6 @@ package org.frc5411.lib.instrument.module;
 import org.frc5411.lib.control.Controller;
 import org.frc5411.lib.pattern.Component;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
@@ -52,9 +51,9 @@ public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411
   Actuator RotationalController;
   Controller<N2,N1,N1> RotationalFeedback;
 
-  Translation2d Position;
   Double Radius;
   Enum<?> Placement;
+  Limit Limits;
 
   @Override
   public Descriptor<Actuator,Encoder> clone() {
@@ -70,9 +69,9 @@ public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411
       RotationalEncoder,
       RotationalController,
       RotationalFeedback,
-      Position,
       Radius,
-      Placement
+      Placement,
+      Limits
     );
   }
 }

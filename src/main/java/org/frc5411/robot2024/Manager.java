@@ -19,7 +19,6 @@ package org.frc5411.robot2024;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
-import org.littletonrobotics.junction.AutoLogOutput;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
@@ -76,14 +75,11 @@ public final class Manager implements Singleton<Manager>, Runnable {
   TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
   TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
 
-  ExtendedKalmanFilter<N2,N2,N2> FILTER;
   SwerveDriveKinematics KINEMATICS;
-  SwerveDriveOdometry ODOMETRY;
+  SwerveDriveOdometry ODOMETRY;  
+  ExtendedKalmanFilter<N2,N2,N2> FILTER;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
-  static volatile SwerveDriveWheelPositions Position;
-  static volatile Rotation2d Rotation;
-  static volatile Double Timestamp;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
@@ -150,17 +146,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
       synchronized(Manager.class) {
         try {
           WHEEL_UPDATE_LOCK.readLock().lock();
-          WHEEL_UPDATE_QUEUE.forEach((Observation) -> {
-            VEHICLE_ODOMETRY.addSample(
-              Observation.Timestamp(), 
-              ODOMETRY.update(
-                Rotation = Observation.Rotation()
-                  .orElse(Rotation.plus(
-                    Rotation2d.fromRadians(
-                      KINEMATICS.toTwist2d(Position, Position = Observation.Position())
-                  .dtheta))), 
-                Observation.Position()));
-            FILTER.predict(VecBuilder.fill((0D), (0D)), -(Timestamp - (Timestamp = Observation.Timestamp)));
+          WHEEL_UPDATE_QUEUE.forEach((final WheelObservation Observation) -> {
+
           });
           WHEEL_UPDATE_QUEUE.clear();
         } finally {
@@ -168,7 +155,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
         }
         try {
           VISION_UPDATE_LOCK.readLock().lock();
-          VISION_UPDATE_QUEUE.forEach((Observation) -> {
+          VISION_UPDATE_QUEUE.forEach((final VisionObservation Observation) -> {
 
           });
           VISION_UPDATE_QUEUE.clear();
