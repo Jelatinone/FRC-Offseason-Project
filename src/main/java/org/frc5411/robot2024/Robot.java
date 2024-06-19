@@ -15,8 +15,8 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
-import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Callback;
+import org.frc5411.lib.schema.Singleton;
 
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;

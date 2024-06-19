@@ -26,8 +26,8 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import java.util.Optional;
 import java.util.Queue;
-import java.util.stream.IntStream;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import lombok.AccessLevel;
 import lombok.NonNull;

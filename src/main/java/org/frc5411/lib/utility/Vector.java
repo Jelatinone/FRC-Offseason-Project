@@ -20,16 +20,16 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Num;
 import edu.wpi.first.math.numbers.N0;
 
+import com.jcabi.aspects.Immutable.Array;
+
+import java.util.Collection;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
-
-import com.jcabi.aspects.Immutable.Array;
-
-import java.util.Objects;
-import java.util.stream.Stream;
-import java.util.Collection;
-import java.util.function.Consumer;
 //----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//
 /**
  * 

@@ -15,17 +15,17 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+
 import org.frc5411.lib.control.archetype.PIDConstants;
-import org.frc5411.lib.control.archetype.PIDController;
 import org.frc5411.lib.instrument.module.Limit;
+
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkBase;
 
 import java.util.function.Supplier;
-
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -79,8 +79,8 @@ public class Constants {
     Module(
       final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<CANSparkBase,CANcoder> Real, 
       final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<DCMotorSim,Supplier<Number>> Mock) {
-      REAL_DESCRIPTOR = Real.withPlacement(this).build();
-      MOCK_DESCRIPTOR = Mock.withPlacement(this).build();
+      REAL_DESCRIPTOR = Real.Identity(this).build();
+      MOCK_DESCRIPTOR = Mock.Identity(this).build();
     }
 
     /**
@@ -105,57 +105,57 @@ public class Constants {
  * <h1>Descriptions</h1>
  * 
  * <p>Contains base-level {@link org.frc5411.lib.pattern.Descriptor descriptors} for the related devices for the {@link DrivebaseSubsystem}, namely
- * it's {@link Module modules} and gyroscopic hardware.
+ * it's {@link Module modules} and {@link org.frc5411.lib.instrument.gyroscope.Gyroscope gyroscopic} hardware.
  */
 @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
 class Descriptions {
 
   static final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<CANSparkBase,CANcoder> REAL_MODULE_DESCRIPTOR = 
-  org.frc5411.lib.instrument.module.Descriptor.<CANSparkBase,CANcoder>builder()
-    .withTranslationalReduction((6.12D))
-    .withTranslationalOffset(Units.inchesToMeters((0D)))
-    .withTranslationalInverted((false))
-    .withTranslationalFeedback(new PIDController(
-      PIDConstants.builder()
-        .setProportional((0D))
-        .setIntegral((0D))
-        .setDerivative((0D))
-        .build()))
-    .withRotationalReduction((150D) / (7D))
-    .withRotationalInverted((false))
-    .withRotationalFeedback(
-      PIDConstants.builder()
-        .setProportional((0D))
-        .setIntegral((0D))
-        .setDerivative((0D))
-        .build().toController())
-    .withRadius(Units.inchesToMeters((4D)))
-    .withLimits(new Limit(
-      (0D), 
-      (0D), 
-      (0D)));
+    org.frc5411.lib.instrument.module.Descriptor.<CANSparkBase,CANcoder>builder()
+      .TranslationalReduction((6.12D))
+      .TranslationalOffset(Units.inchesToMeters((0D)))
+      .TranslationalInverted((false))
+      .TranslationalFeedback(
+        PIDConstants.builder()
+          .Proportional((0D))
+          .Integral((0D))
+          .Derivative((0D))
+          .build().toController())
+      .RotationalReduction((150D) / (7D))
+      .RotationalInverted((false))
+      .RotationalFeedback(
+        PIDConstants.builder()
+          .Proportional((0D))
+          .Integral((0D))
+          .Derivative((0D))
+          .build().toController())
+      .Radius(Units.inchesToMeters((4D)))
+      .Limits(new Limit(
+        (0D), 
+        (0D), 
+        (0D)));
 
   static final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<DCMotorSim,Supplier<Number>> MOCK_MODULE_DESCRIPTOR =
     org.frc5411.lib.instrument.module.Descriptor.<DCMotorSim,Supplier<Number>>builder()
-      .withTranslationalReduction((6.12D))
-      .withTranslationalOffset(Units.inchesToMeters((0D)))    
-      .withTranslationalInverted((false))
-      .withTranslationalFeedback(new PIDController(
+      .TranslationalReduction((6.12D))
+      .TranslationalOffset(Units.inchesToMeters((0D)))
+      .TranslationalInverted((false))
+      .TranslationalFeedback(
         PIDConstants.builder()
-          .setProportional((0D))
-          .setIntegral((0D))
-          .setDerivative((0D))
-          .build()))
-      .withRotationalReduction((150D) / (7D))
-      .withRotationalInverted((false))
-      .withRotationalFeedback(
-        PIDConstants.builder()
-          .setProportional((0D))
-          .setIntegral((0D))
-          .setDerivative((0D))
+          .Proportional((0D))
+          .Integral((0D))
+          .Derivative((0D))
           .build().toController())
-      .withRadius(Units.inchesToMeters((4D)))
-      .withLimits(new Limit(
+      .RotationalReduction((150D) / (7D))
+      .RotationalInverted((false))
+      .RotationalFeedback(
+        PIDConstants.builder()
+          .Proportional((0D))
+          .Integral((0D))
+          .Derivative((0D))
+          .build().toController())
+      .Radius(Units.inchesToMeters((4D)))
+      .Limits(new Limit(
         (0D), 
         (0D), 
         (0D)));

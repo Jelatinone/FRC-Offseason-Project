@@ -13,37 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.control.archetype;
+package org.frc5411.lib.instrument.gyroscope;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import edu.wpi.first.math.geometry.Rotation3d;
+
+import org.littletonrobotics.junction.AutoLog;
+
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>PIDConstants</h1>
+ * <h1>Report</h1>
  * 
- * <p>
+ * @see org.frc5411.lib.pattern.Report Report
  * 
  * @author Cody Washington
  */
-
- @Builder(toBuilder = (true))
- @Getter
- @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class PIDConstants {
+@FieldDefaults(level = AccessLevel.PROTECTED)
+@Getter
+@Setter
+@AutoLog
+public class Report extends org.frc5411.lib.pattern.Report<Rotation3d> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  Double Proportional;
-
-  Double Integral;
-
-  Double Derivative;
-  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
-  /**
-   * Transforms the relevant PID Constants stored within this object into a 'tuned' controller object
-   * @return PID controller object from stored constants
-   */
-  public PIDController toController() {
-    return new PIDController(this);
-  }
+  volatile Rotation3d Velocity;
 }

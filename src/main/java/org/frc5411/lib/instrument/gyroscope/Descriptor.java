@@ -13,37 +13,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.control.archetype;
+package org.frc5411.lib.instrument.gyroscope;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.pattern.Component;
+
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.numbers.N3;
+
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>PIDConstants</h1>
+ * <h1>Descriptor</h1>
  * 
- * <p>
+ * @see org.frc5411.lib.pattern.Descriptor Descriptor
  * 
  * @author Cody Washington
  */
-
- @Builder(toBuilder = (true))
- @Getter
- @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class PIDConstants {
-  //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  Double Proportional;
-
-  Double Integral;
-
-  Double Derivative;
+@Builder(toBuilder = (true))
+@FieldDefaults(level = AccessLevel.PROTECTED, makeFinal = (true))
+public class Descriptor extends org.frc5411.lib.pattern.Descriptor<Component<Rotation3d>> {
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  Vector<N3> Offset;
+  Integer Identity;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
-  /**
-   * Transforms the relevant PID Constants stored within this object into a 'tuned' controller object
-   * @return PID controller object from stored constants
-   */
-  public PIDController toController() {
-    return new PIDController(this);
+  @Override
+  public Descriptor clone() {
+    return new Descriptor(
+      Offset,
+      Identity
+    );
   }
 }

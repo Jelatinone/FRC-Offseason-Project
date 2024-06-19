@@ -15,11 +15,12 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.pattern;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import java.util.function.Function;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import net.bytebuddy.utility.nullability.MaybeNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Descriptor</h1>
@@ -50,17 +51,19 @@ public abstract class Descriptor<@NonNull Described extends Component<?>> implem
    * @return Empty report object
    */
   public static <@NonNull Described extends Component<?>> Descriptor<Described> empty() {
-    return new Descriptor<>() {
-    };
+    return new Descriptor<>() {};
   }
 
   /**
-   * Completes this object and turns it into a Described type by passing it into the constructor of the specified Described type, returns null by default to
-   * support constructors that require more arguments than a Descriptor or abstract types.
+   * Completes this descriptor object by transforming it into the described type by passing it into the generator (constructor) of the specified downstream type; this
+   * behavior is only supported for {@link Component implementations} which reference only a constructor of this descriptor type within their constructor.
+   * @param <Downstream> Type which extends the descriptor, filling out all of the relevant fields for the product at it's implementation level
+   * @param <Produces>   Type which extends the described type, resolves issues with components being created rather than the desired type via an additional cast
+   * @param Generator    Functional type generator which accepts a {@code Descriptor} argument, and produces the {@code Described} type to be desired.
    * @return Instance of a Described type
    */
-  public @MaybeNull Described complete() {
-    return (null);
+  @SuppressWarnings("unchecked")
+  public @NonNull <Downstream extends Descriptor<Described>, Produces extends Described> Produces complete(final Function<? super Downstream,? extends Produces> Generator) {
+    return (Produces) Generator.apply((Downstream) this);
   }
-  
 }

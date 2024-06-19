@@ -48,31 +48,32 @@ import lombok.NonNull;
 public interface Component<@NonNull Measured extends StructSerializable> extends Closeable, Sendable {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
-   * Generates this Component instance from a relevant descriptor type. Descriptor contains the relevant mechanical constant information to 
-   * specify a unique component instance.
-   * @param Descriptor Container of a mechanical system's relevant mechanical constants.
-   * @return Component created from descriptor of this type
-   */
-  static <@NonNull Measured extends StructSerializable> Component<Measured> from(final Descriptor<Component<Measured>> Descriptor) {
-    return Descriptor.complete();
-  }
-
-  /**
    * Updates the Report of measurements to the most recent measurement data from hardware and {@link Register#register(Object) queue} sources
    * @param Record Loggable source of information, which is automatically logged with the {@link AutoLog} annotation
    * @see Register
    */
   void update(final Report<Measured> Record);
 
-
   /**
    * Clones this component instance, throws an exception when this method is called because Component instances are always unique
    * @return                            Nothing, an error is always thrown
    * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
    */
-  default Component<Measured> clone() throws CloneNotSupportedException {
+  public default Component<Measured> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
   }
+
+  /**
+   * Force re-configures the underlying hardware to the standard specifications of this type. Ideally, a blocking operation is also performed which
+   * ensures correct, hardware-safe application of relevant configurations before {@link #periodic() periodic} operation.
+   */
+  default void configure() {}
+
+  /**
+   * Force resets this Component's states and hardware, may fix issues. Should ideally not be called repeatedly or often such as during 
+   * {@link #periodic()}.
+   */
+  default void reset() {}
 
   /**
    * Performs any necessary logic that this device may need with each update, such as maintaining the position of itself using a controller, or 
@@ -92,6 +93,12 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * can be published to different dashboards for ease-of-access.
    */
   default void initSendable(final SendableBuilder Builder) {}
+
+  /**
+   * Provides the identity (name), as a string, of this component instance that is used for logging purposes 
+   * @return Identity of this component
+   */
+  String getIdentity();
 
   /**
    * Provides the real-world description of the component, essentially an object makeup of the system's mechanical constants

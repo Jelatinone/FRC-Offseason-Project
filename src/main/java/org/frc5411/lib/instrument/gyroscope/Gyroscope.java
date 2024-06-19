@@ -13,65 +13,69 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.instrument.module;
+package org.frc5411.lib.instrument.gyroscope;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.control.Controller;
 import org.frc5411.lib.pattern.Component;
 
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.geometry.Rotation3d;
+
+import org.littletonrobotics.junction.Logger;
+
+import java.util.Objects;
 
 import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>Descriptor</h1>
+ * <h1>Gyroscope</h1>
  * 
- * @see org.frc5411.lib.pattern.Descriptor Descriptor
+ * <p>
  * 
  * @author Cody Washington
  */
-@Builder(toBuilder = (true))
-@FieldDefaults(level = AccessLevel.PROTECTED, makeFinal = (true))
-public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411.lib.pattern.Descriptor<Component<SwerveModulePosition>> {
+@FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
+public abstract class Gyroscope implements Component<Rotation3d> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Double TranslationalReduction;
-  Double TranslationalOffset;
-  Boolean TranslationalInverted;
-  Actuator TranslationalController;
-  Controller<N2,N1,N1> TranslationalFeedback;
-  
-  Double RotationalReduction;
-  Double RotationalOffset;
-  Boolean RotationalInverted;
-  Encoder RotationalEncoder;
-  Actuator RotationalController;
-  Controller<N2,N1,N1> RotationalFeedback;
-
-  Double Radius;
-  Enum<?> Identity;
-  Limit Limits;
+  Descriptor DESCRIPTION;
+  ReportAutoLogged STATUS;
+  //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
+  /**
+   * Gyroscope Constructor.
+   * @param Description Real-world description of the system, contains relevant constants to the operation of the gyroscope
+   */
+  protected Gyroscope(final Descriptor Description) {
+    DESCRIPTION = Objects.requireNonNull(Description);
+    STATUS = new ReportAutoLogged();
+  }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public Descriptor<Actuator,Encoder> clone() {
-    return new Descriptor<>(
-      TranslationalReduction,
-      TranslationalOffset,
-      TranslationalInverted,
-      TranslationalController,
-      TranslationalFeedback,
-      RotationalReduction,
-      RotationalOffset,
-      RotationalInverted,
-      RotationalEncoder,
-      RotationalController,
-      RotationalFeedback,
-      Radius,
-      Identity,
-      Limits
-    );
+  public final Gyroscope clone() throws CloneNotSupportedException {
+    throw new CloneNotSupportedException();
+  }
+
+  @Override
+  public synchronized void periodic() {
+    synchronized(STATUS) {
+      update(STATUS);
+    }
+    Logger.processInputs(
+      getIdentity(), STATUS);   
+  }
+  //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+  @Override
+  public Report getReport() {
+    return STATUS;
+  }
+
+  @Override
+  public Descriptor getDescriptor() {
+    return DESCRIPTION;
+  }
+
+  @Override
+  public String getIdentity() {
+    return String.format(
+      ("Gyroscope-[%s]"), 
+      DESCRIPTION.Identity.toString());
   }
 }

@@ -65,18 +65,6 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
     STATUS.setDemand(Demand);
   }
 
-  /**
-   * Force re-configures the underlying module hardware to the standard specifications of this type. Ideally, a blocking operation is also performed which
-   * ensures correct, hardware-safe application of relevant configurations before Module operation.
-   */
-  public void configure() {}
-
-  /**
-   * Force resets this module's measurements to absolute heading measurements, may fix issues with offsets and relative positions. Should ideally not 
-   * be called repeatedly or often.
-   */
-  public void reset() {}
-
   @Override
   public synchronized void periodic() {
     synchronized(STATUS) {
@@ -106,10 +94,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
       STATUS.setEffort(Effort);
     }
     Logger.processInputs(
-      String.format(
-        ("Module-[%s]"), 
-        getPlacement().name()), 
-      STATUS);   
+      getIdentity(),STATUS);   
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
   /**
@@ -147,21 +132,16 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
     return getMeasurement().map(Measurement -> Measurement.distanceMeters - DESCRIPTION.TranslationalOffset);
   }
 
-  /**
-   * Provides the real-world description of the module, essentially an object makeup of the system's constants.
-   * @return Description of this module
-   */
+  
+  @Override
   public Descriptor<Controller,Encoder> getDescriptor() {
     return DESCRIPTION;
   }
 
-  /**
-   * Provides the real-world placement of the module relative to  the wheel-base, this is a non-enforced requirement of the module and has
-   * no effect on the operations, but is instead used to make the modules distinct from one-another.
-   * @return Placement of the module (wheel-base relative)
-   */
-  public Enum<?> getPlacement() {
-    return DESCRIPTION.Placement;
+  @Override
+  public String getIdentity() {
+    return String.format(
+      ("Module-[%s]"), 
+      DESCRIPTION.Identity.name());
   }
-
 }

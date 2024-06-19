@@ -18,6 +18,7 @@ package org.frc5411.robot2024;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
+
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
 import edu.wpi.first.math.Matrix;
@@ -39,11 +40,11 @@ import edu.wpi.first.wpilibj.Notifier;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.Queue;
 import java.util.ArrayDeque;
+import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -98,8 +99,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
       Nat.N2(),
       Nat.N2(),
       Nat.N2(),
-      (State, Output) -> Output,
-      (State, Output) -> State,
+      (Input, Output) -> Output,
+      (Input, Output) -> Input,
       STATE_STANDARD_DEVIATIONS,
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
@@ -147,6 +148,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
         try {
           WHEEL_UPDATE_LOCK.readLock().lock();
           WHEEL_UPDATE_QUEUE.forEach((final WheelObservation Observation) -> {
+
 
           });
           WHEEL_UPDATE_QUEUE.clear();

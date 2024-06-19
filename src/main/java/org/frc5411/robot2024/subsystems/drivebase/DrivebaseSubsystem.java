@@ -15,8 +15,8 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.MockModule;
+import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.SparkModule;
 import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.schema.Registrable;
@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -79,22 +80,16 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
     MODULES = Vector.fill(
-      RobotBase.isReal()? 
-        new SparkModule(Constants.Module.FRONT_LEFT.getRealDescriptor()): 
-        new MockModule(Constants.Module.FRONT_LEFT.getMockDescriptor()),
-      RobotBase.isReal()? 
-        new SparkModule(Constants.Module.FRONT_RIGHT.getRealDescriptor()): 
-        new MockModule(Constants.Module.FRONT_RIGHT.getMockDescriptor()),
-      RobotBase.isReal()? 
-        new SparkModule(Constants.Module.REAR_LEFT.getRealDescriptor()): 
-        new MockModule(Constants.Module.REAR_LEFT.getMockDescriptor()),
-      RobotBase.isReal()? 
-        new SparkModule(Constants.Module.REAR_RIGHT.getRealDescriptor()): 
-        new MockModule(Constants.Module.REAR_RIGHT.getMockDescriptor())
+      Stream.of(Constants.Module.values())
+        .map((Module) -> 
+          RobotBase.isReal()? 
+            Module.getRealDescriptor().complete(SparkModule::new): 
+            Module.getMockDescriptor().complete(MockModule::new))
+        .toArray(Module[]::new)
     );
     GYROSCOPE = (null);
     MODULES.forEach((Module) -> 
-      addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
+      addChild(String.format(Module.getIdentity()), Module));  
     addChild(("Gyroscope"), GYROSCOPE);
     Mode = State.RELATIVE;
     DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
