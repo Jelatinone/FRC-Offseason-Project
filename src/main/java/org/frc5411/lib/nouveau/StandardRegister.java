@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
+import java.util.Vector;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -76,9 +76,9 @@ public class StandardRegister implements Register<Supplier<Optional<Number>>, Re
   private StandardRegister() {
     State = new ReportAutoLogged();
     CALLBACK = new Notifier(this);
-    TIMESTAMPS = new ArrayList<>();
-    RESPONSES = new ArrayList<>();
-    SIGNALS = new ArrayList<>();
+    TIMESTAMPS = new Vector<>();
+    RESPONSES = new Vector<>();
+    SIGNALS = new Vector<>();
     PEAK_REMOVER = new MedianFilter((3));
     LOW_PASS = LinearFilter.movingAverage((50));
     DISCRETE_AGGREGATOR = new Aggregator<>(
@@ -182,15 +182,15 @@ public class StandardRegister implements Register<Supplier<Optional<Number>>, Re
             Queue.offer(Timestamp);
           }
         });
-        State.Period = DISCRETE_AGGREGATOR.aggregate();
-        State.Average = LOW_PASS.calculate(
-          PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated()));
-        State.Timestamp = DISCRETE_AGGREGATOR.getRetained();
-        State.Priority = ThreadsJNI.getCurrentThreadPriority();
-        State.Registered = SIGNALS.size();
       } finally {
         SIGNAL_LOCK.readLock().unlock();
       }
+      State.Period = DISCRETE_AGGREGATOR.aggregate();
+      State.Average = LOW_PASS.calculate(
+        PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated()));
+      State.Timestamp = DISCRETE_AGGREGATOR.getRetained();
+      State.Priority = ThreadsJNI.getCurrentThreadPriority();
+      State.Registered = SIGNALS.size();      
     }
     State.Running = (false);
   }

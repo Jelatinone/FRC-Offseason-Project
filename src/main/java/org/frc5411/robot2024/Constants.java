@@ -59,68 +59,68 @@ public final class Constants {
   public static final class Field {
     public static final AprilTagFields FIELD = AprilTagFields.k2024Crescendo;
   }
-}
-//-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
-/**
- * Represents the mode of the robot being initialized, i.e. whether we are running on real or simulated hardware, and if we are 
- * replaying from a logged source.
- */
-enum Mode {
 
-  ANONYMOUS,
-
-  ACTUAL,
-
-  SIMULATED,
-
-  REPLAY,
-}
-
-/**
- * Represents the pre-set mode a robot is launched into, i.e. a setting to distinguish between the different stages of robot 
- * development for testing purposes.
- */
-enum Type {
-
-  ANONBOT,
-
-  DEVBOT,
-
-  SIMBOT,
-
-  COMPBOT,
-}
-
-/**
- * Represents a different pre-set profile for different drivers operating the robot, i. e, drivers with different preferences for keybindings
- * and robot operation
- */
-enum Profile {
-  
-  DEV_DRIVER((null)),
-
-  DEV_OPERATOR((null)),
-
-  COMP_DRIVER((null)),
-
-  COMP_OPERATOR((null));
-
-  private final org.frc5411.lib.utility.Profile<?,?> PROFILE;
-
+  //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**
-   * Profile Constructor
-   * @param Profile Individual's profile with selected preferences and keybindings which act as settings for different robot functionality
+   * Represents the mode of the robot being initialized, i.e. whether we are running on real or simulated hardware, and if we are
+   * replaying from a logged source.
    */
-  Profile(final org.frc5411.lib.utility.Profile<?,?> Profile) {
-    PROFILE = Profile;
+  public enum Mode {
+
+    ANONYMOUS,
+
+    ACTUAL,
+
+    SIMULATED,
+
+    REPLAY,
   }
 
   /**
-   * Provides the retained operator profile (with settings and keybindings) as settings
-   * @return Retained profile instance
+   * Represents the pre-set mode a robot is launched into, i.e. a setting to distinguish between the different stages of robot
+   * development for testing purposes.
    */
-  public final org.frc5411.lib.utility.Profile<?,?> getProfile() {
-    return PROFILE;
+  public enum Type {
+
+    ANONBOT,
+
+    DEVBOT,
+
+    SIMBOT,
+
+    COMPBOT,
   }
-  
+
+  /**
+   * Represents a different pre-set profile for different drivers operating the robot, i. e, drivers with different preferences for keybindings
+   * and robot operation
+   */
+  public enum Profile {
+
+    DEV_DRIVER((null)),
+
+    DEV_OPERATOR((null)),
+
+    COMP_DRIVER((null)),
+
+    COMP_OPERATOR((null));
+
+    private final org.frc5411.lib.utility.Profile<?,?> PROFILE;
+
+    /**
+     * Profile Constructor
+     * @param Profile Individual's profile with selected preferences and keybindings which act as settings for different robot functionality
+     */
+    Profile(final org.frc5411.lib.utility.Profile<?,?> Profile) {
+      PROFILE = Profile;
+    }
+
+    /**
+     * Provides the retained operator profile (with settings and keybindings) as settings
+     * @return Retained profile instance
+     */
+    public final org.frc5411.lib.utility.Profile<?,?> getProfile() {
+      return PROFILE;
+    }
+  }
 }

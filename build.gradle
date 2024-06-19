@@ -1,6 +1,4 @@
 //-----------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-
-
 import edu.wpi.first.gradlerio.GradleRIOPlugin
 import edu.wpi.first.gradlerio.deploy.roborio.GarbageCollectorType
 import groovy.json.JsonSlurper
@@ -27,7 +25,7 @@ def robotMainClass = "org.frc${teamNumber}.robot${seasonYear}.Main"
 application {
   mainClass.set(robotMainClass)
 }
-project.setGroup("org.frc{teamNumber}")
+project.setGroup("org.frc${teamNumber}.c${seasonYear}")
 project.setVersion("${seasonYear}-1.${revisionNumber}")
 
 if (hasProperty('buildScan')) {

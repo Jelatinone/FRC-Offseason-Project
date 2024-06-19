@@ -28,13 +28,11 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.hardware.ParentDevice;
 
-import org.littletonrobotics.junction.AutoLog;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
+import java.util.Vector;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +43,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -57,7 +54,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class PhoenixRegister extends Thread implements Register<StatusSignal<Number>,Article> {
+public class PhoenixRegister extends Thread implements Register<StatusSignal<Number>,Report> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 55742622883094958L;
@@ -81,16 +78,16 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile PhoenixRegister Instance = (null);
-  static volatile ArticleAutoLogged State;
+  static volatile ReportAutoLogged State;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Phoenix Register Constructor.
    */
   private PhoenixRegister() {
-    State = new ArticleAutoLogged();
-    TIMESTAMPS = new ArrayList<>();
-    RESPONSES = new ArrayList<>();
-    SIGNALS = new ArrayList<>();
+    State = new ReportAutoLogged();
+    TIMESTAMPS = new Vector<>();
+    RESPONSES = new Vector<>();
+    SIGNALS = new Vector<>();
     CLIENTS = new HashMap<>();
     REQUESTS = new HashMap<>();
     PEAK_REMOVER = new MedianFilter((3));
@@ -121,9 +118,9 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
 
   @Override
   public synchronized void close() {
+    halt();
     REQUEST_LOCK.writeLock().lock();
     QUEUE_LOCK.writeLock().lock();
-    halt();
     synchronized(PhoenixRegister.class) {
       TIMESTAMPS.forEach(Queue::clear);
       TIMESTAMPS.clear();
@@ -235,19 +232,17 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
             try {
               QUEUE_LOCK.writeLock().lock();
               Status = BaseStatusSignal.waitForAll(
-                2D/UPDATE_FREQUENCY, 
-                SIGNALS.toArray(
-                  BaseStatusSignal[]::new));
+                2D / UPDATE_FREQUENCY, 
+                SIGNALS.toArray(BaseStatusSignal[]::new));
             } finally {
               QUEUE_LOCK.writeLock().unlock();
             }
             try {
               SIGNAL_LOCK.writeLock().lock();
               final var Providers = SIGNALS.iterator();
-              final var Timestamp = (HALUtil.getFPGATime() / 1e6) - SIGNALS
+              final var Timestamp = DISCRETE_AGGREGATOR.attain() - SIGNALS
                 .stream()
-                .mapToDouble((Signal) -> 
-                  Signal.getTimestamp().getLatency())
+                .mapToDouble((Signal) -> Signal.getTimestamp().getLatency())
                 .average()
                 .orElse((0D));
               RESPONSES.forEach((final Queue<Optional<Number>> Queue) -> {
@@ -260,14 +255,6 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
                   Queue.offer(Timestamp);
                 }
               });
-              State.Priority = getPriority(); 
-              State.Status = Status.value;
-              State.Period = DISCRETE_AGGREGATOR.aggregate(); 
-              State.Average = LOW_PASS.calculate(
-                PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated()));
-              State.Timestamp = DISCRETE_AGGREGATOR.getRetained();
-              State.Registered = SIGNALS.size(); 
-              State.Failed = Status.isError()? 1: 0;
             } finally {
               SIGNAL_LOCK.writeLock().unlock();
             }
@@ -277,6 +264,14 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
             } finally {
               REQUEST_LOCK.readLock().unlock();
             }
+            State.Priority = getPriority(); 
+            State.Status = Status.value;
+            State.Period = DISCRETE_AGGREGATOR.aggregate(); 
+            State.Average = LOW_PASS.calculate(
+              PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated()));
+            State.Timestamp = DISCRETE_AGGREGATOR.getRetained();
+            State.Registered = SIGNALS.size(); 
+            State.Failed = Status.isError()? 1: 0;            
           }
         }
         State.Running = (false);
@@ -312,7 +307,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
   }
 
   @Override
-  public Article getReport() {
+  public Report getReport() {
     try {
       SIGNAL_LOCK.readLock().lock();
       return State;
@@ -320,21 +315,4 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
       SIGNAL_LOCK.readLock().unlock();
     }
   }
-}
-//-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
-/**
- * <h1>Serializable</h1>
- *
- * <p>Struct serializable instance of a report
- *
- * @see Report
- *
- */
-@FieldDefaults(level = AccessLevel.PROTECTED)
-@AutoLog
-@Getter
-class Article extends Report {
-  //----------------------------------------------------------------------[Fields]-----------------------------------------------------------------------------//
-  volatile int Failed = (0);
-  volatile int Status = (0);
 }

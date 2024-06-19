@@ -18,6 +18,7 @@ package org.frc5411.lib.instrument.module;
 import org.frc5411.lib.control.Controller;
 import org.frc5411.lib.pattern.Component;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
@@ -40,21 +41,18 @@ public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double TranslationalReduction;
   Double TranslationalOffset;
-  Double TranslationalVelocity;
-  Double TranslationalAcceleration;
   Boolean TranslationalInverted;
   Actuator TranslationalController;
-
   Controller<N2,N1,N1> TranslationalFeedback;
   
   Double RotationalReduction;
   Double RotationalOffset;
-  Double RotationalVelocity;
   Boolean RotationalInverted;
   Encoder RotationalEncoder;
   Actuator RotationalController;
   Controller<N2,N1,N1> RotationalFeedback;
 
+  Translation2d Position;
   Double Radius;
   Enum<?> Placement;
 
@@ -63,18 +61,16 @@ public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411
     return new Descriptor<>(
       TranslationalReduction,
       TranslationalOffset,
-      TranslationalVelocity,
-      TranslationalAcceleration,
       TranslationalInverted,
       TranslationalController,
       TranslationalFeedback,
       RotationalReduction,
       RotationalOffset,
-      RotationalVelocity,
       RotationalInverted,
       RotationalEncoder,
       RotationalController,
       RotationalFeedback,
+      Position,
       Radius,
       Placement
     );

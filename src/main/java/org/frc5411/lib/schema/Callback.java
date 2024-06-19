@@ -13,37 +13,53 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.control.archetype;
+package org.frc5411.lib.schema;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.utility.Aggregator;
+
+import edu.wpi.first.hal.HALUtil;
+
 import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>PIDConstants</h1>
+ * <h1>Callback</h1>
  * 
  * <p>
  * 
  * @author Cody Washington
  */
-
- @Builder(toBuilder = (true), setterPrefix = ("set"))
- @Getter
- @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class PIDConstants {
-  //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  Double Proportional;
-
-  Double Integral;
-
-  Double Derivative;
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
+public class Callback {
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  Runnable PROCEDURE;
+  Aggregator<Double> DISCRETE_AGGREGATOR;
+  Double PERIOD;
+  //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
+  /**
+   * Callback Constructor.
+   * @param Procedure Runnable operation that requires periodic calls to itself
+   * @param Period    Period on which to perform the procedure
+   */
+  public Callback(final Runnable Procedure, final Double Period) {
+    PROCEDURE = Procedure;
+    PERIOD = Period;
+    DISCRETE_AGGREGATOR = new Aggregator<>(
+      () -> HALUtil.getFPGATime() / 1e6, 
+      (Previous, Current) -> Current - Previous);
+  }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
-   * Transforms the relevant PID Constants stored within this object into a 'tuned' controller object
-   * @return PID controller object from stored constants
+   * Tries (attempts) to perform the underlying operation if the difference in time since last operation it is greater than, or equal to the period on which
+   * this operation should occur. 
    */
-  public PIDController toController() {
-    return new PIDController(this);
+  public synchronized void attempt() {
+    synchronized(this) {
+      if(DISCRETE_AGGREGATOR.acquire() >= PERIOD) {
+        DISCRETE_AGGREGATOR.retain(
+          DISCRETE_AGGREGATOR.getRetained() + DISCRETE_AGGREGATOR.getAggregated());
+        PROCEDURE.run();
+      }
+    }
   }
 }

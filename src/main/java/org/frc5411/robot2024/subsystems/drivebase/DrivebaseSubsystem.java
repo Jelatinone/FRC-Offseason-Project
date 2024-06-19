@@ -16,16 +16,21 @@
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.module.Module;
+import org.frc5411.lib.instrument.module.MockModule;
+import org.frc5411.lib.instrument.module.SparkModule;
 import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
+import org.frc5411.lib.utility.Vector;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
@@ -34,7 +39,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -64,25 +68,36 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Component<Rotation2d> GYROSCOPE;
-  Collection<Module<?,?>> MODULES;
+  Vector<Module<?,?>,N4> MODULES;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
   static volatile State Mode;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
-   * DrivebaseSubsystem Constructor.
+   * Drivebase Subsystem Constructor.
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
-    DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
-    MODULES = List.of(
-      
+    MODULES = Vector.fill(
+      RobotBase.isReal()? 
+        new SparkModule(Constants.Module.FRONT_LEFT.getRealDescriptor()): 
+        new MockModule(Constants.Module.FRONT_LEFT.getMockDescriptor()),
+      RobotBase.isReal()? 
+        new SparkModule(Constants.Module.FRONT_RIGHT.getRealDescriptor()): 
+        new MockModule(Constants.Module.FRONT_RIGHT.getMockDescriptor()),
+      RobotBase.isReal()? 
+        new SparkModule(Constants.Module.REAR_LEFT.getRealDescriptor()): 
+        new MockModule(Constants.Module.REAR_LEFT.getMockDescriptor()),
+      RobotBase.isReal()? 
+        new SparkModule(Constants.Module.REAR_RIGHT.getRealDescriptor()): 
+        new MockModule(Constants.Module.REAR_RIGHT.getMockDescriptor())
     );
     GYROSCOPE = (null);
     MODULES.forEach((Module) -> 
       addChild(String.format(("Module-[%s]"), Module.getPlacement().name()), Module));  
     addChild(("Gyroscope"), GYROSCOPE);
     Mode = State.RELATIVE;
+    DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
   } static {
     SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
     DISCRETE_AGGREGATOR = new Aggregator<>(
@@ -139,6 +154,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         });
         GYROSCOPE.periodic();
       }
+      //TODO: Accuracy Filtering
       update();
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
@@ -265,15 +281,6 @@ enum Named implements Registrable {
     if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
       NAMED_COMMAND.addRequirements(Instance);
     }
-    register();
-  }
-
-  /**
-   * Named Constructor.
-   * @param Command Valid runnable operation to register as a {@link NamedCommands NamedCommand}.
-   */
-  Named(final Runnable Command) {
-    NAMED_COMMAND = new InstantCommand(Command, DrivebaseSubsystem.getInstance());
     register();
   }
 

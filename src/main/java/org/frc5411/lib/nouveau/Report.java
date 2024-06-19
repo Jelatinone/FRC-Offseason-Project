@@ -37,11 +37,11 @@ public class Report {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile int Registered = (0);
   volatile int Priority = (0);
+  volatile int Failed = (0);
+  volatile int Status = (0);  
   volatile double Period = (-1D);  
   volatile double Average = (-1D);
   volatile double Timestamp = (-1D);
-  volatile int Failed = (0);
-  volatile int Status = (0);
   volatile boolean Running = (false);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
@@ -49,6 +49,6 @@ public class Report {
    * @return Empty report object
    */
   public static Report empty() {
-    return new Report() {};
+    return new Report();
   }
 }

@@ -20,11 +20,17 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Num;
 import edu.wpi.first.math.numbers.N0;
 
+import lombok.AccessLevel;
+import lombok.NonNull;
+import lombok.experimental.FieldDefaults;
+
 import com.jcabi.aspects.Immutable.Array;
 
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
+import java.util.stream.Stream;
+import java.util.Collection;
 
+import java.util.function.Consumer;
 //----------------------------------------------------------------------[Declaration]---------------------------------------------------------------------------//
 /**
  * 
@@ -35,11 +41,12 @@ import javax.validation.constraints.NotNull;
  * 
  * @author Cody Washington (@Jelatinone) 
  */
-public class Vector<@NotNull Type, @NotNull Elements extends Num> {
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
+public class Vector<@NonNull Type, @NonNull Elements extends Num> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  private static final Vector<Object,N0> EMPTY = new Vector<>(Nat.N0());
-  private final @NotNull @Array Type[] VECTOR;
-
+  static Vector<Object,N0> EMPTY = new Vector<>(Nat.N0(), new Object[0]);
+  
+  @Array Type[] VECTOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   /**
    * Type Vector Constructor.
@@ -76,6 +83,20 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
   }
 
   /**
+   * Creates a type vector with the specified elements
+   * @param <Type>                Type of the collection
+   * @param Vector                Collection data to place within the bounds of the Vector's collection, {@link Collection#size() size} should match the number 
+   *                              of elements specified.
+   * @throws BoundaryException    Bounds of the collection are exceeded or not met by the length of the Vector parameter
+   * @throws NullPointerException Either the Elements parameter or the Vector parameter evaluate to null 
+   * @return Vector of the given elements
+   */
+  @SuppressWarnings("unchecked")
+  public static <Type, Elements extends Num> Vector<Type,Elements> fill(final Collection<Type> Vector) {
+    return new Vector<>(() -> Vector.size(), (Type[]) Vector.toArray());
+  }
+
+  /**
    * Creates an empty type vector, where there are no elements within the underlying generic array
    * @param <Type> Type of the generic array
    * @return An array consisting of zero elements, with a specified type.
@@ -83,6 +104,47 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
   @SuppressWarnings("unchecked")
   public static <Type, Elements extends Num> Vector<Type, Elements> empty() {
     return (Vector<Type, Elements>) EMPTY;
+  }
+
+  /**
+   * Returns a sequential {@code Stream} with this collection as its source.
+   *
+   * @implSpec
+   * The default implementation creates a sequential {@code Stream} from the
+   * collection's {@code Spliterator}.
+   *
+   * @return a sequential {@code Stream} over the elements in this collection
+   */
+  public Stream<Type> stream() {
+    return Stream.of(VECTOR);
+  }
+
+  /**
+   * Performs the given action for each element of the {@code Iterable}
+   * until all elements have been processed or the action throws an
+   * exception.  Actions are performed in the order of iteration, if that
+   * order is specified.  Exceptions thrown by the action are relayed to the
+   * caller.
+   * <p>
+   * The behavior of this method is unspecified if the action performs
+   * side-effects that modify the underlying source of elements, unless an
+   * overriding class has specified a concurrent modification policy.
+   *
+   * @implSpec
+   * <p>The default implementation behaves as if:
+   * <pre>{@code
+   *     for (T t : this)
+   *         action.accept(t);
+   * }</pre>
+   *
+   * @param Action Consumer to be applied against each element stored within the vector
+   * @throws NullPointerException If the specified action is null
+   */
+  public void forEach(final Consumer<? super Type> Action) {
+    Objects.requireNonNull(Action);
+    for(final var Element: VECTOR) {
+      Action.accept(Element);
+    }
   }
   //-----------------------------------------------------------------------[Accessors]------------------------------------------------------------------------//
   /**
@@ -93,13 +155,4 @@ public class Vector<@NotNull Type, @NotNull Elements extends Num> {
   public Type[] getArray() {
     return VECTOR;
   }
-
-  /**
-   * Provides the value of a specific point within the array
-   * @param Index Point within the array to get a value from
-   * @see #getArray()
-   */
-  public synchronized Type get(final Integer Index) {
-    return VECTOR[Index];
-  }  
 }

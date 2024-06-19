@@ -34,14 +34,14 @@ import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>SimulatedModule</h1>
+ * <h1>MockModule</h1>
  * 
  * <p>
  * 
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public class SimulatedModule extends Module<DCMotorSim,Supplier<Number>> {
+public class MockModule extends Module<DCMotorSim,Supplier<Number>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Queue<Optional<Number>> TRANSLATIONAL_POSITIONS;
   Queue<Optional<Number>> ROTATIONAL_POSITIONS;
@@ -54,7 +54,7 @@ public class SimulatedModule extends Module<DCMotorSim,Supplier<Number>> {
    * Simulated Module Constructor.
    * @param Descriptor Real-world getDescriptor() of the system, contains relevant constants to the operation of the module
    */
-  public SimulatedModule(final Descriptor<DCMotorSim,Supplier<Number>> Descriptor) {
+  public MockModule(final Descriptor<DCMotorSim,Supplier<Number>> Descriptor) {
     super(Descriptor);
 
     TRANSLATIONAL_POSITIONS = StandardRegister

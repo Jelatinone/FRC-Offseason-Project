@@ -14,19 +14,37 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
+
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
-
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
+import org.littletonrobotics.junction.AutoLogOutput;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveDriveWheelPositions;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.wpilibj.Notifier;
-
-import org.photonvision.estimation.OpenCVHelp;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
+import java.util.Queue;
+import java.util.ArrayDeque;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -43,20 +61,57 @@ public final class Manager implements Singleton<Manager>, Runnable {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   static long serialVersionUID = 2389697764281159320L;
-  Notifier CALLBACK;
+  static Integer UPDATE_FREQUENCY = (100);
+  static Integer QUEUE_SIZE = (20);
+  static Double BUFFER_SIZE = (2D);
+  static Matrix<N2,N1> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((0D),(0D));
+  static Matrix<N2,N1> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((0D),(0D));
+
+  ReadWriteLock WHEEL_UPDATE_LOCK;
+  ReadWriteLock VISION_UPDATE_LOCK;  
+
+  Queue<WheelObservation> WHEEL_UPDATE_QUEUE;
+  Queue<VisionObservation> VISION_UPDATE_QUEUE;
+
+  TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
+  TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
+
+  ExtendedKalmanFilter<N2,N2,N2> FILTER;
+  SwerveDriveKinematics KINEMATICS;
+  SwerveDriveOdometry ODOMETRY;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
+  static volatile SwerveDriveWheelPositions Position;
+  static volatile Rotation2d Rotation;
+  static volatile Double Timestamp;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
    */
   private Manager() {
-    CALLBACK = new Notifier(this);
-    CALLBACK.setName(("Robot-Manager"));
-    CALLBACK.startPeriodic((1/100D));
+    //<- Fetch All Subsystem Instances ->
     DrivebaseSubsystem.getInstance();
+
+    WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
+    VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));
+    WHEEL_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
+    VISION_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
+    VEHICLE_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
+    FIELD_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
+    FILTER = new ExtendedKalmanFilter<>(
+      Nat.N2(),
+      Nat.N2(),
+      Nat.N2(),
+      (State, Output) -> Output,
+      (State, Output) -> State,
+      STATE_STANDARD_DEVIATIONS,
+      MEASUREMENT_STANDARD_DEVIATIONS,
+      1D / UPDATE_FREQUENCY);
+    //<- Fetch From Drivebase Subsystem->
+    KINEMATICS = (null);
+    ODOMETRY = (null);
   } static {
-    OpenCVHelp.forceLoadOpenCV();
+    Robot.add(Instance, 1D / UPDATE_FREQUENCY);
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
 
@@ -81,7 +136,6 @@ public final class Manager implements Singleton<Manager>, Runnable {
           Subsystem.close();
         } catch(final IOException Ignored) {}
       });      
-      CALLBACK.close();
       Instance = (null);
     }
   }
@@ -92,14 +146,74 @@ public final class Manager implements Singleton<Manager>, Runnable {
    * within their own {@link Notifier} or separate {@link Thread} instance(s).
    */
   public synchronized void run() {
-    synchronized(Manager.class) {
-      
+    if(Instance != null) {
+      synchronized(Manager.class) {
+        try {
+          WHEEL_UPDATE_LOCK.readLock().lock();
+          WHEEL_UPDATE_QUEUE.forEach((Observation) -> {
+            VEHICLE_ODOMETRY.addSample(
+              Observation.Timestamp(), 
+              ODOMETRY.update(
+                Rotation = Observation.Rotation()
+                  .orElse(Rotation.plus(
+                    Rotation2d.fromRadians(
+                      KINEMATICS.toTwist2d(Position, Position = Observation.Position())
+                  .dtheta))), 
+                Observation.Position()));
+            FILTER.predict(VecBuilder.fill((0D), (0D)), -(Timestamp - (Timestamp = Observation.Timestamp)));
+          });
+          WHEEL_UPDATE_QUEUE.clear();
+        } finally {
+          WHEEL_UPDATE_LOCK.readLock().unlock();
+        }
+        try {
+          VISION_UPDATE_LOCK.readLock().lock();
+          VISION_UPDATE_QUEUE.forEach((Observation) -> {
+
+          });
+          VISION_UPDATE_QUEUE.clear();
+        } finally {
+          VISION_UPDATE_LOCK.readLock().unlock();
+        }
+      }      
     }
   }
 
   @Override
   public Manager clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
+  }
+
+  /**
+   * <p>Adds a new WheelObservation instance, containing the necessary information to calculate accurate wheel odometry values when the {@link #run()} method 
+   * is called, to the wheel observation queue.
+   * <p>Note that because of the nature of a queue collection, and that the added elements are processed asynchronously, this method can handle dozens of 
+   * repeat calls (such as during Subsystem#periodic()) to calculate far more accurate odometry values
+   * @param Observation Wheel observation to add to the processing queue
+   */
+  public synchronized void add(final WheelObservation Observation) {
+    try {
+      WHEEL_UPDATE_LOCK.writeLock().lock();
+      WHEEL_UPDATE_QUEUE.offer(Observation);
+    } finally {
+      WHEEL_UPDATE_LOCK.writeLock().unlock();
+    }
+  }  
+
+  /**
+   * <p>Adds a new VisionObservation instance, containing the necessary information to calculate accurate vision odometry values when the {@link #run()} method 
+   * is called, to the vision observation queue.
+   * <p>Note that because of the nature of a queue collection, and that the added elements are processed asynchronously, this method can handle dozens of 
+   * repeat calls (such as during Subsystem#periodic()) to calculate far more accurate odometry values
+   * @param Observation Vision observation to add to the processing queue
+   */
+  public synchronized void add(final VisionObservation Observation) {
+    try {
+      VISION_UPDATE_LOCK.writeLock().lock();
+      VISION_UPDATE_QUEUE.offer(Observation);
+    } finally {
+      VISION_UPDATE_LOCK.writeLock().unlock();
+    }
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
@@ -118,4 +232,20 @@ public final class Manager implements Singleton<Manager>, Runnable {
     }
     return Result;
   }
+  //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
+  /**
+   *
+   *
+   * <h1>WheelObservation</h1>
+   *
+   */
+  public record WheelObservation(SwerveDriveWheelPositions Position, Optional<Rotation2d> Rotation, Double Timestamp) {}
+
+  /**
+   *
+   *
+   * <h1>VisionObservation</h1>
+   *
+   */
+  public record VisionObservation(Pose2d Position, Matrix<N5,N1> Deviations, Double Timestamp) {}
 }
