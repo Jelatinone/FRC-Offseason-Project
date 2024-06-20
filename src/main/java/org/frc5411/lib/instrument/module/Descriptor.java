@@ -18,6 +18,8 @@ package org.frc5411.lib.instrument.module;
 import org.frc5411.lib.control.Controller;
 import org.frc5411.lib.pattern.Component;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
@@ -35,7 +37,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @Builder(toBuilder = (true))
-@FieldDefaults(level = AccessLevel.PROTECTED, makeFinal = (true))
+@FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
 public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411.lib.pattern.Descriptor<Component<SwerveModulePosition>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double TranslationalReduction;
@@ -45,12 +47,13 @@ public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411
   Controller<N2,N1,N1> TranslationalFeedback;
   
   Double RotationalReduction;
-  Double RotationalOffset;
+  Rotation2d RotationalOffset;
   Boolean RotationalInverted;
   Encoder RotationalEncoder;
   Actuator RotationalController;
   Controller<N2,N1,N1> RotationalFeedback;
 
+  Translation2d Position;
   Double Radius;
   Enum<?> Identity;
   Limit Limits;
@@ -69,6 +72,7 @@ public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411
       RotationalEncoder,
       RotationalController,
       RotationalFeedback,
+      Position,
       Radius,
       Identity,
       Limits

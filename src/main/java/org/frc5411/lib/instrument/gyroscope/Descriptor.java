@@ -33,7 +33,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @Builder(toBuilder = (true))
-@FieldDefaults(level = AccessLevel.PROTECTED, makeFinal = (true))
+@FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
 public class Descriptor extends org.frc5411.lib.pattern.Descriptor<Component<Rotation3d>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Vector<N3> Offset;

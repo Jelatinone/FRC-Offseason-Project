@@ -14,6 +14,7 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module;
+import org.frc5411.lib.control.archetype.PIDController;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Aggregator;
@@ -26,7 +27,6 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import java.util.Optional;
 import java.util.Queue;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import lombok.AccessLevel;
@@ -41,7 +41,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public class MockModule extends Module<DCMotorSim,Supplier<Number>> {
+public class MockModule extends Module<DCMotorSim,Optional<Object>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Queue<Optional<Number>> TRANSLATIONAL_POSITIONS;
   Queue<Optional<Number>> ROTATIONAL_POSITIONS;
@@ -54,7 +54,7 @@ public class MockModule extends Module<DCMotorSim,Supplier<Number>> {
    * Simulated Module Constructor.
    * @param Descriptor Real-world getDescriptor() of the system, contains relevant constants to the operation of the module
    */
-  public MockModule(final Descriptor<DCMotorSim,Supplier<Number>> Descriptor) {
+  public MockModule(final Descriptor<DCMotorSim,Optional<Object>> Descriptor) {
     super(Descriptor);
 
     TRANSLATIONAL_POSITIONS = StandardRegister
@@ -73,12 +73,21 @@ public class MockModule extends Module<DCMotorSim,Supplier<Number>> {
     DISCRETE_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1e6, 
       (Previous, Current) -> Current - Previous);
+    configure();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public synchronized void cease() {
-    getDescriptor().TranslationalController.setInputVoltage((0D));
-    getDescriptor().RotationalController.setInputVoltage((0D));
+    getDescriptor().TranslationalController.setState((0D), (0D));
+    getDescriptor().RotationalController.setState((0D), (0D));
+  }
+
+  @Override
+  public synchronized void configure() {
+    cease();
+    synchronized(this) {
+      ((PIDController) getDescriptor().RotationalFeedback).enableContinuousInput(-Math.PI, Math.PI);
+    }
   }
 
   @Override

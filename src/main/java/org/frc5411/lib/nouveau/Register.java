@@ -16,7 +16,7 @@
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
-import org.frc5411.lib.utility.Utilities;
+import org.frc5411.lib.utility.Numbers;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.util.DoubleCircularBuffer;
@@ -82,7 +82,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    * 
    * @param Signal Supplier of Numerical values which can be parsed as a double.
    * @return Queue, should be retained and used to collect values periodically. 
-   * @see Utilities#from(DoubleCircularBuffer)
+   * @see Numbers#from(DoubleCircularBuffer)
    */
   Queue<Optional<Number>> register(final Source Signal);
 
@@ -95,7 +95,7 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    * {@link SubsystemBase#periodic()}, which provides lower accuracy.
    * 
    * @return Queue, should be retained and used to collect values periodically. 
-   * @see Utilities#from(DoubleCircularBuffer)
+   * @see Numbers#from(DoubleCircularBuffer)
    */
   Queue<Double> timestamp(); 
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//

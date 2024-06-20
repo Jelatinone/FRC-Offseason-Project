@@ -124,7 +124,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
       getDescriptor().TranslationalController.setCANTimeout((0));
       getDescriptor().RotationalController.setCANTimeout((0));
 
-      ((PIDController) getDescriptor().RotationalFeedback).continuous(-Math.PI, Math.PI);
+      ((PIDController) getDescriptor().RotationalFeedback).enableContinuousInput(-Math.PI, Math.PI);
     }
   }
 
@@ -176,7 +176,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         Rotations = ROTATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue() / getDescriptor().RotationalReduction - getDescriptor().RotationalOffset)
+            Position.orElse(Double.NaN).doubleValue() / getDescriptor().RotationalReduction - getDescriptor().RotationalOffset.getRotations())
             .toArray();
         ROTATIONAL_POSITIONS.clear();
       }

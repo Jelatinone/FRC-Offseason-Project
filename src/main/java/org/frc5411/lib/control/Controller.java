@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------[License]----------------------------------------------------------------------------//
+//--------------------------------------------------------------------------[License]--------------------------------------------------------------------------//
 // Copyright 2024 Cody Washington
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
+//--------------------------------------------------------------------------[Package]--------------------------------------------------------------------------//
 package org.frc5411.lib.control;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import edu.wpi.first.math.Matrix;
@@ -30,7 +30,7 @@ import lombok.NonNull;
  */
 public interface Controller<@NonNull States extends Num, @NonNull Inputs extends Num, @NonNull Outputs extends Num> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
-    /**
+  /**
    * Resets this controller to a given initial position and all other relevant data.
    */
   default void reset() {}

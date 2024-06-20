@@ -30,7 +30,7 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
-import static org.frc5411.lib.utility.Utilities.*;
+import static org.frc5411.lib.utility.Numbers.*;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Module</h1>
@@ -120,7 +120,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
    * @return Position of the rotational controller's axis of rotation in radians as a Rotation2d Object
    */
   public Optional<Rotation2d> getRotationalPosition() {
-    return getMeasurement().map(Measurement -> Measurement.angle.minus(Rotation2d.fromRadians(DESCRIPTION.RotationalOffset)));
+    return getMeasurement().map(Measurement -> Measurement.angle.minus(DESCRIPTION.RotationalOffset));
   }
 
   /**

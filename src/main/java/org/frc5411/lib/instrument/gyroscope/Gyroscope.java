@@ -61,6 +61,12 @@ public abstract class Gyroscope implements Component<Rotation3d> {
     Logger.processInputs(
       getIdentity(), STATUS);   
   }
+  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
+  /**
+   * Mutates the current observed rotational such that the current value is now the supplied rotational value
+   * @param Rotation Amount to set each axis of rotation to observe at this heading
+   */
+  public abstract void set(final Rotation3d Rotation);
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public Report getReport() {

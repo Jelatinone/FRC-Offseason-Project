@@ -19,7 +19,7 @@ package org.frc5411.robot2024;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 
-import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
+import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
@@ -86,9 +86,6 @@ public final class Manager implements Singleton<Manager>, Runnable {
    * Manager Constructor.
    */
   private Manager() {
-    //<- Fetch All Subsystem Instances ->
-    DrivebaseSubsystem.getInstance();
-
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     WHEEL_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
@@ -104,11 +101,18 @@ public final class Manager implements Singleton<Manager>, Runnable {
       STATE_STANDARD_DEVIATIONS,
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
-    //<- Fetch From Drivebase Subsystem->
     KINEMATICS = (null);
     ODOMETRY = (null);
   } static {
     Robot.add(Instance, 1D / UPDATE_FREQUENCY);
+    AutoBuilder.configureHolonomic(
+      (null), 
+      (null), 
+      (null), 
+      (null), 
+      (null), 
+      (null), 
+      (null));
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
 

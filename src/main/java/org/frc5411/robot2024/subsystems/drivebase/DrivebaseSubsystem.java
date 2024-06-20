@@ -14,20 +14,22 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
+import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.module.MockModule;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.SparkModule;
-import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
 
 import edu.wpi.first.hal.HALUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -42,7 +44,7 @@ import java.io.Serial;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import lombok.AccessLevel;
@@ -60,7 +62,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  * 
  */
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
+@FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
 public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
@@ -68,11 +70,15 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   static ReadWriteLock SUBSYSTEM_LOCK;
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
-  Component<Rotation2d> GYROSCOPE;
   Vector<Module<?,?>,N4> MODULES;
+  Gyroscope GYROSCOPE;
+  //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
+  SwerveDriveKinematics KINEMATICS;
+  SwerveDriveOdometry ODOMETRY;  
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
   static volatile State Mode;
+  static volatile Twist2d Control;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Drivebase Subsystem Constructor.
@@ -88,9 +94,21 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .toArray(Module[]::new)
     );
     GYROSCOPE = (null);
+    KINEMATICS = new SwerveDriveKinematics(
+      MODULES
+        .stream()
+        .map((Module) -> Module.getDescriptor().Position)
+        .toArray(Translation2d[]::new)
+    );
+    ODOMETRY = new SwerveDriveOdometry(
+      KINEMATICS, 
+      null,
+      null, 
+      null
+    );    
     MODULES.forEach((Module) -> 
-      addChild(String.format(Module.getIdentity()), Module));  
-    addChild(("Gyroscope"), GYROSCOPE);
+      addChild(Module.getIdentity(), Module));  
+    addChild(GYROSCOPE.getIdentity(), GYROSCOPE);
     Mode = State.RELATIVE;
     DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
   } static {
@@ -149,7 +167,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         });
         GYROSCOPE.periodic();
       }
-      //TODO: Accuracy Filtering
       update();
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
@@ -197,58 +214,58 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
  * Represents the named states of operation of the drivebase, which have distinct behavior that differentiate it from other modes of control, i.e.
  * robot-oriented (Relative) control differs from field-oriented through the use of a gyroscope as the reference of rotation.
  */
-enum State implements BiFunction<Translation2d, Rotation2d, ChassisSpeeds> {
+enum State implements Function<Twist2d, ChassisSpeeds> {
 
+  
   /**
    * Control based on the detection of objects located on the field, i.e. Object-Oriented; driving with respect
    * to game pieces and field elements.
    */
-  OBJECTIVE((Translation, Rotation) ->
+  OBJECTIVE((Twist) ->
+    (null)
+  ),
+
+  /**
+   * Control based on a given trajectory, accepts a twist, 
+   */
+  TRAJECTORY((Twist) ->
     (null)
   ),
 
   /**
    * Control based on the direction of the absolute rotation (yaw) of the gyroscope , i.e. Field Oriented; driving
-   * with respect to the direction of the driverstation on the field
+   * with respect to the direction of the driver-station on the field
    */
-  ABSOLUTE((Translation, Rotation) -> 
-    ChassisSpeeds.fromFieldRelativeSpeeds(
-      Translation.getX(), 
-      Translation.getY(), 
-      Rotation.getRadians(), 
-      (null))
+  ABSOLUTE((Twist) -> 
+    (null)
   ),
 
   /**
    * Control based on the relative direction of the robot, i.e. Robot-Oriented; driving with no frame of reference
    * to guide us
    */
-  RELATIVE((Translation, Rotation) -> 
-    ChassisSpeeds.fromRobotRelativeSpeeds(
-      Translation.getX(), 
-      Translation.getY(), 
-      Rotation.getRadians(), 
-      (null))
+  RELATIVE((Twist) -> 
+    (null)
   );
 
-  private final BiFunction<Translation2d, Rotation2d, ChassisSpeeds> FUNCTION;
-
+  private final Function<Twist2d, ChassisSpeeds> FUNCTION;
+  static int x = 0;
+  
   /**
    * State Constructor.
    * @param Function Bi-function which consumes both the desired rotation and translation to produce speeds for the demand.
    */
-  State(final BiFunction<Translation2d, Rotation2d, ChassisSpeeds> Function) {
+  State(final Function<Twist2d, ChassisSpeeds> Function) {
     FUNCTION = Function;
   }
 
   /**
    * Applies the function's given arguments of Translation and Rotation to create ChassisSpeeds.
-   * @param Translation Demand translation in two-dimensional space
-   * @param Rotation    Demand rotation in two-dimensional space
+   * @param Twist Demand translation & rotation in two-dimensional space
    * @return Output ChassisSpeeds based on the arguments
    */
-  public final ChassisSpeeds apply(final Translation2d Translation, final Rotation2d Rotation) {
-    return FUNCTION.apply(Translation, Rotation);
+  public final ChassisSpeeds apply(final Twist2d Twist) {
+    return FUNCTION.apply(Twist);
   }
 }
 /**

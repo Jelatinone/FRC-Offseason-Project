@@ -56,24 +56,6 @@ public class PIDController extends edu.wpi.first.math.controller.PIDController i
   public synchronized Matrix<@NonNull N1, N1> calculate(Matrix<@NonNull N2, N1> Reference) {
     return MatBuilder.fill(Nat.N1(), Nat.N1(), Effort = calculate(Reference.get((0), (0)), Reference.get((0), (1))));
   }
-
-  /**
-   * Rather than interpreting the minimum and maximum as separate points, a 'roll-over' is performed and the shortest route can be calculated between them by treating
-   * them as equivalent.
-   * @param Minimum Minimum input value for which a roll-over occurs
-   * @param Maximum Maximum input value for which a roll-over occurs
-   */
-  public void continuous(final Double Minimum, final Double Maximum) {
-    super.enableContinuousInput(Minimum, Maximum);
-  }
-
-  /**
-   * Disables {@link #continuous(Double, Double) continuous} input, disregarding the system's minimum and maximum bounds and treating them as separate points that
-   * are not equivalent.
-   */
-  public void discrete() {
-    super.disableContinuousInput();
-  }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public Matrix<@NonNull N2, N1> getStates() {
@@ -90,5 +72,4 @@ public class PIDController extends edu.wpi.first.math.controller.PIDController i
   public Matrix<@NonNull N1, N1> getError() {
     return MatBuilder.fill(Nat.N1(), Nat.N1(), getPositionError());
   }
-  
 }
