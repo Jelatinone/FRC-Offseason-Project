@@ -27,6 +27,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.RobotBase;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkBase;
@@ -59,12 +60,13 @@ public class Constants {
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public enum Module {
     FRONT_LEFT(
+      RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((11), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.724121D)))
         .RotationalEncoder(new CANcoder((31),("CTREBUS")))
         .RotationalController(new CANSparkMax((21), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))),
+        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
@@ -72,12 +74,13 @@ public class Constants {
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
     FRONT_RIGHT(
+      RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((12), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.726074D)))
         .RotationalEncoder(new CANcoder((32)))
         .RotationalController(new CANSparkMax((22), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))),
+        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
@@ -85,12 +88,13 @@ public class Constants {
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
     REAR_LEFT(
+      RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((13), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.609863D)))
         .RotationalEncoder(new CANcoder((33)))
         .RotationalController(new CANSparkMax((23), MotorType.kBrushless))
-        .Position(new Translation2d( (Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))),
+        .Position(new Translation2d( (Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
@@ -98,12 +102,13 @@ public class Constants {
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
     REAR_RIGHT(
+      RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((14), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.382568D)))
         .RotationalEncoder(new CANcoder((34)))
         .RotationalController(new CANSparkMax((24), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))),
+        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
@@ -111,8 +116,7 @@ public class Constants {
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))));
 
-    org.frc5411.lib.instrument.module.Descriptor<CANSparkBase,CANcoder> REAL_DESCRIPTOR;
-    org.frc5411.lib.instrument.module.Descriptor<DCMotorSim,Optional<Object>> MOCK_DESCRIPTOR;
+    org.frc5411.lib.instrument.module.Descriptor<?,?> DESCRIPTOR;
 
     /**
      * Module Constructor.
@@ -125,26 +129,17 @@ public class Constants {
      * {@link org.frc5411.lib.instrument.module.Descriptor#clone() Descriptor.clone()} to specify it's own descriptor specific to it's emplacement on the chassis
      */
     Module(
-      final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<CANSparkBase,CANcoder> Real, 
-      final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<DCMotorSim,Optional<Object>> Mock) {
-      REAL_DESCRIPTOR = Real.Identity(this).build();
-      MOCK_DESCRIPTOR = Mock.Identity(this).build();
+      final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<?,?> Descriptor) {
+      DESCRIPTOR = Descriptor.Identity(this).build();
     }
 
     /**
-     * Provides the related descriptor for this enum constant's real-world counterpart module to be constructed
-     * @return Real-world descriptor of this module
+     * Provides the descriptor of this enum constant's stored value, which at runtime via {@link RobotBase#isReal()} determines the correct (real or mock) descriptor
+     * to use.
+     * @return Descriptor based on if the robot is real or simulated
      */
-    public org.frc5411.lib.instrument.module.Descriptor<CANSparkBase,CANcoder> getRealDescriptor() {
-      return REAL_DESCRIPTOR;
-    }
-
-    /**
-     * Provides the related descriptor for this enum constant's Mock counterpart module to be constructed
-     * @return Mock descriptor of this module
-     */
-    public org.frc5411.lib.instrument.module.Descriptor<DCMotorSim,Optional<Object>> getMockDescriptor() {
-      return MOCK_DESCRIPTOR;
+    public org.frc5411.lib.instrument.module.Descriptor<?,?> getDescriptor() {
+      return DESCRIPTOR;
     }
   }
 

@@ -87,10 +87,10 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
     MODULES = Vector.fill(
       Stream.of(Constants.Module.values())
-        .map((Module) -> 
-          RobotBase.isReal()? 
-            Module.getRealDescriptor().complete(SparkModule::new): 
-            Module.getMockDescriptor().complete(MockModule::new))
+        .map((Module) -> {
+          final var Descriptor = Module.getDescriptor();
+          return RobotBase.isReal()? Descriptor.complete(SparkModule::new): Descriptor.complete(MockModule::new);
+        })
         .toArray(Module[]::new)
     );
     GYROSCOPE = (null);
