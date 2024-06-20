@@ -53,6 +53,11 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   protected Module(final Descriptor<Controller,Encoder> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
     STATUS = new ReportAutoLogged();
+    synchronized(STATUS) {
+      STATUS.setDemand(new SwerveModuleState());
+      STATUS.setEffort(new SwerveModuleState());
+      STATUS.setMeasurements(new SwerveModulePosition[0]);
+    }
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override

@@ -14,7 +14,6 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
-import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.module.MockModule;
 import org.frc5411.lib.instrument.module.Module;
@@ -23,6 +22,7 @@ import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
+import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -100,15 +100,10 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .map((Module) -> Module.getDescriptor().Position)
         .toArray(Translation2d[]::new)
     );
-    ODOMETRY = new SwerveDriveOdometry(
-      KINEMATICS, 
-      null,
-      null, 
-      null
-    );    
+    ODOMETRY = (null);
     MODULES.forEach((Module) -> 
       addChild(Module.getIdentity(), Module));  
-    addChild(GYROSCOPE.getIdentity(), GYROSCOPE);
+    //addChild(GYROSCOPE.getIdentity(), GYROSCOPE);
     Mode = State.RELATIVE;
     DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
   } static {
@@ -165,7 +160,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
             Module.cease();
           }
         });
-        GYROSCOPE.periodic();
+        //GYROSCOPE.periodic();
       }
       update();
     } finally {

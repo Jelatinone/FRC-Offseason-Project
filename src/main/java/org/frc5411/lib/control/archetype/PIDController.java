@@ -54,7 +54,7 @@ public class PIDController extends edu.wpi.first.math.controller.PIDController i
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public synchronized Matrix<@NonNull N1, N1> calculate(Matrix<@NonNull N2, N1> Reference) {
-    return MatBuilder.fill(Nat.N1(), Nat.N1(), Effort = calculate(Reference.get((0), (0)), Reference.get((0), (1))));
+    return MatBuilder.fill(Nat.N1(), Nat.N1(), Effort = calculate(Reference.get((0), (0)), Reference.get((1), (0))));
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override

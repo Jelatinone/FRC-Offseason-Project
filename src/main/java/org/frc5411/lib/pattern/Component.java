@@ -157,7 +157,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    */
   default Optional<Measured> getMeasurement() {
     final var Measurements = getMeasurements();
-    return Optional.ofNullable(Measurements.get(Measurements.size() - (1)));
+    return Optional.ofNullable(Measurements.size() > (0)? Measurements.get(Measurements.size() - (1)): (null));
   }  
 
   /**

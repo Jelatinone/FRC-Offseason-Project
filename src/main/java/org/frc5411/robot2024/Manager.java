@@ -18,6 +18,7 @@ package org.frc5411.robot2024;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
+import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -92,27 +93,29 @@ public final class Manager implements Singleton<Manager>, Runnable {
     VISION_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
     VEHICLE_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
     FIELD_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
-    FILTER = new ExtendedKalmanFilter<>(
-      Nat.N2(),
-      Nat.N2(),
-      Nat.N2(),
-      (Input, Output) -> Output,
-      (Input, Output) -> Input,
-      STATE_STANDARD_DEVIATIONS,
-      MEASUREMENT_STANDARD_DEVIATIONS,
-      1D / UPDATE_FREQUENCY);
+    FILTER = (null);
+    // new ExtendedKalmanFilter<>(
+    //   Nat.N2(),
+    //   Nat.N2(),
+    //   Nat.N2(),
+    //   (Input, Output) -> Output,
+    //   (Input, Output) -> Input,
+    //   STATE_STANDARD_DEVIATIONS,
+    //   MEASUREMENT_STANDARD_DEVIATIONS,
+    //   1D / UPDATE_FREQUENCY);
     KINEMATICS = (null);
     ODOMETRY = (null);
+    DrivebaseSubsystem.getInstance();
   } static {
     Robot.add(Instance, 1D / UPDATE_FREQUENCY);
-    AutoBuilder.configureHolonomic(
-      (null), 
-      (null), 
-      (null), 
-      (null), 
-      (null), 
-      (null), 
-      (null));
+    // AutoBuilder.configureHolonomic(
+    //   (null), 
+    //   (null), 
+    //   (null), 
+    //   (null), 
+    //   (null), 
+    //   (null), 
+    //   (null));
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
 
