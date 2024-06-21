@@ -19,6 +19,8 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
+import java.util.function.Supplier;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -105,7 +107,7 @@ public final class Constants {
    * and robot operation
    */
   @SuppressWarnings("resource")
-  public enum Profile {
+  public enum Profile implements Supplier<org.frc5411.lib.utility.Profile<?,?>> {
 
     DEV_DRIVER(
       new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
@@ -137,7 +139,8 @@ public final class Constants {
      * Provides the retained operator profile (with settings and keybindings) as settings
      * @return Retained profile instance
      */
-    public final org.frc5411.lib.utility.Profile<?,?> getProfile() {
+    @Override
+    public final org.frc5411.lib.utility.Profile<?,?> get() {
       return PROFILE;
     }
   }

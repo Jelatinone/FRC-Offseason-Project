@@ -90,7 +90,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       Stream.of(Constants.Module.values())
         .parallel()
         .<Module<?,?>>map((Module) -> {
-          final var Descriptor = Module.getDescriptor();
+          final var Descriptor = Module.get();
           return RobotBase.isReal()?
             Descriptor.complete(SparkModule::new):
             Descriptor.complete(MockModule::new);
@@ -166,6 +166,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         });
         GYROSCOPE.periodic();
       }
+      //Experimental Shit Below :P
+      
       update();
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
@@ -214,8 +216,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
  * robot-oriented (Relative) control differs from field-oriented through the use of a gyroscope as the reference of rotation.
  */
 enum State implements Function<Twist2d, ChassisSpeeds> {
-
-  
   /**
    * Control based on the detection of objects located on the field, i.e. Object-Oriented; driving with respect
    * to game pieces and field elements.

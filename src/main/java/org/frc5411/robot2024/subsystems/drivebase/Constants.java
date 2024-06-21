@@ -15,7 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-
 import org.frc5411.lib.annotation.Unit;
 import org.frc5411.lib.annotation.Unit.Measured;
 import org.frc5411.lib.control.archetype.PIDConstants;
@@ -36,6 +35,7 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -54,7 +54,7 @@ public class Constants {
    * <h1>Module</h1>
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-  public enum Module {
+  public enum Module implements Supplier<org.frc5411.lib.instrument.module.Descriptor<?,?>> {
     FRONT_LEFT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
@@ -118,9 +118,10 @@ public class Constants {
      * {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builders} from {@link Descriptions} and use
      * {@link org.frc5411.lib.instrument.module.Descriptor#clone() Descriptor.clone()} to specify its own descriptor specific to its emplacement on the chassis
      */
-    Module(
-      final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<?,?> Descriptor) {
-      DESCRIPTOR = Descriptor.Identity(this).build();
+    Module(final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<?,?> Descriptor) {
+      DESCRIPTOR = Descriptor
+        .Identity(this)
+        .build();
     }
 
     /**
@@ -128,7 +129,8 @@ public class Constants {
      * to use.
      * @return Descriptor based on if the robot is real or simulated
      */
-    public org.frc5411.lib.instrument.module.Descriptor<?,?> getDescriptor() {
+    @Override
+    public org.frc5411.lib.instrument.module.Descriptor<?,?> get() {
       return DESCRIPTOR;
     }
   }
@@ -164,34 +166,34 @@ public class Constants {
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
 class Descriptions {
 
-  static final org.frc5411.lib.instrument.gyroscope.Descriptor.DescriptorBuilder<?> GYROSCOPE_DESCRIPTOR_BUILDER = 
+  static org.frc5411.lib.instrument.gyroscope.Descriptor.DescriptorBuilder<?> GYROSCOPE_DESCRIPTOR_BUILDER = 
     org.frc5411.lib.instrument.gyroscope.Descriptor.<Pigeon2>builder()
       .Identity((0))
       .Hardware(new Pigeon2((0)))
       .Offset(new Rotation3d());
 
-  static final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<CANSparkBase,CANcoder> REAL_MODULE_DESCRIPTOR = 
+  static org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<CANSparkBase,CANcoder> REAL_MODULE_DESCRIPTOR = 
     org.frc5411.lib.instrument.module.Descriptor.<CANSparkBase,CANcoder>builder()
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDConstants.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().toController())
+      .TranslationalFeedback(PIDConstants.builder().Proportional((0.2D)).Integral((0D)).Derivative((5e-1D)).build().toController())
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
-      .RotationalFeedback(PIDConstants.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().toController())
+      .RotationalFeedback(PIDConstants.builder().Proportional((2.81D)).Integral((0D)).Derivative((5e-1D)).build().toController())
       .Radius(Units.inchesToMeters((4D)))
       .Limits(new Limit((0D), (0D), (0D)));
 
-  static final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<DCMotorSim,Optional<Object>> MOCK_MODULE_DESCRIPTOR =
+  static org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<DCMotorSim,Optional<Object>> MOCK_MODULE_DESCRIPTOR =
     org.frc5411.lib.instrument.module.Descriptor.<DCMotorSim,Optional<Object>>builder()
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDConstants.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().toController())
+      .TranslationalFeedback(PIDConstants.builder().Proportional((0.2D)).Integral((0D)).Derivative((0D)).build().toController())
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
       .RotationalEncoder(Optional.empty())
-      .RotationalFeedback(PIDConstants.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().toController())
+      .RotationalFeedback(PIDConstants.builder().Proportional((2.81D)).Integral((0D)).Derivative((0D)).build().toController())
       .Radius(Units.inchesToMeters((4D)))
       .Limits(new Limit((0D), (0D), (0D)));
 }
