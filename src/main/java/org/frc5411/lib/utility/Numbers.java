@@ -59,7 +59,7 @@ public class Numbers {
    * @param Source Buffer source to accept elements from into the new array
    * @return Array with the same elements, in the same order
    */
-  static double[] from(final DoubleCircularBuffer Source) {
+  public static double[] from(final DoubleCircularBuffer Source) {
     final var Size = Source.size();
     final var Array = new double[Size];
     for(int Index = (0); Index < Size; Index++) {
@@ -74,12 +74,42 @@ public class Numbers {
    * @param Source Array source to accept elements from into the new buffer
    * @return Buffer with the same elements, in the same order
    */
-  static DoubleCircularBuffer from(final double[] Source) {
+  public static DoubleCircularBuffer from(final double[] Source) {
     final var Buffer = new DoubleCircularBuffer(Source.length);
     for(final double Element: Source) {
       Buffer.addLast(Element);
     }
     return Buffer;
+  }
+
+  /**
+   * Computes the minimum element among a collection (array) of numbers, under the case that the collection (array) is empty the returned value is {@link Double#MAX_VALUE}.
+   * @param Numbers Collection (array) of data to find the minimum of
+   * @return Minimum value of collection (array) of data
+   */
+  public static Number minimum(final Number... Numbers) {
+    Number Minimum = Double.MAX_VALUE;
+    for(final Number Element: Numbers) {
+      if(Element.doubleValue() < Minimum.doubleValue()) {
+        Minimum = Element;
+      }
+    }
+    return Minimum;
+  }
+
+  /**
+   * Computes the maximum element among a collection (array) of numbers, under the case that the collection (array) is empty the returned value is {@link Double#MIN_VALUE}.
+   * @param Numbers Collection (array) of data to find the maximum of
+   * @return Maximum value of collection (array) of data
+   */
+  public static Number maximum(final Number... Numbers) {
+    Number Maximum = Double.MIN_VALUE;
+    for(final Number Element: Numbers) {
+      if(Element.doubleValue() > Maximum.doubleValue()) {
+        Maximum = Element;
+      }
+    }
+    return Maximum;
   }
 
   /**

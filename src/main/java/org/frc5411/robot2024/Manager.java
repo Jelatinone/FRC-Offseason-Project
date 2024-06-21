@@ -18,9 +18,8 @@ package org.frc5411.robot2024;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
-import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
-import com.pathplanner.lib.auto.AutoBuilder;
+import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
@@ -65,8 +64,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
   static Integer UPDATE_FREQUENCY = (100);
   static Integer QUEUE_SIZE = (20);
   static Double BUFFER_SIZE = (2D);
-  static Matrix<N2,N1> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((0D),(0D));
-  static Matrix<N2,N1> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((0D),(0D));
+  static Matrix<N2,N1> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
+  static Matrix<N2,N1> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
 
   ReadWriteLock WHEEL_UPDATE_LOCK;
   ReadWriteLock VISION_UPDATE_LOCK;  
@@ -93,16 +92,15 @@ public final class Manager implements Singleton<Manager>, Runnable {
     VISION_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
     VEHICLE_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
     FIELD_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
-    FILTER = (null);
-    // new ExtendedKalmanFilter<>(
-    //   Nat.N2(),
-    //   Nat.N2(),
-    //   Nat.N2(),
-    //   (Input, Output) -> Output,
-    //   (Input, Output) -> Input,
-    //   STATE_STANDARD_DEVIATIONS,
-    //   MEASUREMENT_STANDARD_DEVIATIONS,
-    //   1D / UPDATE_FREQUENCY);
+    FILTER = new ExtendedKalmanFilter<>(
+      Nat.N2(),
+      Nat.N2(),
+      Nat.N2(),
+      (Input, Output) -> Output,
+      (Input, Output) -> Input,
+      STATE_STANDARD_DEVIATIONS,
+      MEASUREMENT_STANDARD_DEVIATIONS,
+      1D / UPDATE_FREQUENCY);
     KINEMATICS = (null);
     ODOMETRY = (null);
     DrivebaseSubsystem.getInstance();

@@ -17,6 +17,7 @@ package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.control.archetype.PIDController;
 import org.frc5411.lib.nouveau.StandardRegister;
+import org.frc5411.lib.utility.Numbers;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -57,7 +58,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Spark Module Constructor.
-   * @param Descriptor Real-world getDescriptor() of the system, contains relevant constants to the operation of the module
+   * @param Descriptor Real-world {@link #getDescriptor() descriptor} of the system, contains relevant constants to the operation of the module
    */
   public SparkModule(final Descriptor<CANSparkBase,CANcoder> Descriptor) {
     super(Descriptor);
@@ -187,7 +188,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
           .toArray());
         UPDATE_TIMESTAMPS.clear();
       }        
-      Article.setMeasurements(IntStream.range((0), Math.min(Translations.length, Rotations.length)).mapToObj((Index) -> 
+      Article.setMeasurements(IntStream.range((0), (int) Numbers.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
           Translations[Index], 
           Rotation2d.fromRadians(Rotations[Index]))

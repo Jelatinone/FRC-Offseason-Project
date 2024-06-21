@@ -15,6 +15,8 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.instrument.gyroscope.Gyroscope;
+import org.frc5411.lib.instrument.gyroscope.PigeonGyroscope;
 import org.frc5411.lib.instrument.module.MockModule;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.SparkModule;
@@ -22,7 +24,6 @@ import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
-import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -71,7 +72,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Module<?,?>,N4> MODULES;
-  Gyroscope GYROSCOPE;
+  Gyroscope<?> GYROSCOPE;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
@@ -85,15 +86,17 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
-    MODULES = Vector.fill(
+    MODULES = Vector.<Module<?,?>,N4>fill(
       Stream.of(Constants.Module.values())
         .map((Module) -> {
           final var Descriptor = Module.getDescriptor();
-          return RobotBase.isReal()? Descriptor.complete(SparkModule::new): Descriptor.complete(MockModule::new);
+          return RobotBase.isReal()? 
+            Descriptor.complete(SparkModule::new): 
+            Descriptor.complete(MockModule::new);
         })
         .toArray(Module[]::new)
     );
-    GYROSCOPE = (null);
+    GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR.complete(PigeonGyroscope::new);
     KINEMATICS = new SwerveDriveKinematics(
       MODULES
         .stream()
@@ -103,7 +106,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     ODOMETRY = (null);
     MODULES.forEach((Module) -> 
       addChild(Module.getIdentity(), Module));  
-    //addChild(GYROSCOPE.getIdentity(), GYROSCOPE);
+    addChild(GYROSCOPE.getIdentity(), GYROSCOPE);
     Mode = State.RELATIVE;
     DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
   } static {
@@ -244,7 +247,6 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
   );
 
   private final Function<Twist2d, ChassisSpeeds> FUNCTION;
-  static int x = 0;
   
   /**
    * State Constructor.

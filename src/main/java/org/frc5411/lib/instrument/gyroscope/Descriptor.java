@@ -17,9 +17,7 @@ package org.frc5411.lib.instrument.gyroscope;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.numbers.N3;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -34,15 +32,17 @@ import lombok.experimental.FieldDefaults;
  */
 @Builder(toBuilder = (true))
 @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
-public class Descriptor extends org.frc5411.lib.pattern.Descriptor<Component<Rotation3d>> {
+public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Component<Rotation3d>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Vector<N3> Offset;
+  Rotation3d Offset;
+  Hardware Hardware;
   Integer Identity;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public Descriptor clone() {
-    return new Descriptor(
+  public Descriptor<Hardware> clone() {
+    return new Descriptor<Hardware>(
       Offset,
+      Hardware,
       Identity
     );
   }

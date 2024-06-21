@@ -18,6 +18,7 @@ import org.frc5411.lib.control.archetype.PIDController;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Aggregator;
+import org.frc5411.lib.utility.Numbers;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.MathUtil;
@@ -51,8 +52,8 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
-   * Simulated Module Constructor.
-   * @param Descriptor Real-world getDescriptor() of the system, contains relevant constants to the operation of the module
+   * Mock Module Constructor.
+   * @param Descriptor Real-world {@link #getDescriptor() descriptor} of the system, contains relevant constants to the operation of the module
    */
   public MockModule(final Descriptor<DCMotorSim,Optional<Object>> Descriptor) {
     super(Descriptor);
@@ -139,7 +140,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
           .toArray());
         UPDATE_TIMESTAMPS.clear();
       }        
-      Article.setMeasurements(IntStream.range((0), Math.min(Translations.length, Rotations.length)).mapToObj((Index) -> 
+      Article.setMeasurements(IntStream.range((0), (int) Numbers.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
           Translations[Index], 
           Rotation2d.fromRadians(Rotations[Index]))

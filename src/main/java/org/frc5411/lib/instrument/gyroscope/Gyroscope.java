@@ -34,22 +34,22 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public abstract class Gyroscope implements Component<Rotation3d> {
+public abstract class Gyroscope<Hardware> implements Component<Rotation3d> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Descriptor DESCRIPTION;
+  Descriptor<Hardware> DESCRIPTION;
   ReportAutoLogged STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Gyroscope Constructor.
    * @param Description Real-world description of the system, contains relevant constants to the operation of the gyroscope
    */
-  protected Gyroscope(final Descriptor Description) {
+  protected Gyroscope(final Descriptor<Hardware> Description) {
     DESCRIPTION = Objects.requireNonNull(Description);
     STATUS = new ReportAutoLogged();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public final Gyroscope clone() throws CloneNotSupportedException {
+  public final Gyroscope<Hardware> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
   }
 
@@ -74,7 +74,7 @@ public abstract class Gyroscope implements Component<Rotation3d> {
   }
 
   @Override
-  public Descriptor getDescriptor() {
+  public Descriptor<Hardware> getDescriptor() {
     return DESCRIPTION;
   }
 

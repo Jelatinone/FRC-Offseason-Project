@@ -21,18 +21,19 @@ import org.frc5411.lib.annotation.Unit.Measured;
 import org.frc5411.lib.control.archetype.PIDConstants;
 import org.frc5411.lib.instrument.module.Limit;
 
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.revrobotics.CANSparkBase;
-import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
 
 import java.util.Optional;
 
@@ -78,7 +79,7 @@ public class Constants {
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((12), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.726074D)))
-        .RotationalEncoder(new CANcoder((32)))
+        .RotationalEncoder(new CANcoder((32),("CTREBUS")))
         .RotationalController(new CANSparkMax((22), MotorType.kBrushless))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
@@ -92,9 +93,9 @@ public class Constants {
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((13), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.609863D)))
-        .RotationalEncoder(new CANcoder((33)))
+        .RotationalEncoder(new CANcoder((33),("CTREBUS")))
         .RotationalController(new CANSparkMax((23), MotorType.kBrushless))
-        .Position(new Translation2d( (Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
+        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
@@ -106,7 +107,7 @@ public class Constants {
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((14), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.382568D)))
-        .RotationalEncoder(new CANcoder((34)))
+        .RotationalEncoder(new CANcoder((34),("CTREBUS")))
         .RotationalController(new CANSparkMax((24), MotorType.kBrushless))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
@@ -120,13 +121,11 @@ public class Constants {
 
     /**
      * Module Constructor.
-     * @param Real {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builder} which contains the relevant module constants
-     *              for a real module to be constructed
-     * @param Mock {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builder} which contains the relevant module constants
-     *              for a mock module to be constructed
-     * @implSpec Each module enum constant, {@code FRONT_LEFT}; {@code FRONT_RIGHT}; etc, should use the provided base 
-     * {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builders} from {@link descriptions} and use 
-     * {@link org.frc5411.lib.instrument.module.Descriptor#clone() Descriptor.clone()} to specify it's own descriptor specific to it's emplacement on the chassis
+     * @param Descriptor {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builder} which contains the relevant module constants
+     *              for a real or mock module to be constructed
+     * @implSpec Each module enum constant, {@code FRONT_LEFT}; {@code FRONT_RIGHT}; etc., should use the provided base
+     * {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builders} from {@link Descriptions} and use
+     * {@link org.frc5411.lib.instrument.module.Descriptor#clone() Descriptor.clone()} to specify its own descriptor specific to its emplacement on the chassis
      */
     Module(
       final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<?,?> Descriptor) {
@@ -143,12 +142,14 @@ public class Constants {
     }
   }
 
+  static org.frc5411.lib.instrument.gyroscope.Descriptor<?> GYROSCOPE_DESCRIPTOR = Descriptions.GYROSCOPE_DESCRIPTOR_BUILDER.build();
+
   /**
    * <h1>Identity<h1>
    * 
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-  public class Identity {
+  public static class Identity {
     @Unit(measures = Measured.DISTANCE, symbol = ("meters"))
     static Double ROBOT_WIDTH = Units.inchesToMeters((24.6D));
     @Unit(measures = Measured.DISTANCE, symbol = ("meters"))
@@ -172,13 +173,11 @@ public class Constants {
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
 class Descriptions {
 
-  static final org.frc5411.lib.instrument.gyroscope.Descriptor.DescriptorBuilder GYROSCOPE_DESCRIPTOR_BUILDER = 
-    org.frc5411.lib.instrument.gyroscope.Descriptor.builder()
+  static final org.frc5411.lib.instrument.gyroscope.Descriptor.DescriptorBuilder<?> GYROSCOPE_DESCRIPTOR_BUILDER = 
+    org.frc5411.lib.instrument.gyroscope.Descriptor.<Pigeon2>builder()
       .Identity((0))
-      .Offset(VecBuilder.fill(
-        (0D), 
-        (0D), 
-        (0D)));
+      .Hardware(new Pigeon2((0)))
+      .Offset(new Rotation3d());
 
   static final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<CANSparkBase,CANcoder> REAL_MODULE_DESCRIPTOR = 
     org.frc5411.lib.instrument.module.Descriptor.<CANSparkBase,CANcoder>builder()
