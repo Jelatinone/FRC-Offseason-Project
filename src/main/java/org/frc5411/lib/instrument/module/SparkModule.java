@@ -23,6 +23,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
@@ -115,7 +116,9 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
       }
 
       getDescriptor().RotationalEncoder.getConfigurator()
-        .apply(new MagnetSensorConfigs().withAbsoluteSensorRange(AbsoluteSensorRangeValue.Unsigned_0To1));
+        .apply(new CANcoderConfiguration()
+          .withMagnetSensor(new MagnetSensorConfigs()
+            .withAbsoluteSensorRange(AbsoluteSensorRangeValue.Unsigned_0To1)));
       getDescriptor().RotationalEncoder.getAbsolutePosition().setUpdateFrequency((25D));
       getDescriptor().RotationalEncoder.optimizeBusUtilization();
 

@@ -41,11 +41,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- *
- *
  * <h1>Constants</h1>
- *
- * <p>
  * 
  * @see DrivebaseSubsystem
  * @author Cody Washington
@@ -56,7 +52,6 @@ public class Constants {
   //----------------------------------------------------------------------[Internal]---------------------------------------------------------------------------//
   /**
    * <h1>Module</h1>
-   * 
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public enum Module {
@@ -65,13 +60,12 @@ public class Constants {
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((11), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.724121D)))
-        .RotationalEncoder(new CANcoder((31),("CTREBUS")))
+        .RotationalEncoder(new CANcoder((31), ("CTREBUS")))
         .RotationalController(new CANSparkMax((21), MotorType.kBrushless))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
-        .RotationalEncoder(Optional.empty())
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
     FRONT_RIGHT(
@@ -79,43 +73,40 @@ public class Constants {
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((12), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.726074D)))
-        .RotationalEncoder(new CANcoder((32),("CTREBUS")))
+        .RotationalEncoder(new CANcoder((32), ("CTREBUS")))
         .RotationalController(new CANSparkMax((22), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
+        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
-        .RotationalEncoder(Optional.empty())
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
+        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2)))),
     REAR_LEFT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((13), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.609863D)))
-        .RotationalEncoder(new CANcoder((33),("CTREBUS")))
+        .RotationalEncoder(new CANcoder((33), ("CTREBUS")))
         .RotationalController(new CANSparkMax((23), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
+        .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
-        .RotationalEncoder(Optional.empty())
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
+        .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
     REAR_RIGHT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((14), MotorType.kBrushless))
         .RotationalOffset(Rotation2d.fromRotations((0.382568D)))
-        .RotationalEncoder(new CANcoder((34),("CTREBUS")))
+        .RotationalEncoder(new CANcoder((34), ("CTREBUS")))
         .RotationalController(new CANSparkMax((24), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
+        .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
-        .RotationalEncoder(Optional.empty())
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))));
+        .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2))));
 
     org.frc5411.lib.instrument.module.Descriptor<?,?> DESCRIPTOR;
 
@@ -184,48 +175,23 @@ class Descriptions {
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(
-        PIDConstants.builder()
-          .Proportional((0D))
-          .Integral((0D))
-          .Derivative((0D))
-          .build().toController())
+      .TranslationalFeedback(PIDConstants.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().toController())
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
-      .RotationalFeedback(
-        PIDConstants.builder()
-          .Proportional((0D)) 
-          .Integral((0D))
-          .Derivative((0D))
-          .build().toController())
+      .RotationalFeedback(PIDConstants.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().toController())
       .Radius(Units.inchesToMeters((4D)))
-      .Limits(new Limit(
-        (0D), 
-        (0D), 
-        (0D)));
+      .Limits(new Limit((0D), (0D), (0D)));
 
   static final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<DCMotorSim,Optional<Object>> MOCK_MODULE_DESCRIPTOR =
     org.frc5411.lib.instrument.module.Descriptor.<DCMotorSim,Optional<Object>>builder()
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(
-        PIDConstants.builder()
-          .Proportional((0D))
-          .Integral((0D))
-          .Derivative((0D))
-          .build().toController())
+      .TranslationalFeedback(PIDConstants.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().toController())
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
-      .RotationalFeedback(
-        PIDConstants.builder()
-          .Proportional((0D))
-          .Integral((0D))
-          .Derivative((0D))
-          .build().toController())
+      .RotationalEncoder(Optional.empty())
+      .RotationalFeedback(PIDConstants.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().toController())
       .Radius(Units.inchesToMeters((4D)))
-      .Limits(new Limit(
-        (0D), 
-        (0D), 
-        (0D)));
+      .Limits(new Limit((0D), (0D), (0D)));
 }

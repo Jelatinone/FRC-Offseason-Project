@@ -56,6 +56,7 @@ import lombok.experimental.FieldDefaults;
  *
  * <p>Utility class handling the declaration and usage of subsystems at runtime.
  */
+@SuppressWarnings("unused")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public final class Manager implements Singleton<Manager>, Runnable {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//

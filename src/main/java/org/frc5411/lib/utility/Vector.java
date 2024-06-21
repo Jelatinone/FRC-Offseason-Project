@@ -73,7 +73,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
    * @param <Type>                Type of the generic array
    * @param Vector                Array data to place within the bounds of the Vector's array, length should match the number of elements specified.
    * @throws BoundaryException    Bounds of the array are exceeded or not met by the length of the Vector parameter
-   * @throws NullPointerException Either the Elements parameter or the Vector parameter evaluate to null 
+   * @throws NullPointerException Either the Elements parameter or the Vector parameter evaluate to null
    * @return Vector of the given elements
    */
   @SuppressWarnings("unchecked")
@@ -92,7 +92,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
    */
   @SuppressWarnings("unchecked")
   public static <Type, Elements extends Num> Vector<Type,Elements> fill(final Collection<Type> Vector) {
-    return new Vector<>(() -> Vector.size(), (Type[]) Vector.toArray());
+    return new Vector<>(Vector::size, (Type[]) Vector.toArray());
   }
 
   /**
@@ -126,7 +126,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
    * caller.
    * <p>
    * The behavior of this method is unspecified if the action performs
-   * side-effects that modify the underlying source of elements, unless an
+   * side effects that modify the underlying source of elements, unless an
    * overriding class has specified a concurrent modification policy.
    *
    * @implSpec
@@ -160,7 +160,6 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
   /**
    * Provides the underlying, specified type, array that was defined during construction, will always meet the expected bounds of Elements.
    * @return Array of specified type
-   * @see #get(Integer)
    */
   public Type[] getArray() {
     return VECTOR;

@@ -68,6 +68,7 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
       .timestamp();
+    Adjustment = new Rotation3d();
     configure();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//

@@ -6,7 +6,7 @@
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
-//
+//s
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,6 +45,7 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
+@FunctionalInterface
 public interface Component<@NonNull Measured extends StructSerializable> extends Closeable, Sendable {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
@@ -78,8 +79,16 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
   /**
    * Performs any necessary logic that this device may need with each update, such as maintaining the position of itself using a controller, or 
    * updating relevant internal values.
+   * 
+   * @implNote Default implementation assumes that no periodic update operations must occur other than updating the {@link #getReport() report} via
+   * {@link #update(Report)}.
    */
-  default void periodic() {}
+  default void periodic() {
+    final var Article = getReport();
+    synchronized(Article) {
+      update(Article);
+    }
+  }
 
   /**
    * Closes this instance immediately and performs locking-operations to ensure the complete closure of all hardware references. This renders any
@@ -96,9 +105,11 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
 
   /**
    * Provides the identity (name), as a string, of this component instance that is used for logging purposes 
-   * @return Identity of this component
+   * @return Identity of this component, new string by default
    */
-  String getIdentity();
+  default String getIdentity() {
+    return new String();
+  }
 
   /**
    * Provides the real-world description of the component, essentially an object makeup of the system's mechanical constants
@@ -137,7 +148,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    */
   default Optional<Double> getTimestamp() {
     final var Timestamps = getTimestamps();
-    return Optional.ofNullable(Timestamps.get(Timestamps.size() - (1)));
+    return Optional.ofNullable(Timestamps.size() > (0)? Timestamps.get(Timestamps.size() - (1)): (null));
   }
 
   /**

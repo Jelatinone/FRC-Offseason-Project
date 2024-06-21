@@ -17,6 +17,10 @@ package org.frc5411.robot2024;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  *
@@ -27,6 +31,7 @@ import edu.wpi.first.wpilibj.RobotBase;
  *
  * @see Manager
  */
+@FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
 public final class Constants {
   //----------------------------------------------------------------------[Methods]----------------------------------------------------------------------------//
   /**
@@ -41,10 +46,11 @@ public final class Constants {
     }
   }
   //----------------------------------------------------------------------[Internal]---------------------------------------------------------------------------//
+  @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public static final class Robot {
-    private static final Type DESIRED_TYPE = Type.SIMBOT;
-    public static final Type TYPE = RobotBase.isReal()? DESIRED_TYPE: Type.SIMBOT;
-    public static final Mode MODE = switch(TYPE) {
+    static Type DESIRED_TYPE = Type.SIMBOT;
+    static Type TYPE = RobotBase.isReal()? DESIRED_TYPE: Type.SIMBOT;
+    static Mode MODE = switch(TYPE) {
       case DEVBOT, COMPBOT 
         -> RobotBase.isReal()? Mode.ACTUAL: Mode.REPLAY;
       case ANONBOT
@@ -52,12 +58,15 @@ public final class Constants {
       case SIMBOT 
         -> Mode.SIMULATED;
     };
-    public static final Profile DRIVER =  TYPE.equals(Type.COMPBOT)? Profile.COMP_DRIVER: Profile.DEV_DRIVER;
-    public static final Profile OPERATOR = TYPE.equals(Type.COMPBOT)? Profile.COMP_OPERATOR: Profile.DEV_OPERATOR;
+    static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController((0));
+    static CommandXboxController OPERATOR_CONTROLLER = new CommandXboxController((1));
+    static Profile DRIVER =  TYPE.equals(Type.COMPBOT)? Profile.COMP_DRIVER: Profile.DEV_DRIVER;
+    static Profile OPERATOR = TYPE.equals(Type.COMPBOT)? Profile.COMP_OPERATOR: Profile.DEV_OPERATOR;
   }
 
+  @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public static final class Field {
-    public static final AprilTagFields FIELD = AprilTagFields.k2024Crescendo;
+    static AprilTagFields FIELD = AprilTagFields.k2024Crescendo;
   }
 
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
@@ -95,15 +104,24 @@ public final class Constants {
    * Represents a different pre-set profile for different drivers operating the robot, i. e, drivers with different preferences for keybindings
    * and robot operation
    */
+  @SuppressWarnings("resource")
   public enum Profile {
 
-    DEV_DRIVER((null)),
+    DEV_DRIVER(
+      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
+    ),
 
-    DEV_OPERATOR((null)),
+    DEV_OPERATOR(
+      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
+    ),
 
-    COMP_DRIVER((null)),
+    COMP_DRIVER(
+      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
+    ),
 
-    COMP_OPERATOR((null));
+    COMP_OPERATOR(
+      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
+    );
 
     private final org.frc5411.lib.utility.Profile<?,?> PROFILE;
 
@@ -123,4 +141,25 @@ public final class Constants {
       return PROFILE;
     }
   }
+
+  /**
+   * 
+   */
+  public enum Keybindings {
+    STATE_TOGGLE,    
+    GYROSCOPE_RESET,
+  }
+
+  /**
+   * 
+   */
+  public enum Preferences {
+    CONTROL_EFFORT_X,
+    CONTROL_ZONE_X,
+    CONTROL_EFFORT_Y,
+    CONTROL_ZONE_Y,
+    CONTROL_EFFORT_T,
+    CONTROL_ZONE_T,
+    CONTROL_SQUARED,
+  }  
 }
