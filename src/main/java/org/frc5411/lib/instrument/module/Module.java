@@ -30,7 +30,7 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
-import static org.frc5411.lib.utility.Numbers.*;
+import static org.frc5411.lib.utility.Figure.*;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Module</h1>

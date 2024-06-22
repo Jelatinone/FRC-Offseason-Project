@@ -150,9 +150,9 @@ public class Constants {
     @Unit(measures = Measured.DISTANCE, symbol = ("meters"))
     static Double ROBOT_RADIUS_METERS = Math.hypot(ROBOT_LENGTH / (2d), ROBOT_WIDTH / (2d));
 
-    @Unit(measures = Measured.DISTANCE, symbol = ("meters/second"))
+    @Unit(measures = Measured.VELOCITY, symbol = ("meters/second"))
     static Double ROBOT_MAXIMUM_LINEAR_VELOCITY = Units.feetToMeters((19.1D));
-    @Unit(measures = Measured.DISTANCE, symbol = ("radians/second"))
+    @Unit(measures = Measured.VELOCITY, symbol = ("radians/second"))
     static Double ROBOT_MAXIMUM_ANGULAR_VELOCITY = ROBOT_MAXIMUM_LINEAR_VELOCITY / ROBOT_RADIUS_METERS;
   }
 }
@@ -189,11 +189,11 @@ class Descriptions {
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDConstants.builder().Proportional((0.2D)).Integral((0D)).Derivative((0D)).build().toController())
+      .TranslationalFeedback(PIDConstants.builder().Proportional((0.35D)).Integral((0D)).Derivative((2.9D)).build().toController())
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
       .RotationalEncoder(Optional.empty())
-      .RotationalFeedback(PIDConstants.builder().Proportional((2.81D)).Integral((0D)).Derivative((0D)).build().toController())
+      .RotationalFeedback(PIDConstants.builder().Proportional((7.08D)).Integral((0D)).Derivative((2.9D)).build().toController())
       .Radius(Units.inchesToMeters((4D)))
       .Limits(new Limit((0D), (0D), (0D)));
 }

@@ -136,7 +136,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
       Threads.setCurrentThreadPriority((true), (99));
       CommandScheduler.getInstance().run();
       SmartDashboard.updateValues();
-      CALLBACKS.forEach(Callback::attempt);  
+      CALLBACKS.parallelStream().forEach(Callback::attempt);  
       if (Autonomous != (null)) {
         if (!Autonomous.isScheduled() && !Message) {
           System.out.printf(

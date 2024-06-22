@@ -24,6 +24,7 @@ import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
+import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -31,6 +32,8 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -73,6 +76,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Module<?,?>,N4> MODULES;
   Gyroscope<?> GYROSCOPE;
+  Module<?,?> TARGET_MODULE;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
@@ -94,7 +98,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           return RobotBase.isReal()?
             Descriptor.complete(SparkModule::new):
             Descriptor.complete(MockModule::new);
-        }).toList()
+        }).toArray(Module[]::new)
     );
     GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR
       .complete(PigeonGyroscope::new);
@@ -105,6 +109,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .toArray(Translation2d[]::new)
     );
     ODOMETRY = (null);
+    TARGET_MODULE = MODULES.stream().findAny().orElse(MODULES.getArray()[0]);
     Mode = State.RELATIVE;
     MODULES.forEach((Module) -> 
       addChild(Module.getIdentity(), Module));  
@@ -150,7 +155,48 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   @Override
   public synchronized void update() {
-    
+    Logger.recordOutput(
+      String.format(
+        ("[s]/Measurement"), getName()), 
+      MODULES
+        .stream()
+        .map((Module) -> Module
+          .getMeasurement()
+          .orElse(new SwerveModulePosition()))
+        .toArray(SwerveModulePosition[]::new));
+    Logger.recordOutput(
+      String.format(
+        ("[s]/State"), getName()), 
+      MODULES
+        .stream()
+        .map(Module::getInput)
+        .toArray(SwerveModuleState[]::new));
+    Logger.recordOutput(
+      String.format(
+        ("[s]/Input"), getName()), 
+      MODULES
+        .stream()
+        .map(Module::getState)
+        .toArray(SwerveModuleState[]::new));
+    Logger.recordOutput(
+      String.format(
+        ("[s]/Mode"), getName()), 
+      getState());
+    Logger.recordOutput(
+      String.format(
+        ("[s]/Connection"), getName()), 
+      MODULES
+        .stream()
+        .allMatch(Module::getConnection));
+    Logger.recordOutput(
+      String.format(
+        ("[s]/Latency"), getName()), 
+        DISCRETE_AGGREGATOR
+          .attain() 
+              - 
+        TARGET_MODULE
+          .getTimestamp()
+          .orElse(Double.NaN));
   }
 
   @Override
@@ -167,7 +213,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         GYROSCOPE.periodic();
       }
       //Experimental Shit Below :P
-      
       update();
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();

@@ -16,7 +16,7 @@
 package org.frc5411.lib.instrument.gyroscope;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.StandardRegister;
-import org.frc5411.lib.utility.Numbers;
+import org.frc5411.lib.utility.Figure;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 
@@ -137,7 +137,7 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
           .toArray());
         UPDATE_TIMESTAMPS.clear();
       }        
-      Article.setMeasurements(IntStream.range((0), (int) Numbers.minimum(Yaw.length, Pitch.length, Roll.length)).mapToObj((Index) -> 
+      Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Yaw.length, Pitch.length, Roll.length)).mapToObj((Index) -> 
         new Rotation3d(
           Roll[Index],
           Pitch[Index],

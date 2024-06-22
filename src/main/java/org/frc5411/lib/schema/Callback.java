@@ -58,7 +58,9 @@ public class Callback {
       if(DISCRETE_AGGREGATOR.acquire() >= PERIOD) {
         DISCRETE_AGGREGATOR.retain(
           DISCRETE_AGGREGATOR.getRetained() + DISCRETE_AGGREGATOR.getAggregated());
-        PROCEDURE.run();
+        if(PROCEDURE != (null)) {
+          PROCEDURE.run();
+        }
       }
     }
   }

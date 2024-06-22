@@ -16,6 +16,7 @@
 package org.frc5411.lib.pattern;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.Register;
+import org.frc5411.lib.utility.Serialize;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.util.sendable.Sendable;
@@ -101,7 +102,39 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * Initializes this component as a sendable object over {@link NetworkTable NetworkTables}, meaning the relevant values from {@link #update(Report)}
    * can be published to different dashboards for ease-of-access.
    */
-  default void initSendable(final SendableBuilder Builder) {}
+  @SuppressWarnings("unchecked")
+  @Override
+  default void initSendable(final SendableBuilder Builder) {
+    Builder.clearProperties();
+    Builder.setActuator((false));
+    Builder.setSmartDashboardType(getIdentity());
+    synchronized(Builder) {
+      Builder.addBooleanProperty(
+        String.format(
+          ("[s]/Connection"), getIdentity()), 
+        getReport()::isConnected, 
+        getReport()::setConnected
+      );
+      Builder.addDoubleArrayProperty(
+        String.format(
+          ("[s]/Timestamps"), getIdentity()), 
+        getReport()::getTimestamps, 
+        getReport()::setTimestamps
+      );
+      Builder.addRawProperty(
+        String.format(
+          ("[s]/Measurements"), getIdentity()), 
+        ("StructSerializable"), 
+        () ->  Serialize.convert(getMeasurement().get()),
+        (Data) -> {
+          synchronized(getReport()) {
+            final var Update = (Measured) Serialize.convert(Data);
+            getReport().setMeasurements((Measured[]) new Object[] {Update});
+          }
+      });
+    }
+    Builder.update();
+  }
 
   /**
    * Provides the identity (name), as a string, of this component instance that is used for logging purposes 

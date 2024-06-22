@@ -115,7 +115,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
    * @return a sequential {@code Stream} over the elements in this collection
    */
   public Stream<Type> stream() {
-    return Stream.of(VECTOR);
+    return Stream.<Type>of(VECTOR);
   }
 
   /**

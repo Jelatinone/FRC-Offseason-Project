@@ -18,7 +18,7 @@ import org.frc5411.lib.control.archetype.PIDController;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Aggregator;
-import org.frc5411.lib.utility.Numbers;
+import org.frc5411.lib.utility.Figure;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.MathUtil;
@@ -79,8 +79,9 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public synchronized void cease() {
-    getDescriptor().TranslationalController.setState((0D), (0D));
-    getDescriptor().RotationalController.setState((0D), (0D));
+    //TODO: Requires a more in-depth fix...
+    getDescriptor().TranslationalController.setInputVoltage((0D));
+    getDescriptor().RotationalController.setInputVoltage((0D));
   }
 
   @Override
@@ -140,7 +141,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
           .toArray());
         UPDATE_TIMESTAMPS.clear();
       }        
-      Article.setMeasurements(IntStream.range((0), (int) Numbers.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
+      Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
           Translations[Index], 
           Rotation2d.fromRadians(Rotations[Index]))
