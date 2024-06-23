@@ -57,7 +57,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
   @SuppressWarnings("unchecked")
   public Vector(final Nat<Elements> Elements, final Type... Vector) throws BoundaryException {
     try {
-      assert Elements.getNum() == Objects.requireNonNull(Vector).length;
+      assert Objects.requireNonNull(Elements.getNum()) == Objects.requireNonNull(Vector).length;
     } catch(final AssertionError Ignored) {
       throw new BoundaryException(
         String.format(
@@ -89,6 +89,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
    * @throws BoundaryException    Bounds of the collection are exceeded or not met by the length of the Vector parameter
    * @throws NullPointerException Either the Elements parameter or the Vector parameter evaluate to null 
    * @return Vector of the given elements
+   * @implSpec {@link #fill(Object...)} is preferred when possible, as {@link Collection#toArray()} is used with an unchecked cast, which may produce unintended casting behavior
    */
   @SuppressWarnings("unchecked")
   public static <Type, Elements extends Num> Vector<Type,Elements> fill(final Collection<Type> Vector) {
@@ -161,7 +162,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
    * Provides the underlying, specified type, array that was defined during construction, will always meet the expected bounds of Elements.
    * @return Array of specified type
    */
-  public Type[] getArray() {
-    return VECTOR;
+  public Type[] toArray() {
+    return VECTOR.clone();
   }
 }

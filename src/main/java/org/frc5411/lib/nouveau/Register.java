@@ -35,7 +35,7 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public interface Register<@NonNull Source, @NonNull Serial extends Report> extends Runnable, Singleton<Register<Source,Serial>> {
+public interface Register<@NonNull Source> extends Runnable, Singleton<Register<Source>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double STANDARD_FREQUENCY_HERTZ = (250d);
   Integer STARTING_THREAD_PRIORITY = (1);
@@ -103,11 +103,10 @@ public interface Register<@NonNull Source, @NonNull Serial extends Report> exten
    * Provides the current state of this Thread, which can be serialized as a struct value and sent over the network.
    * @return Current state report
    */
-  @SuppressWarnings("unchecked")
-  default Serial getReport() {
+  default Report getReport() {
     try {
       getQueueLock().readLock().lock();
-      return (Serial) Report.empty();
+      return Report.empty();
     } finally {
       getQueueLock().readLock().unlock();
     }

@@ -176,7 +176,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
 
   @Override
   public Manager clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
+    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getSimpleName()));
   }
 
   /**

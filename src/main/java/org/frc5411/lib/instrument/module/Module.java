@@ -56,7 +56,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
     synchronized(STATUS) {
       STATUS.setDemand(new SwerveModuleState());
       STATUS.setEffort(new SwerveModuleState());
-      STATUS.setMeasurements(new SwerveModulePosition[0]);
+      STATUS.setMeasurements(new SwerveModulePosition[] {new SwerveModulePosition()});
     }
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
@@ -74,7 +74,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   public synchronized void periodic() {
     synchronized(STATUS) {
       update(STATUS);
-      final var Reference = getState();
+      final var Reference = getState().orElseThrow();
       final var Effort = new SwerveModuleState();
       if(getConnection() || Reference != (null)) {
           setTranslationalVoltage(Effort.speedMetersPerSecond = unwrap(
@@ -146,7 +146,9 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   @Override
   public String getIdentity() {
     return String.format(
-      ("Module-[%s]"), 
-      DESCRIPTION.Identity.name());
+      ("[%s]-[%s]"), 
+      getClass().getSimpleName().toUpperCase(),
+      DESCRIPTION.Identity.name()
+    );
   }
 }

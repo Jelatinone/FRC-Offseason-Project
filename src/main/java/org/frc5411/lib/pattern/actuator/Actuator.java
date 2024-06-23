@@ -19,6 +19,8 @@ import org.frc5411.lib.pattern.Component;
 
 import edu.wpi.first.util.struct.StructSerializable;
 
+import java.util.Optional;
+
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
@@ -46,11 +48,11 @@ public interface Actuator<@NonNull Reference extends StructSerializable, @NonNul
 
   /**
    * Provides the current reference state, in other words the Demand set by calling {@link #set(Object)}.
-   * @return Struct of current state
+   * @return Struct of controller state (reference)
    */
   @SuppressWarnings("unchecked")
-  default Reference getState() {
-    return ((Report<Reference,Measurement>) getReport()).getDemand();
+  default Optional<Reference> getState() {
+    return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getDemand());
   }
 
   /**
@@ -58,7 +60,7 @@ public interface Actuator<@NonNull Reference extends StructSerializable, @NonNul
    * @return Struct of controller effort
    */
   @SuppressWarnings("unchecked")
-  default Reference getInput() {
-    return ((Report<Reference,Measurement>) getReport()).getEffort();
+  default Optional<Reference> getInput() {
+    return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getEffort());
   }
 }

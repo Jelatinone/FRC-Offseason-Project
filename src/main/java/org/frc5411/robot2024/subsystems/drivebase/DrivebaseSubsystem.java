@@ -24,9 +24,12 @@ import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
+import org.frc5411.lib.pattern.Component;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.hal.HALUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -76,7 +79,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Module<?,?>,N4> MODULES;
   Gyroscope<?> GYROSCOPE;
-  Module<?,?> TARGET_MODULE;
+  Component<?> IDENTITY_COMPONENT; // <--- Used in the case we just need general metrics (timestamp sizes, measurement sizes, etc...) that are representative of all other components on the same register
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
@@ -92,7 +95,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
     MODULES = Vector.<Module<?,?>,N4>fill(
       Stream.of(Constants.Module.values())
-        .parallel()
         .<Module<?,?>>map((Module) -> {
           final var Descriptor = Module.get();
           return RobotBase.isReal()?
@@ -102,14 +104,23 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     );
     GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR
       .complete(PigeonGyroscope::new);
+    IDENTITY_COMPONENT = MODULES
+      .stream()
+      .findAny()
+      .orElseThrow();
     KINEMATICS = new SwerveDriveKinematics(
       MODULES
         .stream()
         .map((Module) -> Module.getDescriptor().Position)
         .toArray(Translation2d[]::new)
     );
-    ODOMETRY = (null);
-    TARGET_MODULE = MODULES.stream().findAny().orElse(MODULES.getArray()[0]);
+    ODOMETRY = new SwerveDriveOdometry(
+      KINEMATICS, 
+      getGyroscopePosition()
+        .toRotation2d(), 
+      getModulePositions(), 
+      new Pose2d() // <--- Vision un-implemented
+    );
     Mode = State.RELATIVE;
     MODULES.forEach((Module) -> 
       addChild(Module.getIdentity(), Module));  
@@ -137,18 +148,21 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   @Override
   public synchronized void close() throws IOException {
-    SUBSYSTEM_LOCK.writeLock().lock();
-    synchronized(DrivebaseSubsystem.class) {
-      MODULES.forEach((Module) -> {
+    try {
+      SUBSYSTEM_LOCK.writeLock().lock();
+      synchronized(DrivebaseSubsystem.class) {
+        MODULES.forEach((Module) -> {
+          try {
+            Module.close();
+          } catch(final IOException Ignored) {}
+        });
         try {
-          Module.close();
-        } catch(final IOException Ignored) {}
-      });
-      try {
-        GYROSCOPE.close();
-      } catch (final IOException Ignored) {}
-      Instance = (null);
-      Mode = (null);
+          GYROSCOPE.close();
+        } catch (final IOException Ignored) {}
+        Instance = (null);
+        Mode = (null);
+      }
+    } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
   }
@@ -157,48 +171,59 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public synchronized void update() {
     Logger.recordOutput(
       String.format(
-        ("[s]/Measurement"), getName()), 
+        ("%s/Measurement"), getName()),
       MODULES
         .stream()
         .map((Module) -> Module
           .getMeasurement()
-          .orElse(new SwerveModulePosition()))
-        .toArray(SwerveModulePosition[]::new));
+          .orElseGet(SwerveModulePosition::new))
+        .toArray(SwerveModulePosition[]::new)
+    );
     Logger.recordOutput(
       String.format(
-        ("[s]/State"), getName()), 
+        ("%s/State"), getName()),
       MODULES
         .stream()
-        .map(Module::getInput)
-        .toArray(SwerveModuleState[]::new));
+        .map((Module) -> Module
+          .getInput()
+          .orElseGet(SwerveModuleState::new))
+        .toArray(SwerveModuleState[]::new)
+    );
     Logger.recordOutput(
       String.format(
-        ("[s]/Input"), getName()), 
+        ("%s/Input"), getName()),
       MODULES
         .stream()
-        .map(Module::getState)
-        .toArray(SwerveModuleState[]::new));
+        .map((Module) -> Module
+          .getState()
+          .orElseGet(SwerveModuleState::new))
+        .toArray(SwerveModuleState[]::new)
+    );
     Logger.recordOutput(
       String.format(
-        ("[s]/Mode"), getName()), 
-      getState());
+        ("%s/Mode"), getName()),
+      getState()
+    );
     Logger.recordOutput(
       String.format(
-        ("[s]/Connection"), getName()), 
+        ("%s/Connection"), getName()),
       MODULES
         .stream()
-        .allMatch(Module::getConnection));
+        .allMatch(Module::getConnection)
+    );
     Logger.recordOutput(
       String.format(
-        ("[s]/Latency"), getName()), 
+        ("%s/Latency"), getName()),
         DISCRETE_AGGREGATOR
           .attain() 
               - 
-        TARGET_MODULE
+        IDENTITY_COMPONENT
           .getTimestamp()
-          .orElse(Double.NaN));
+          .orElse(Double.NaN)
+    );
   }
 
+  @SuppressWarnings("SynchronizeOnNonFinalField")
   @Override
   public synchronized void periodic() {
     try {
@@ -212,7 +237,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         });
         GYROSCOPE.periodic();
       }
-      //Experimental Shit Below :P
       update();
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
@@ -231,6 +255,80 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
       return Mode;
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+  /**
+   * Provides the current controller state (reference) of all child {@link Module modules} of this drivebase as a {@link SwerveModuleState} object
+   * <p> Performs a read-lock blocking operation, which ensures that {@link Report reports} are up-to-date before retrieval of {@link Module#getState() reference} values
+   * @return Array (ordered) of controller state (reference) of each module
+   * @throws NoSuchElementException One or more modules could not produce a reference value within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
+   */
+  public SwerveModuleState[] getModuleReferences() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return MODULES
+        .stream()
+        .map((Module) -> 
+          Module.getState().orElseThrow())
+        .toArray(SwerveModuleState[]::new);
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+  /**
+   * Provides the current controller input (effort) of all child {@link Module modules} of this drivebase as a {@link SwerveModuleState} object
+   * <p> Performs a read-lock blocking operation, which ensures that {@link Report reports} are up-to-date before retrieval of {@link Module#getState() effort} values
+   * @return Array (ordered) of controller state (effort) of each module
+   * @throws NoSuchElementException One or more modules could not produce a effort value within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
+   */
+  public SwerveModuleState[] getModuleEffort() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return MODULES
+        .stream()
+        .map((Module) -> 
+          Module.getInput().orElseThrow())
+        .toArray(SwerveModuleState[]::new);
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+  /**
+   * Provides the current position of all child {@link Module modules} of this drivebase as a {@link SwerveModulePosition} object
+   * <p> Performs a read-lock blocking operation, which ensures that {@link Report reports} are up-to-date before retrieval of {@link Module#getMeasurement() measurement} values
+   * @return Array (ordered) of positions of each module
+   * @throws NoSuchElementException One or more modules could not produce a measurement within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
+   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager}
+   */
+  public SwerveModulePosition[] getModulePositions() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return MODULES
+        .stream()
+        .map((Module) -> 
+          Module.getMeasurement().orElseThrow())
+        .toArray(SwerveModulePosition[]::new);
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+    /**
+   * Provides the current position of child {@link Gyroscope gyroscope} of this drivebase as a {@link Rotation3d} object
+   * <p> Performs a read-lock blocking operation, which ensures that {@link Report reports} are up-to-date before retrieval of {@link Gyroscope#getMeasurement() measurement} values
+   * @return Gyroscope measured position on axes x (roll), y (pitch), and z (yaw)
+   * @throws NoSuchElementException Gyroscope could not produce a measurement within the last {@link Gyroscope#periodic() periodic} cycle, indicative of a hardware error
+   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager}
+   */
+  public Rotation3d getGyroscopePosition() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return GYROSCOPE.getMeasurement().orElseThrow();
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
     } 

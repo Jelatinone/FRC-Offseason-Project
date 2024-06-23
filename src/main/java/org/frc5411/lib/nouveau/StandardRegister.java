@@ -47,7 +47,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class StandardRegister implements Register<Supplier<Optional<Number>>, Report>{
+public class StandardRegister implements Register<Supplier<Optional<Number>>>{
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 84309938899889961L;
@@ -86,7 +86,7 @@ public class StandardRegister implements Register<Supplier<Optional<Number>>, Re
       (Previous, Current) -> Current - Previous);
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
-    CALLBACK.setName(getClass().getCanonicalName());
+    CALLBACK.setName(getClass().getSimpleName());
     start();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
@@ -164,6 +164,7 @@ public class StandardRegister implements Register<Supplier<Optional<Number>>, Re
     CALLBACK.startPeriodic(1D/UPDATE_FREQUENCY);
   }
 
+  @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
   @Override
   public synchronized void run() {
     State.Running = (true);

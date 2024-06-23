@@ -54,7 +54,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class PhoenixRegister extends Thread implements Register<StatusSignal<Number>,Report> {
+public class PhoenixRegister extends Thread implements Register<StatusSignal<Number>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 55742622883094958L;
@@ -99,7 +99,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));  
     setDaemon((true));
-    setName(getClass().getCanonicalName());
+    setName(getClass().getSimpleName());
     start();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
@@ -138,7 +138,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
 
   @Override
   public final PhoenixRegister clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
+    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getSimpleName()));
   }
 
   @Override
@@ -221,6 +221,7 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
     return Buffer;
   }
 
+  @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
   @Override
   public synchronized void run() {
     synchronized(Instance) {

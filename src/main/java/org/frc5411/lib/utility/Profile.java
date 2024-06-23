@@ -159,7 +159,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
    */
   @Override
   public final Object clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
+    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getSimpleName()));
   }
   //-----------------------------------------------------------------------[Accessors]--------------------------------------------------------------------------//
   /**

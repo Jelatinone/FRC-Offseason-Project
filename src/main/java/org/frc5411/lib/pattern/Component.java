@@ -138,10 +138,15 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
 
   /**
    * Provides the identity (name), as a string, of this component instance that is used for logging purposes 
-   * @return Identity of this component, new string by default
+   * @return Identity of this component
+   * @implNote Default implementation provides the canonical name, followed by the hash code of this object
    */
-  default String getIdentity() {
-    return new String();
+  public default String getIdentity() {
+    return String.format(
+      ("[%s]-[%s]"), 
+      getClass().getSimpleName().toUpperCase(),
+      hashCode()
+    );
   }
 
   /**

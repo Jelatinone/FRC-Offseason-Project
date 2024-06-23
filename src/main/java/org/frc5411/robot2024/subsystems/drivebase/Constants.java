@@ -52,10 +52,12 @@ public class Constants {
   //----------------------------------------------------------------------[Internal]---------------------------------------------------------------------------//
   /**
    * <h1>Module</h1>
+   * 
+   * @implNote Enum Constants are named {LOCATION}${SIDE} to prevent AdvantageKit formatting from folding the tabs...
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public enum Module implements Supplier<org.frc5411.lib.instrument.module.Descriptor<?,?>> {
-    FRONT_LEFT(
+    FRONT$LEFT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((11), MotorType.kBrushless))
@@ -68,7 +70,7 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
-    FRONT_RIGHT(
+    FRONT$RIGHT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((12), MotorType.kBrushless))
@@ -81,7 +83,7 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2)))),
-    REAR_LEFT(
+    REAR$LEFT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((13), MotorType.kBrushless))
@@ -94,7 +96,7 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
-    REAR_RIGHT(
+    REAR$RIGHT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
         .TranslationalController(new CANSparkMax((14), MotorType.kBrushless))

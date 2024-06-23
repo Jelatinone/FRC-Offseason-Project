@@ -47,7 +47,7 @@ public abstract class Report<@NonNull Measured extends StructSerializable> imple
 
   volatile double[] Timestamps = {};
 
-  volatile Measured @NonNull[] Measurements;
+  volatile Measured @NonNull[] Measurements; // <---- This property must be set at downstream implementations of Component or ClassCastException is thrown!
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Shorthand for providing an empty instance of a report, with no relevant data stored inside.
