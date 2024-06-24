@@ -28,8 +28,11 @@ import lombok.experimental.NonFinal;
 /**
  * <h1>Aggregator</h1>
  * 
- * <p>
+ * <p>Simple utility object for performing compound and or repeating operations via the java {@link java.util.function.Function function} API. 
  * 
+ * <p>Note that instances are synchronized, and because of the compounding nature of the contained values the order of calls to any method is <b>important</b> 
+ * to consider. Additionally, aggregators can be expensive, and are ideal for <b>repeated</b> operations as opposed to a single call to one of it's compound 
+ * operation methods
  * 
  * @author Cody Washington (@Jelatinone) 
  */

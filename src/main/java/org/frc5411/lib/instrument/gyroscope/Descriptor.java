@@ -40,7 +40,7 @@ public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Com
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public Descriptor<Hardware> clone() {
-    return new Descriptor<Hardware>(
+    return new Descriptor<>(
       Offset,
       Hardware,
       Identity

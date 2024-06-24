@@ -47,21 +47,21 @@ import lombok.NonNull;
  * @author Cody Washington
  */
 @FunctionalInterface
-public interface Component<@NonNull Measured extends StructSerializable> extends Closeable, Sendable {
+public interface Component<@NonNull Measurement extends StructSerializable> extends Closeable, Sendable {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Updates the Report of measurements to the most recent measurement data from hardware and {@link Register#register(Object) queue} sources
    * @param Record Loggable source of information, which is automatically logged with the {@link AutoLog} annotation
    * @see Register
    */
-  void update(final Report<Measured> Record);
+  void update(final Report<Measurement> Record);
 
   /**
    * Clones this component instance, throws an exception when this method is called because Component instances are always unique
    * @return                            Nothing, an error is always thrown
    * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
    */
-  public default Component<Measured> clone() throws CloneNotSupportedException {
+  default Component<Measurement> clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException();
   }
 
@@ -111,25 +111,26 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
     synchronized(Builder) {
       Builder.addBooleanProperty(
         String.format(
-          ("[s]/Connection"), getIdentity()), 
+          ("%s/Connection"),
+          getIdentity()),
         getReport()::isConnected, 
         getReport()::setConnected
       );
       Builder.addDoubleArrayProperty(
         String.format(
-          ("[s]/Timestamps"), getIdentity()), 
+          ("%s/Timestamps"), getIdentity()),
         getReport()::getTimestamps, 
         getReport()::setTimestamps
       );
       Builder.addRawProperty(
         String.format(
-          ("[s]/Measurements"), getIdentity()), 
+          ("%s/Measurements"), getIdentity()),
         ("StructSerializable"), 
-        () ->  Serialize.convert(getMeasurement().get()),
+        () ->  Serialize.convert(getMeasurement().orElseThrow()),
         (Data) -> {
           synchronized(getReport()) {
-            final var Update = (Measured) Serialize.convert(Data);
-            getReport().setMeasurements((Measured[]) new Object[] {Update});
+            final Measurement Update = (Measurement) Serialize.convert(Data);
+            getReport().setMeasurements((Measurement[]) new Object[] {Update});
           }
       });
     }
@@ -141,9 +142,9 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * @return Identity of this component
    * @implNote Default implementation provides the canonical name, followed by the hash code of this object
    */
-  public default String getIdentity() {
+  default String getIdentity() {
     return String.format(
-      ("[%s]-[%s]"), 
+      ("%s-[%s]"),
       getClass().getSimpleName().toUpperCase(),
       hashCode()
     );
@@ -153,7 +154,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * Provides the real-world description of the component, essentially an object makeup of the system's mechanical constants
    * @return Descriptor of this component, null by default
    */
-  default Descriptor<Component<Measured>> getDescriptor() {
+  default Descriptor<Component<Measurement>> getDescriptor() {
     return Descriptor.empty();
   }
 
@@ -166,7 +167,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * 
    * @return Report of measurements, by default an empty report.
    */
-  default Report<Measured> getReport() {
+  default Report<Measurement> getReport() {
     return Report.empty();
   }  
 
@@ -186,7 +187,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    */
   default Optional<Double> getTimestamp() {
     final var Timestamps = getTimestamps();
-    return Optional.ofNullable(Timestamps.size() > (0)? Timestamps.get(Timestamps.size() - (1)): (null));
+    return Optional.ofNullable(!Timestamps.isEmpty() ? Timestamps.get(Timestamps.size() - (1)): (null));
   }
 
   /**
@@ -204,9 +205,9 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * has not been called for a significant amount of time.
    * @return Latest Measurement 
    */
-  default Optional<Measured> getMeasurement() {
+  default Optional<Measurement> getMeasurement() {
     final var Measurements = getMeasurements();
-    return Optional.ofNullable(Measurements.size() > (0)? Measurements.get(Measurements.size() - (1)): (null));
+    return Optional.ofNullable(!Measurements.isEmpty() ? Measurements.get(Measurements.size() - (1)): (null));
   }  
 
   /**
@@ -216,7 +217,7 @@ public interface Component<@NonNull Measured extends StructSerializable> extends
    * @return Latest list of measurements
    * @see Register#register(Object) registering queues
    */
-  default List<Measured> getMeasurements() {
+  default List<Measurement> getMeasurements() {
     return List.of(getReport().getMeasurements());
   }
 }

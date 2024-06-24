@@ -32,25 +32,29 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
+@SuppressWarnings("unchecked")
 public interface Actuator<@NonNull Reference extends StructSerializable, @NonNull Measurement extends StructSerializable> extends Component<Measurement> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Mutates the current demand state of the actuator to a different state, but does not immediately process the correct actuator effort required
-   * to reach this demand state, instead this is done during {@link #periodic()}.
+   * to reach this demand state, instead this is done during {@link #periodic()}. Returns, if needed an 'optimized' instance of the Demand
    * @param Demand Reference state to reach
+   * @return Optimized state, used by the internal controller and actuator, default behavior returns the same instance as provided
    */
-  void set(final Reference Demand);
+  default Reference set(final @NonNull Reference Demand) {
+    ((Report<Reference,Measurement>) getReport()).setDemand(Demand);
+    return Demand;
+  }
 
   /**
-   * Immediately stops this actuator in such a way that {@link #set(Object)} can be called again after.
+   * Immediately stops this actuator in such a way that {@link #set(StructSerializable)} can be called again after.
    */
   void cease();
 
   /**
-   * Provides the current reference state, in other words the Demand set by calling {@link #set(Object)}.
+   * Provides the current reference state, in other words the Demand set by calling {@link #set(StructSerializable)}.
    * @return Struct of controller state (reference)
    */
-  @SuppressWarnings("unchecked")
   default Optional<Reference> getState() {
     return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getDemand());
   }
@@ -59,7 +63,6 @@ public interface Actuator<@NonNull Reference extends StructSerializable, @NonNul
    * Provides the current controller input to the actuator, in other words the controller effort updated internally each {@link #periodic()} call.
    * @return Struct of controller effort
    */
-  @SuppressWarnings("unchecked")
   default Optional<Reference> getInput() {
     return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getEffort());
   }

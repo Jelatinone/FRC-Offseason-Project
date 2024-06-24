@@ -70,7 +70,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
    * Adds a keybinding to the keybinding map of this profile, and updates that value across to the Sendable builder, if {@link #initSendable(SendableBuilder) applicable}. 
    * @param Keybinding Key to pull and put the Control value to
    * @param Control Trigger object to store within the Keybinding Map
-   * @return This operator, for chained calls to {@link #add(Enum, Trigger)} and {@link #add(Enum, Object)}
+   * @return This operator, for chained calls
    */
   public synchronized Profile<Keybindings,Preferences> add(final Keybindings Keybinding, final Trigger Control) {
     synchronized(KEYBINDING_MAP) {
@@ -82,7 +82,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
           ("[%s]/Keybinding-[%s]"), 
           NAME, 
           Keybinding.name()), 
-        () -> getKeybinding(Keybinding).get().toString(), 
+        () -> getKeybinding(Keybinding).orElseThrow().toString(),
         (final String Ignored) -> {});
       Builder.update();
     }
@@ -94,7 +94,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
    * @param <Preference> Relevant type of the value being added to the preference map
    * @param Preference Key to pull and put the preference value to
    * @param Value Object of any type object to store within the Keybinding Map
-   * @return This operator, for chained calls to {@link #add(Enum, Object)} and {@link #add(Enum, Trigger)}
+   * @return This operator, for chained calls
    */
   public synchronized <Preference> Profile<Keybindings, Preferences> add(final Preferences Preference, final Preference Value) {
     synchronized(PREFERENCE_MAP) {
@@ -106,7 +106,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
           ("[%s]/Keybinding-[%s]"), 
           NAME, 
           Preference.name()), 
-        () -> getPreference(Preference).get().toString(), 
+        () -> getPreference(Preference).orElseThrow().toString(),
         (final String Ignored) -> {});
       Builder.update();
     }
@@ -127,12 +127,12 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
       KEYBINDING_MAP.forEach((Keybinding, Control) -> 
         this.Builder.addStringProperty(
           Keybinding.name(), 
-          () -> getKeybinding(Keybinding).get().toString(), 
+          () -> getKeybinding(Keybinding).orElseThrow().toString(),
           (final String Ignored) -> {}));
       PREFERENCE_MAP.forEach((Preference, Value) -> 
         this.Builder.addStringProperty(
           Preference.name(), 
-          () -> getPreference(Preference).get().toString(), 
+          () -> getPreference(Preference).orElseThrow().toString(),
           (final String Ignored) -> {}));
       this.Builder.update();
     }
@@ -167,7 +167,7 @@ public class Profile<@NonNull Keybindings extends Enum<?>, @NonNull Preferences 
    * @param <Supplied> Type of the returned value, the value itself is cast to this type before it is made optional
    * @param Preference Key to pull the value from as an Object
    * @return {@link Optional} reference to a preference, if it exists or else it is {@link Optional#empty()}
-   * @see {@link Optional}
+   * @see Optional
    */
   @SuppressWarnings("unchecked")
   public <Supplied> Optional<Supplied> getPreference(final Preferences Preference) {

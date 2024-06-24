@@ -90,7 +90,7 @@ public interface Register<@NonNull Source> extends Runnable, Singleton<Register<
    * Creates a new Queue of standard size, and adds it to the collection of timestamp Queues. Each timestamp Queue contains the timestamp from a 
    * {@link HALUtil#getFPGATime() timestamp} of a {@link #run() run-cycle}, where the last element in the Queue is the most recent timestamp.
    * 
-   * <p> Note that this is done concurrently with updating {@link #timestamp()} Queues, so each update-cycle of {@link #run()} creates a pair of
+   * <p> Note that this is done concurrently with updating timestamp Queues, so each update-cycle of {@link #run()} creates a pair of
    * signal-values and timestamps that can be used to better interpolate values as opposed to a standard 20-millisecond cycle provided by
    * {@link SubsystemBase#periodic()}, which provides lower accuracy.
    * 

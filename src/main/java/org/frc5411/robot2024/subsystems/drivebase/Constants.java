@@ -53,7 +53,7 @@ public class Constants {
   /**
    * <h1>Module</h1>
    * 
-   * @implNote Enum Constants are named {LOCATION}${SIDE} to prevent AdvantageKit formatting from folding the tabs...
+   * @implNote Enum Constants are named {LOCATION}${SIDE} to prevent AdvantageScope from folding the tabs...
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public enum Module implements Supplier<org.frc5411.lib.instrument.module.Descriptor<?,?>> {
@@ -191,11 +191,11 @@ class Descriptions {
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDConstants.builder().Proportional((0.35D)).Integral((0D)).Derivative((2.9D)).build().toController())
+      .TranslationalFeedback(PIDConstants.builder().Proportional((0.35D)).Integral((0D)).Derivative((1.9D)).build().toController())
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
       .RotationalEncoder(Optional.empty())
-      .RotationalFeedback(PIDConstants.builder().Proportional((7.08D)).Integral((0D)).Derivative((2.9D)).build().toController())
+      .RotationalFeedback(PIDConstants.builder().Proportional((9.08D)).Integral((0D)).Derivative((1.9D)).build().toController())
       .Radius(Units.inchesToMeters((4D)))
       .Limits(new Limit((0D), (0D), (0D)));
 }

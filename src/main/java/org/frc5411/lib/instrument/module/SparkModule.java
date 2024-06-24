@@ -97,7 +97,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
       getDescriptor().RotationalController.setCANTimeout((250));
 
       //Knowledge from beyond...?
-      for(Integer Iterations = (0); Iterations < (30); Iterations++) {
+      for(int Iterations = (0); Iterations < (30); Iterations++) {
         getDescriptor().TranslationalController.setInverted(getDescriptor().TranslationalInverted);
         getDescriptor().RotationalController.setInverted(getDescriptor().RotationalInverted);
 

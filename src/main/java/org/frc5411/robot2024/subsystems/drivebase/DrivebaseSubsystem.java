@@ -79,7 +79,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Module<?,?>,N4> MODULES;
   Gyroscope<?> GYROSCOPE;
-  Component<?> IDENTITY_COMPONENT; // <--- Used in the case we just need general metrics (timestamp sizes, measurement sizes, etc...) that are representative of all other components on the same register
+  Component<?> IDENTITY_COMPONENT; // <--- Used where we need metrics (timestamp sizes, measurement sizes, etc...) representative of all other components on the same register
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
@@ -93,9 +93,9 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    */
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
-    MODULES = Vector.<Module<?,?>,N4>fill(
+    MODULES = Vector.fill(
       Stream.of(Constants.Module.values())
-        .<Module<?,?>>map((Module) -> {
+        .map((Module) -> {
           final var Descriptor = Module.get();
           return RobotBase.isReal()?
             Descriptor.complete(SparkModule::new):
@@ -262,11 +262,11 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   /**
    * Provides the current controller state (reference) of all child {@link Module modules} of this drivebase as a {@link SwerveModuleState} object
-   * <p> Performs a read-lock blocking operation, which ensures that {@link Report reports} are up-to-date before retrieval of {@link Module#getState() reference} values
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Module#getState() reference} values
    * @return Array (ordered) of controller state (reference) of each module
-   * @throws NoSuchElementException One or more modules could not produce a reference value within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
+   * @throws java.util.NoSuchElementException One or more modules could not produce a reference value within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
    */
-  public SwerveModuleState[] getModuleReferences() {
+  public SwerveModuleState[] getModuleStates() {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
       return MODULES
@@ -281,11 +281,11 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   /**
    * Provides the current controller input (effort) of all child {@link Module modules} of this drivebase as a {@link SwerveModuleState} object
-   * <p> Performs a read-lock blocking operation, which ensures that {@link Report reports} are up-to-date before retrieval of {@link Module#getState() effort} values
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Module#getState() effort} values
    * @return Array (ordered) of controller state (effort) of each module
-   * @throws NoSuchElementException One or more modules could not produce a effort value within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
+   * @throws java.util.NoSuchElementException One or more modules could not produce a effort value within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
    */
-  public SwerveModuleState[] getModuleEffort() {
+  public SwerveModuleState[] getModuleInputs() {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
       return MODULES
@@ -300,10 +300,10 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   /**
    * Provides the current position of all child {@link Module modules} of this drivebase as a {@link SwerveModulePosition} object
-   * <p> Performs a read-lock blocking operation, which ensures that {@link Report reports} are up-to-date before retrieval of {@link Module#getMeasurement() measurement} values
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Module#getMeasurement() measurement} values
    * @return Array (ordered) of positions of each module
-   * @throws NoSuchElementException One or more modules could not produce a measurement within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
-   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager}
+   * @throws java.util.NoSuchElementException One or more modules could not produce a measurement within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
+   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link org.frc5411.robot2024.Manager}
    */
   public SwerveModulePosition[] getModulePositions() {
     try {
@@ -320,10 +320,10 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
     /**
    * Provides the current position of child {@link Gyroscope gyroscope} of this drivebase as a {@link Rotation3d} object
-   * <p> Performs a read-lock blocking operation, which ensures that {@link Report reports} are up-to-date before retrieval of {@link Gyroscope#getMeasurement() measurement} values
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Gyroscope#getMeasurement() measurement} values
    * @return Gyroscope measured position on axes x (roll), y (pitch), and z (yaw)
-   * @throws NoSuchElementException Gyroscope could not produce a measurement within the last {@link Gyroscope#periodic() periodic} cycle, indicative of a hardware error
-   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager}
+   * @throws java.util.NoSuchElementException Gyroscope could not produce a measurement within the last {@link Gyroscope#periodic() periodic} cycle, indicative of a hardware error
+   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link org.frc5411.robot2024.Manager}
    */
   public Rotation3d getGyroscopePosition() {
     try {

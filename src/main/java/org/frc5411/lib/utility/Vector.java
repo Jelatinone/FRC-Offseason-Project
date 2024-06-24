@@ -43,7 +43,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class Vector<@NonNull Type, @NonNull Elements extends Num> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  static Vector<Object,N0> EMPTY = new Vector<>(Nat.N0(), new Object[0]);
+  static Vector<Object,N0> EMPTY = new Vector<>(Nat.N0());
   
   @Array Type[] VECTOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
@@ -57,7 +57,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
   @SuppressWarnings("unchecked")
   public Vector(final Nat<Elements> Elements, final Type... Vector) throws BoundaryException {
     try {
-      assert Objects.requireNonNull(Elements.getNum()) == Objects.requireNonNull(Vector).length;
+      assert Elements.getNum() == Objects.requireNonNull(Vector).length;
     } catch(final AssertionError Ignored) {
       throw new BoundaryException(
         String.format(
@@ -116,7 +116,7 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> {
    * @return a sequential {@code Stream} over the elements in this collection
    */
   public Stream<Type> stream() {
-    return Stream.<Type>of(VECTOR);
+    return Stream.of(VECTOR);
   }
 
   /**

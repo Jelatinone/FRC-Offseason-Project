@@ -15,7 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module;
 import org.frc5411.lib.control.archetype.PIDController;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Figure;
@@ -79,7 +78,6 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public synchronized void cease() {
-    //TODO: Requires a more in-depth fix...
     getDescriptor().TranslationalController.setInputVoltage((0D));
     getDescriptor().RotationalController.setInputVoltage((0D));
   }
@@ -88,6 +86,15 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
   public synchronized void configure() {
     cease();
     synchronized(this) {
+      getDescriptor().TranslationalController.setState(
+        getTranslationPosition()
+          .orElse((0D)), 
+        (0D));
+      getDescriptor().RotationalController.setState(
+        getRotationalPosition()
+          .orElse(new Rotation2d())
+          .getRadians(), 
+        (0D));
       ((PIDController) getDescriptor().RotationalFeedback).enableContinuousInput(-Math.PI, Math.PI);
     }
   }
@@ -103,7 +110,9 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
   public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull SwerveModulePosition> Record) {
     final var Article = (Report) Record;
 
-    getDescriptor().TranslationalController.update(DISCRETE_AGGREGATOR.aggregate());
+    DISCRETE_AGGREGATOR.aggregate();
+
+    getDescriptor().TranslationalController.update(DISCRETE_AGGREGATOR.getAggregated());
     getDescriptor().RotationalController.update(DISCRETE_AGGREGATOR.getAggregated());
 
     synchronized(Article) {
@@ -122,7 +131,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
         Translations = TRANSLATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.get().doubleValue() / getDescriptor().TranslationalReduction * getDescriptor().Radius)
+            Position.orElse(Double.NaN).doubleValue() / getDescriptor().TranslationalReduction * getDescriptor().Radius)
           .toArray();
         TRANSLATIONAL_POSITIONS.clear();
       }
@@ -130,7 +139,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
         Rotations = ROTATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.get().doubleValue() / getDescriptor().RotationalReduction)
+            Position.orElse(Double.NaN).doubleValue() / getDescriptor().RotationalReduction)
             .toArray();
         ROTATIONAL_POSITIONS.clear();
       }

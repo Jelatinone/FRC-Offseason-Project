@@ -66,8 +66,9 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   }
 
   @Override
-  public synchronized void set(final SwerveModuleState Demand) {
-    STATUS.setDemand(Demand);
+  public synchronized SwerveModuleState set(@NonNull SwerveModuleState Demand) {
+    STATUS.setDemand(Demand = SwerveModuleState.optimize(Demand, getRotationalPosition().orElse(new Rotation2d())));
+    return Demand;
   }
 
   @Override
@@ -76,7 +77,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
       update(STATUS);
       final var Reference = getState().orElseThrow();
       final var Effort = new SwerveModuleState();
-      if(getConnection() || Reference != (null)) {
+      if(getConnection()) {
           setTranslationalVoltage(Effort.speedMetersPerSecond = unwrap(
             DESCRIPTION.TranslationalFeedback.calculate(wrap(
               STATUS.getTranslationalVelocity(), 
@@ -146,7 +147,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   @Override
   public String getIdentity() {
     return String.format(
-      ("[%s]-[%s]"), 
+      ("%s-[%s]"),
       getClass().getSimpleName().toUpperCase(),
       DESCRIPTION.Identity.name()
     );

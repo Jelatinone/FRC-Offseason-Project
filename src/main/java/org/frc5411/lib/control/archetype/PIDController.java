@@ -46,7 +46,7 @@ public class PIDController extends edu.wpi.first.math.controller.PIDController i
 
   /**
    * PID Controller Constructor
-   * @param Constants Standard PIDController object with Relevant PID tuned constants: P(roptional), I(ntegral), D(erivative) 
+   * @param Controller object with Relevant PID tuned constants: P(roptional), I(ntegral), D(erivative)
    */
   public PIDController(final edu.wpi.first.math.controller.PIDController Controller) {
     super(Controller.getP(), Controller.getI(), Controller.getD());

@@ -64,6 +64,6 @@ public abstract class Descriptor<@NonNull Described extends Component<?>> implem
    */
   @SuppressWarnings("unchecked")
   public @NonNull <Downstream extends Descriptor<Described>, Produces extends Described> Produces complete(final Function<? super Downstream,? extends Produces> Generator) {
-    return (Produces) Generator.apply((Downstream) this);
+    return Generator.apply((Downstream) this);
   }
 }

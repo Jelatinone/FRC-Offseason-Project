@@ -33,21 +33,25 @@ import lombok.experimental.FieldDefaults;
  * a changing-value updated {@link Component#update(Report) periodically}. Any types extending this class should be annotated with the relevant
  * {@link AutoLog}, and {@link Getter} annotations. 
  * 
- * <p> Note that the contents of a given report, it's measurements, timestamps, and connection status are all values that can only be mutated
- * from Component of origin's access. <p>
+ * <p>Note that the contents of a given report, it's measurements, timestamps, and connection status are all values that should only be mutated
+ * from Component of origin's access.<p>
+ * 
+ * @implNote Array values, such as {@code Timestamps} and {@code Measurements} should be mutated to values in which the component values of the array
+ * are ordered in ascending order from oldest to newest; this ensures the correct values are provided from {@link Component#getMeasurement()}
+ * and {@link Component#getTimestamps()} by their default implementations.
  * 
  * @see StructSerializable
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
 @Setter
-public abstract class Report<@NonNull Measured extends StructSerializable> implements Cloneable {
+public abstract class Report<@NonNull Measurement extends StructSerializable> implements Cloneable {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile boolean Connected = (false);
 
   volatile double[] Timestamps = {};
 
-  volatile Measured @NonNull[] Measurements; // <---- This property must be set at downstream implementations of Component or ClassCastException is thrown!
+  volatile Measurement @NonNull[] Measurements; // <---- This property must be set at downstream implementations of Component or ClassCastException is thrown!
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Shorthand for providing an empty instance of a report, with no relevant data stored inside.
@@ -59,12 +63,12 @@ public abstract class Report<@NonNull Measured extends StructSerializable> imple
   }
 
   /**
-   * Creates and returns a copy of this Report object, retaining all relevant information stored within, such as the
-   * most-recent measurements, but is not the same specific instance.
-   * @return Copy of this object, but not the same instance
+   * Creates and returns an entirely new instance of this Report object, which does not retain any of the relevant information
+   * of the original instance. 
+   * @return new instance of this Report type with no stored data
    */
-  public Report<Measured> clone() {
-    return new Report<>() {};
+  public Report<Measurement> clone() {
+    return Report.empty();
   }
 
 }
