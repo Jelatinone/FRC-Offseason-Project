@@ -14,6 +14,7 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.control.archetype.PIDController;
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Aggregator;
@@ -23,6 +24,8 @@ import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import java.util.Optional;
@@ -59,11 +62,11 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
 
     TRANSLATIONAL_POSITIONS = StandardRegister
       .getInstance()
-      .register(() -> Optional.of(
-        Descriptor.TranslationalController.getAngularPositionRotations()));
+      .register(() -> Optional.ofNullable(
+        Descriptor.TranslationalController.getAngularPositionRad()));
     ROTATIONAL_POSITIONS = StandardRegister
       .getInstance()
-      .register(() -> Optional.of(
+      .register(() -> Optional.ofNullable(
         Descriptor.RotationalController.getAngularPositionRad()));
         
     UPDATE_TIMESTAMPS = StandardRegister
@@ -87,13 +90,10 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
     cease();
     synchronized(this) {
       getDescriptor().TranslationalController.setState(
-        getTranslationPosition()
-          .orElse((0D)), 
+        Units.rotationsToRadians(getDescriptor().TranslationalOffset), 
         (0D));
       getDescriptor().RotationalController.setState(
-        getRotationalPosition()
-          .orElse(new Rotation2d())
-          .getRadians(), 
+        getDescriptor().RotationalReduction, 
         (0D));
       ((PIDController) getDescriptor().RotationalFeedback).enableContinuousInput(-Math.PI, Math.PI);
     }
@@ -116,14 +116,24 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
     getDescriptor().RotationalController.update(DISCRETE_AGGREGATOR.getAggregated());
 
     synchronized(Article) {
-      Article.setTranslationalAmperage(getDescriptor().TranslationalController.getCurrentDrawAmps());
-      Article.setTranslationalVelocity(getDescriptor().TranslationalController.getAngularVelocityRPM() / getDescriptor().TranslationalReduction);
+      Article.setTranslationalVoltage(getInput().orElseThrow().speedMetersPerSecond);
+      Article.setTranslationalAmperage(Math.abs(getDescriptor().TranslationalController.getCurrentDrawAmps()));
+      Article.setTranslationalVelocity(getDescriptor().TranslationalController.getAngularVelocityRadPerSec() / getDescriptor().TranslationalReduction * getDescriptor().Radius);
       Article.setTranslationalConnected((true));
 
-      Article.setRotationalAmperage(getDescriptor().RotationalController.getCurrentDrawAmps());
-      Article.setRotationalVelocity(getDescriptor().RotationalController.getAngularVelocityRPM() / getDescriptor().RotationalReduction);
+      Article.setRotationalVoltage(getInput().orElseThrow().angle.getRotations());
+      Article.setRotationalAmperage(Math.abs(getDescriptor().RotationalController.getCurrentDrawAmps()));
+      Article.setRotationalVelocity(getDescriptor().RotationalController.getAngularVelocityRadPerSec() / getDescriptor().RotationalReduction);
       Article.setRotationalConnected((true));   
 
+      Article.setOutput(
+        new SwerveModuleState(
+          Article.TranslationalVelocity,
+          Rotation2d.fromRotations(
+            getDescriptor().RotationalController.getAngularPositionRotations())
+              .minus(getDescriptor().RotationalOffset)
+              // .div(getDescriptor().RotationalReduction) <--- This wraps angles weirdly?
+      ));
       Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());
 
       final double[] Translations, Rotations;
@@ -131,7 +141,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
         Translations = TRANSLATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue() / getDescriptor().TranslationalReduction * getDescriptor().Radius)
+            Position.orElse(Double.NaN).doubleValue())
           .toArray();
         TRANSLATIONAL_POSITIONS.clear();
       }
@@ -139,22 +149,25 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
         Rotations = ROTATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue() / getDescriptor().RotationalReduction)
-            .toArray();
+            Position.orElse(Double.NaN).doubleValue())
+          .toArray();
         ROTATIONAL_POSITIONS.clear();
       }
       synchronized(UPDATE_TIMESTAMPS) {
         Article.setTimestamps(UPDATE_TIMESTAMPS
           .stream()
-          .mapToDouble(Double::doubleValue)
+          .mapToDouble(Number::doubleValue)
           .toArray());
         UPDATE_TIMESTAMPS.clear();
-      }        
+      }
+
       Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
-          Translations[Index], 
-          Rotation2d.fromRadians(Rotations[Index]))
-      ).toArray(SwerveModulePosition[]::new));
+          Translations[Index] / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
+          Rotation2d.fromRotations(Rotations[Index])
+            .minus(getDescriptor().RotationalOffset)
+            .div(getDescriptor().RotationalReduction))
+      ).toArray(SwerveModulePosition[]::new));      
     }
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//

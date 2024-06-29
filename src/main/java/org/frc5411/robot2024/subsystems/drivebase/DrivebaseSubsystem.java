@@ -14,21 +14,23 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
+import org.frc5411.lib.external.SwerveSetpointGenerator;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 import org.frc5411.lib.instrument.gyroscope.PigeonGyroscope;
 import org.frc5411.lib.instrument.module.MockModule;
 import org.frc5411.lib.instrument.module.Module;
+import org.frc5411.lib.instrument.module.Setpoint;
 import org.frc5411.lib.instrument.module.SparkModule;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
-import org.frc5411.lib.pattern.Component;
+import org.frc5411.robot2024.subsystems.drivebase.Constants.Identity;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.hal.HALUtil;
-import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
@@ -79,13 +81,16 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Module<?,?>,N4> MODULES;
   Gyroscope<?> GYROSCOPE;
-  Component<?> IDENTITY_COMPONENT; // <--- Used where we need metrics (timestamp sizes, measurement sizes, etc...) representative of all other components on the same register
+  Module<?,?> IDENTITY; // <--- Used where we need metrics (timestamp sizes, measurement sizes, etc...) representative of all Modules on the same register
+  Translation2d[] LOCATIONS;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
+  SwerveSetpointGenerator GENERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
   static volatile State Mode;
+  static volatile Setpoint Effort;
   static volatile Twist2d Control;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -102,26 +107,39 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
             Descriptor.complete(MockModule::new);
         }).toArray(Module[]::new)
     );
+    LOCATIONS = MODULES
+      .stream()
+      .map((Module) -> Module.getDescriptor().Position)
+      .toArray(Translation2d[]::new);
     GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR
       .complete(PigeonGyroscope::new);
-    IDENTITY_COMPONENT = MODULES
+    IDENTITY = MODULES
       .stream()
       .findAny()
       .orElseThrow();
     KINEMATICS = new SwerveDriveKinematics(
-      MODULES
-        .stream()
-        .map((Module) -> Module.getDescriptor().Position)
-        .toArray(Translation2d[]::new)
+      LOCATIONS
     );
     ODOMETRY = new SwerveDriveOdometry(
       KINEMATICS, 
       getGyroscopePosition()
         .toRotation2d(), 
       getModulePositions(), 
-      new Pose2d() // <--- Vision un-implemented
+      Identity.POSE_PRESET
+    );
+    GENERATOR = new SwerveSetpointGenerator(
+      KINEMATICS, 
+      LOCATIONS
     );
     Mode = State.RELATIVE;
+    Effort = new Setpoint(
+      new ChassisSpeeds(), 
+      getModuleStates());
+    Control = new Twist2d(
+      (1D), 
+      (1D), 
+      (1D)
+    );
     MODULES.forEach((Module) -> 
       addChild(Module.getIdentity(), Module));  
     addChild(GYROSCOPE.getIdentity(), GYROSCOPE);
@@ -176,7 +194,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .stream()
         .map((Module) -> Module
           .getMeasurement()
-          .orElseGet(SwerveModulePosition::new))
+          .orElseGet(() -> new SwerveModulePosition(Double.NaN, new Rotation2d(Double.NaN))))
         .toArray(SwerveModulePosition[]::new)
     );
     Logger.recordOutput(
@@ -185,18 +203,18 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       MODULES
         .stream()
         .map((Module) -> Module
-          .getInput()
-          .orElseGet(SwerveModuleState::new))
+          .getState()
+          .orElseGet(() -> new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN))))
         .toArray(SwerveModuleState[]::new)
     );
     Logger.recordOutput(
       String.format(
-        ("%s/Input"), getName()),
+        ("%s/Output"), getName()),
       MODULES
         .stream()
         .map((Module) -> Module
-          .getState()
-          .orElseGet(SwerveModuleState::new))
+          .getOutput()
+          .orElseGet(() -> new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN))))
         .toArray(SwerveModuleState[]::new)
     );
     Logger.recordOutput(
@@ -217,7 +235,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         DISCRETE_AGGREGATOR
           .attain() 
               - 
-        IDENTITY_COMPONENT
+        IDENTITY
           .getTimestamp()
           .orElse(Double.NaN)
     );
@@ -229,15 +247,36 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
       synchronized(Instance) {
-        MODULES.forEach((Module) -> {
+        GYROSCOPE.periodic();
+        Effort = GENERATOR.generateSetpoint(
+          IDENTITY.getDescriptor().Limits, 
+          Effort, 
+          Mode.apply(Control), 
+          DISCRETE_AGGREGATOR.aggregate());   
+        MODULES.stream().parallel().forEach((Module) -> {
           Module.periodic();
           if(DriverStation.isDisabled()) {
             Module.cease();
+          } else {
+            Module.set(Effort.States()[Module.getDescriptor().Identity.ordinal()]);
           }
         });
-        GYROSCOPE.periodic();
       }
       update();
+    } finally {
+      SUBSYSTEM_LOCK.writeLock().unlock();
+    }
+  }
+
+  /**
+   * Applies an effort (which must be scaled from [-1,+1]) to the drivebase' modules respective translational and rotational actuators upon
+   * completion of the next control loop.
+   * @param Effort Scaled effort, which has a translation (dx, dy) and rotation (dtheta)
+   */
+  public synchronized void apply(final Twist2d Effort) {
+    try {
+      SUBSYSTEM_LOCK.writeLock().lock();
+      Control = Effort;
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
@@ -368,7 +407,7 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
   ),
 
   /**
-   * Control based on a given trajectory, accepts a twist, 
+   * TODO:
    */
   TRAJECTORY((Twist) ->
     (null)
@@ -387,7 +426,11 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
    * to guide us
    */
   RELATIVE((Twist) -> 
-    (null)
+    ChassisSpeeds.fromFieldRelativeSpeeds(
+      Twist.dx, 
+      Twist.dy, 
+      Twist.dtheta, 
+      new Rotation2d())
   );
 
   private final Function<Twist2d, ChassisSpeeds> FUNCTION;

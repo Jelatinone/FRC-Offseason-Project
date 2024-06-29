@@ -104,17 +104,9 @@ public final class Manager implements Singleton<Manager>, Runnable {
       1D / UPDATE_FREQUENCY);
     KINEMATICS = (null);
     ODOMETRY = (null);
-    DrivebaseSubsystem.getInstance();
   } static {
-    Robot.add(Instance, 1D / UPDATE_FREQUENCY);
-    // AutoBuilder.configureHolonomic(
-    //   (null), 
-    //   (null), 
-    //   (null), 
-    //   (null), 
-    //   (null), 
-    //   (null), 
-    //   (null));
+    //<--- Fetch All Managed Subsystems --->
+    DrivebaseSubsystem.getInstance();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
 
@@ -226,6 +218,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
       }
     }
     return Result;
+  } static {
+    Robot.add(Instance, 1D / UPDATE_FREQUENCY);
   }
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**

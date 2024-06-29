@@ -22,6 +22,7 @@ import org.frc5411.lib.utility.Figure;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -157,7 +158,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
     synchronized(Article) {
       Article.setTranslationalVoltage(getDescriptor().TranslationalController.getBusVoltage() * getDescriptor().TranslationalController.getAppliedOutput());
       Article.setTranslationalAmperage(getDescriptor().TranslationalController.getOutputCurrent());
-      Article.setTranslationalVelocity(TRANSLATIONAL_ENCODER.getVelocity() / getDescriptor().TranslationalReduction);
+      Article.setTranslationalVelocity(TRANSLATIONAL_ENCODER.getVelocity() / getDescriptor().TranslationalReduction * getDescriptor().Radius);
       Article.setTranslationalConnected(getDescriptor().TranslationalController.getLastError().equals(REVLibError.kOk));
 
       Article.setRotationalVoltage(getDescriptor().RotationalController.getBusVoltage() * getDescriptor().RotationalController.getAppliedOutput());
@@ -165,6 +166,16 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
       Article.setRotationalVelocity(getDescriptor().RotationalEncoder.getVelocity().refresh().getValue() / getDescriptor().RotationalReduction);
       Article.setRotationalConnected(getDescriptor().RotationalController.getLastError().equals(REVLibError.kOk));   
 
+      Article.setOutput(new SwerveModuleState(
+        Article.TranslationalVelocity,
+        Rotation2d.fromRotations(
+          getDescriptor().RotationalEncoder
+            .getAbsolutePosition()
+            .refresh()
+            .getValue())
+          .minus(getDescriptor().RotationalOffset)
+          .div(getDescriptor().RotationalReduction)
+      ));
       Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());
 
       final double[] Translations, Rotations;
@@ -172,7 +183,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         Translations = TRANSLATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue() / getDescriptor().TranslationalReduction * getDescriptor().Radius - getDescriptor().TranslationalOffset)
+            Position.orElse(Double.NaN).doubleValue())
           .toArray();
         TRANSLATIONAL_POSITIONS.clear();
       }
@@ -180,21 +191,23 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         Rotations = ROTATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue() / getDescriptor().RotationalReduction - getDescriptor().RotationalOffset.getRotations())
-            .toArray();
+            Position.orElse(Double.NaN).doubleValue())
+          .toArray();
         ROTATIONAL_POSITIONS.clear();
       }
       synchronized(UPDATE_TIMESTAMPS) {
         Article.setTimestamps(UPDATE_TIMESTAMPS
           .stream()
-          .mapToDouble(Double::doubleValue)
+          .mapToDouble(Number::doubleValue)
           .toArray());
         UPDATE_TIMESTAMPS.clear();
       }        
       Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
-          Translations[Index], 
-          Rotation2d.fromRadians(Rotations[Index]))
+          (Translations[Index] - getDescriptor().TranslationalOffset) / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
+          Rotation2d.fromRotations(Rotations[Index])
+            .minus(getDescriptor().RotationalOffset)
+            .div(getDescriptor().RotationalReduction))
       ).toArray(SwerveModulePosition[]::new));
     }
   }

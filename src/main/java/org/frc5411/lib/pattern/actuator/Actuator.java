@@ -42,7 +42,7 @@ public interface Actuator<@NonNull Reference extends StructSerializable, @NonNul
    * @return Optimized state, used by the internal controller and actuator, default behavior returns the same instance as provided
    */
   default Reference set(final @NonNull Reference Demand) {
-    ((Report<Reference,Measurement>) getReport()).setDemand(Demand);
+    ((Report<Reference,Measurement>) getReport()).setState(Demand);
     return Demand;
   }
 
@@ -56,14 +56,23 @@ public interface Actuator<@NonNull Reference extends StructSerializable, @NonNul
    * @return Struct of controller state (reference)
    */
   default Optional<Reference> getState() {
-    return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getDemand());
+    return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getState());
   }
 
   /**
    * Provides the current controller input to the actuator, in other words the controller effort updated internally each {@link #periodic()} call.
-   * @return Struct of controller effort
+   * @return Struct of controller input 
    */
   default Optional<Reference> getInput() {
-    return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getEffort());
+    return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getInput());
+  }
+
+
+  /**
+   * Provides the current controller output of the actuator, in other words the controller's feedback updated internally each {@link #periodic()} call.
+   * @return Struct of controller output 
+   */
+  default Optional<Reference> getOutput() {
+    return Optional.ofNullable(((Report<Reference,Measurement>) getReport()).getOutput());
   }
 }

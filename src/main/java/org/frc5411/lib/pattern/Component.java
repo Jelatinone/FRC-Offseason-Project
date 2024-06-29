@@ -187,7 +187,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    */
   default Optional<Double> getTimestamp() {
     final var Timestamps = getTimestamps();
-    return Optional.ofNullable(!Timestamps.isEmpty() ? Timestamps.get(Timestamps.size() - (1)): (null));
+    return Optional.ofNullable(Timestamps.isEmpty() ? (null): Timestamps.get(Timestamps.size() - (1)));
   }
 
   /**
@@ -207,7 +207,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    */
   default Optional<Measurement> getMeasurement() {
     final var Measurements = getMeasurements();
-    return Optional.ofNullable(!Measurements.isEmpty() ? Measurements.get(Measurements.size() - (1)): (null));
+    return Optional.ofNullable(Measurements.isEmpty() ? (null): Measurements.get(Measurements.size() - (1)));
   }  
 
   /**

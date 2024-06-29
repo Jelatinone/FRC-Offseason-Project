@@ -17,6 +17,7 @@ package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.actuator.Actuator;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -54,8 +55,9 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
     DESCRIPTION = Objects.requireNonNull(Description);
     STATUS = new ReportAutoLogged();
     synchronized(STATUS) {
-      STATUS.setDemand(new SwerveModuleState());
-      STATUS.setEffort(new SwerveModuleState());
+      STATUS.setState(new SwerveModuleState());
+      STATUS.setInput(new SwerveModuleState());
+      STATUS.setOutput(new SwerveModuleState());
       STATUS.setMeasurements(new SwerveModulePosition[] {new SwerveModulePosition()});
     }
   }
@@ -67,7 +69,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
 
   @Override
   public synchronized SwerveModuleState set(@NonNull SwerveModuleState Demand) {
-    STATUS.setDemand(Demand = SwerveModuleState.optimize(Demand, getRotationalPosition().orElse(new Rotation2d())));
+    STATUS.setState(Demand = SwerveModuleState.optimize(Demand, getOutput().orElseThrow().angle));
     return Demand;
   }
 
@@ -75,29 +77,43 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   public synchronized void periodic() {
     synchronized(STATUS) {
       update(STATUS);
+      //TODO: Implement Orbit-style module limits (accelleration, skid, tilt, etc)
       final var Reference = getState().orElseThrow();
+      final var Output = getOutput().orElseThrow();
       final var Effort = new SwerveModuleState();
       if(getConnection()) {
-          setTranslationalVoltage(Effort.speedMetersPerSecond = unwrap(
-            DESCRIPTION.TranslationalFeedback.calculate(wrap(
-              STATUS.getTranslationalVelocity(), 
-              Reference.speedMetersPerSecond * Math.cos(
-                unwrap(DESCRIPTION.RotationalFeedback.getError())) / DESCRIPTION.Radius
-            ))
-          ));
-          final var Position = getRotationalPosition();
-          if(Reference.angle != (null) && Position.isPresent()) {
-            setRotationalVoltage((
-              Effort.angle = Rotation2d.fromRotations(unwrap(
-              DESCRIPTION.RotationalFeedback.calculate(wrap(
-                Position.get().getRadians(), 
-                Reference.angle.getRadians()))))
-            ).getRotations());
-          }          
+        setTranslationalVoltage((
+          Effort.speedMetersPerSecond = unwrap(
+            DESCRIPTION.TranslationalFeedback.calculate(
+              VecBuilder.fill(
+                STATUS.TranslationalVelocity, 
+                Reference.speedMetersPerSecond 
+                          * 
+                Math.cos(unwrap(DESCRIPTION.RotationalFeedback.getError())) 
+                          / 
+                DESCRIPTION.Radius)
+              )
+            )
+          )
+        );
+        if(Reference.angle != (null)) {
+          setRotationalVoltage(
+            (Effort.angle = Rotation2d.fromRotations(unwrap(
+                DESCRIPTION.RotationalFeedback.calculate(
+                  VecBuilder.fill(
+                    Output.angle
+                      .getRotations(), 
+                    Reference.angle
+                      .getRotations())
+                )
+              ))
+            ).getRotations()
+          );
+        }
       } else {
         cease();
       }
-      STATUS.setEffort(Effort);
+      STATUS.setInput(Effort);
     }
     Logger.processInputs(
       getIdentity(),STATUS);   
@@ -137,7 +153,6 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   public Optional<Double> getTranslationPosition() {
     return getMeasurement().map(Measurement -> Measurement.distanceMeters - DESCRIPTION.TranslationalOffset);
   }
-
   
   @Override
   public Descriptor<Controller,Encoder> getDescriptor() {

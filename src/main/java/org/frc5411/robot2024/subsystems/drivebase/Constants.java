@@ -15,11 +15,10 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.annotation.Unit;
-import org.frc5411.lib.annotation.Unit.Measured;
 import org.frc5411.lib.control.archetype.PIDConstants;
 import org.frc5411.lib.instrument.module.Limit;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -64,12 +63,12 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations((0.724121D)))
         .RotationalEncoder(new CANcoder((31), ("CTREBUS")))
         .RotationalController(new CANSparkMax((21), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
+        .Position(new Translation2d((Identity.CHASSIS_WIDTH)  / (2), (Identity.CHASSIS_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
+        .Position(new Translation2d((Identity.CHASSIS_WIDTH)  / (2), (Identity.CHASSIS_LENGTH) / (2)))),
     FRONT$RIGHT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
@@ -77,12 +76,12 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations((0.726074D)))
         .RotationalEncoder(new CANcoder((32), ("CTREBUS")))
         .RotationalController(new CANSparkMax((22), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2))):
+        .Position(new Translation2d((Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d((Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2)))),
+        .Position(new Translation2d((Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2)))),
     REAR$LEFT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
@@ -90,12 +89,12 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations((0.609863D)))
         .RotationalEncoder(new CANcoder((33), ("CTREBUS")))
         .RotationalController(new CANSparkMax((23), MotorType.kBrushless))
-        .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2))):
+        .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), (Identity.CHASSIS_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), (Identity.ROBOT_LENGTH) / (2)))),
+        .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), (Identity.CHASSIS_LENGTH) / (2)))),
     REAR$RIGHT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
@@ -103,12 +102,12 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations((0.382568D)))
         .RotationalEncoder(new CANcoder((34), ("CTREBUS")))
         .RotationalController(new CANSparkMax((24), MotorType.kBrushless))
-        .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2))):
+        .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d(-(Identity.ROBOT_WIDTH)  / (2), -(Identity.ROBOT_LENGTH) / (2))));
+        .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2))));
 
     org.frc5411.lib.instrument.module.Descriptor<?,?> DESCRIPTOR;
 
@@ -145,17 +144,14 @@ public class Constants {
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public static class Identity {
-    @Unit(measures = Measured.DISTANCE, symbol = ("meters"))
-    static Double ROBOT_WIDTH = Units.inchesToMeters((24.6D));
-    @Unit(measures = Measured.DISTANCE, symbol = ("meters"))
-    static Double ROBOT_LENGTH = Units.inchesToMeters((24.6D));
-    @Unit(measures = Measured.DISTANCE, symbol = ("meters"))
-    static Double ROBOT_RADIUS_METERS = Math.hypot(ROBOT_LENGTH / (2d), ROBOT_WIDTH / (2d));
+    static Double CHASSIS_WIDTH = Units.inchesToMeters((24.6D));
+    static Double CHASSIS_LENGTH = Units.inchesToMeters((24.6D));
+    static Double CHASSIS_RADIUS_METERS = Math.hypot(CHASSIS_LENGTH / (2d), CHASSIS_WIDTH / (2d));
 
-    @Unit(measures = Measured.VELOCITY, symbol = ("meters/second"))
-    static Double ROBOT_MAXIMUM_LINEAR_VELOCITY = Units.feetToMeters((19.1D));
-    @Unit(measures = Measured.VELOCITY, symbol = ("radians/second"))
-    static Double ROBOT_MAXIMUM_ANGULAR_VELOCITY = ROBOT_MAXIMUM_LINEAR_VELOCITY / ROBOT_RADIUS_METERS;
+    static Double MAXIMUM_LINEAR_VELOCITY = Units.feetToMeters((19.1D));
+    static Double MAXIMUM_ANGULAR_VELOCITY = MAXIMUM_LINEAR_VELOCITY / CHASSIS_RADIUS_METERS;
+
+    static Pose2d POSE_PRESET = new Pose2d();  // <--- We'll eventually get this from vision, but we don't have it yet
   }
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
@@ -184,18 +180,18 @@ class Descriptions {
       .RotationalInverted((false))
       .RotationalFeedback(PIDConstants.builder().Proportional((2.81D)).Integral((0D)).Derivative((5e-1D)).build().toController())
       .Radius(Units.inchesToMeters((4D)))
-      .Limits(new Limit((0D), (0D), (0D)));
+      .Limits(new Limit(Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_ANGULAR_VELOCITY));
 
   static org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<DCMotorSim,Optional<Object>> MOCK_MODULE_DESCRIPTOR =
     org.frc5411.lib.instrument.module.Descriptor.<DCMotorSim,Optional<Object>>builder()
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDConstants.builder().Proportional((0.35D)).Integral((0D)).Derivative((1.9D)).build().toController())
+      .TranslationalFeedback(PIDConstants.builder().Proportional((0.35D)).Integral((0D)).Derivative((0D)).build().toController())
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
       .RotationalEncoder(Optional.empty())
-      .RotationalFeedback(PIDConstants.builder().Proportional((9.08D)).Integral((0D)).Derivative((1.9D)).build().toController())
+      .RotationalFeedback(PIDConstants.builder().Proportional((4.05e1D)).Integral((0D)).Derivative((0D)).build().toController())
       .Radius(Units.inchesToMeters((4D)))
-      .Limits(new Limit((0D), (0D), (0D)));
+      .Limits(new Limit(Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_ANGULAR_VELOCITY));
 }

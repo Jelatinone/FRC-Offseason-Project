@@ -36,7 +36,9 @@ import lombok.experimental.FieldDefaults;
 @Setter
 public abstract class Report<@NonNull Reference extends StructSerializable, @NonNull Measurement extends StructSerializable> extends org.frc5411.lib.pattern.Report<Measurement> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  volatile Reference Effort;
+  volatile Reference State; 
 
-  volatile Reference Demand; 
+  volatile Reference Input;
+
+  volatile Reference Output;
 }
