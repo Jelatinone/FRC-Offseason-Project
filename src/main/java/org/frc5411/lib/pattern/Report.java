@@ -47,10 +47,27 @@ import lombok.experimental.FieldDefaults;
 @Setter
 public abstract class Report<@NonNull Measurement extends StructSerializable> implements Cloneable {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
+  /**
+   * -- GETTER --
+   * Provides a value which represents if the hardware related to a {@link Component component} is connected reported during the most recent 
+   * {@link Component#update(Report) update} cycle
+   * @return Hardware connection
+   */
   volatile boolean Connected = (false);
-
+  /**
+   * -- GETTER --
+   * Provides a collection (array) of double timestamps at which the related {@link #getMeasurements() measurements} that have been 
+   * recorded in the interval between {@link Component#update(Report) update} cycles
+   * @implNote Not necessarily equivalent in collection size to {@link #getMeasurements() measurements}
+   * @return Measurement timestamps
+   */
   volatile double[] Timestamps = {};
-
+  /**
+   * -- GETTER --
+   *  Provides a collection (array) of measurements that have been recorded in the interval between {@link Component#update(Report) update} cycles
+   *  @implNote Not necessarily equivalent in collection size to {@link #getTimestamps() timestamps}
+   * @return Hardware measurements
+   */
   volatile Measurement @NonNull[] Measurements; // <---- This property must be set at downstream implementations of Component or ClassCastException is thrown!
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**

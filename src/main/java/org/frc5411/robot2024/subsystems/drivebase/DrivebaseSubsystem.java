@@ -15,19 +15,18 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 import org.frc5411.lib.external.SwerveSetpointGenerator;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 import org.frc5411.lib.instrument.gyroscope.PigeonGyroscope;
-import org.frc5411.lib.instrument.module.MockModule;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Setpoint;
-import org.frc5411.lib.instrument.module.SparkModule;
+import org.frc5411.lib.instrument.module.archetype.MockModule;
+import org.frc5411.lib.instrument.module.archetype.SparkModule;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
+
 import org.frc5411.robot2024.subsystems.drivebase.Constants.Identity;
-import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -46,6 +45,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.pathplanner.lib.auto.NamedCommands;
+
+import org.littletonrobotics.junction.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -135,11 +136,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     Effort = new Setpoint(
       new ChassisSpeeds(), 
       getModuleStates());
-    Control = new Twist2d(
-      (1D), 
-      (1D), 
-      (1D)
-    );
+    Control = new Twist2d();
     MODULES.forEach((Module) -> 
       addChild(Module.getIdentity(), Module));  
     addChild(GYROSCOPE.getIdentity(), GYROSCOPE);
@@ -232,12 +229,12 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     Logger.recordOutput(
       String.format(
         ("%s/Latency"), getName()),
-        DISCRETE_AGGREGATOR
-          .attain() 
-              - 
-        IDENTITY
-          .getTimestamp()
-          .orElse(Double.NaN)
+      DISCRETE_AGGREGATOR
+        .attain() 
+            - 
+      IDENTITY
+        .getTimestamp()
+        .orElse(Double.NaN)
     );
   }
 
@@ -403,13 +400,6 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
    * to game pieces and field elements.
    */
   OBJECTIVE((Twist) ->
-    (null)
-  ),
-
-  /**
-   * TODO:
-   */
-  TRAJECTORY((Twist) ->
     (null)
   ),
 

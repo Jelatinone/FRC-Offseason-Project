@@ -36,9 +36,22 @@ import lombok.experimental.FieldDefaults;
 @Setter
 public abstract class Report<@NonNull Reference extends StructSerializable, @NonNull Measurement extends StructSerializable> extends org.frc5411.lib.pattern.Report<Measurement> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
+  /**
+   * -- GETTER --
+   * Value used by the {@link Component component's} internal hardware-level controller as a reference or 'setpoint' value
+   * @return Controller's state (reference, 'setpoint')
+   */
   volatile Reference State; 
-
+  /**
+   * -- GETTER --
+   * Value produced by the {@link Component component's} internal hardware-level controller and applied to the hardware
+   * @return Controller's output (hardware's input)
+   */
   volatile Reference Input;
-
+  /**
+   * -- GETTER --
+   * Value produced by the {@link Component component's} hardware, and used as feedback for it's internal hardware-level controller
+   * @return Controller's input (hardware's output)
+   */
   volatile Reference Output;
 }

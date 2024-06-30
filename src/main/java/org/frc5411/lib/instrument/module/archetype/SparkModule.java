@@ -13,11 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.instrument.module;
+package org.frc5411.lib.instrument.module.archetype;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.control.archetype.PIDController;
+import org.frc5411.lib.instrument.module.Descriptor;
+import org.frc5411.lib.instrument.module.Module;
+import org.frc5411.lib.instrument.module.Report;
 import org.frc5411.lib.nouveau.StandardRegister;
-import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Figure;
 
 import edu.wpi.first.hal.HALUtil;
@@ -25,8 +27,15 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
+import com.revrobotics.CANSparkBase;
+import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
+import com.revrobotics.REVLibError;
+import com.revrobotics.RelativeEncoder;
 
 import java.util.Optional;
 import java.util.Queue;
@@ -37,70 +46,110 @@ import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>MockModule</h1>
+ * <h1>SparkModule</h1>
  * 
  * <p>
  * 
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public class MockModule extends Module<DCMotorSim,Optional<Object>> {
+public class SparkModule extends Module<CANSparkBase,CANcoder> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Queue<Optional<Number>> TRANSLATIONAL_POSITIONS;
+  RelativeEncoder TRANSLATIONAL_ENCODER;
+  
   Queue<Optional<Number>> ROTATIONAL_POSITIONS;
 
   Queue<Double> UPDATE_TIMESTAMPS;
-
-  Aggregator<Double> DISCRETE_AGGREGATOR;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
-   * Mock Module Constructor.
+   * Spark Module Constructor.
    * @param Descriptor Real-world {@link #getDescriptor() descriptor} of the system, contains relevant constants to the operation of the module
    */
-  public MockModule(final Descriptor<DCMotorSim,Optional<Object>> Descriptor) {
+  public SparkModule(final Descriptor<CANSparkBase,CANcoder> Descriptor) {
     super(Descriptor);
 
+    TRANSLATIONAL_ENCODER = getDescriptor().TranslationalController.getEncoder();
     TRANSLATIONAL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.ofNullable(
-        Descriptor.TranslationalController.getAngularPositionRad()));
+        getConnection()? 
+        TRANSLATIONAL_ENCODER.getPosition(): 
+        null));
+    
     ROTATIONAL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.ofNullable(
-        Descriptor.RotationalController.getAngularPositionRad()));
+        getConnection()? 
+        Descriptor.RotationalEncoder.getAbsolutePosition().refresh().getValue(): 
+        null));
         
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
       .timestamp();
 
-    DISCRETE_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1e6, 
-      (Previous, Current) -> Current - Previous);
     configure();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public synchronized void cease() {
-    getDescriptor().TranslationalController.setInputVoltage((0D));
-    getDescriptor().RotationalController.setInputVoltage((0D));
-  }
-
-  @Override
   public synchronized void configure() {
     cease();
     synchronized(this) {
-      getDescriptor().TranslationalController.setState(
-        Units.rotationsToRadians(getDescriptor().TranslationalOffset), 
-        (0D));
-      getDescriptor().RotationalController.setState(
-        getDescriptor().RotationalReduction, 
-        (0D));
+      getDescriptor().TranslationalController.restoreFactoryDefaults();
+      getDescriptor().RotationalController.restoreFactoryDefaults();
+
+      getDescriptor().TranslationalController.setCANTimeout((250));
+      getDescriptor().RotationalController.setCANTimeout((250));
+
+      //Knowledge from beyond...?
+      for(int Iterations = (0); Iterations < (30); Iterations++) {
+        getDescriptor().TranslationalController.setInverted(getDescriptor().TranslationalInverted);
+        getDescriptor().RotationalController.setInverted(getDescriptor().RotationalInverted);
+
+        getDescriptor().TranslationalController.setSmartCurrentLimit((40));
+        getDescriptor().RotationalController.setSmartCurrentLimit((30));
+
+        getDescriptor().TranslationalController.enableVoltageCompensation((12D));
+        getDescriptor().RotationalController.enableVoltageCompensation((12D));
+
+        TRANSLATIONAL_ENCODER.setPosition((0D));
+        TRANSLATIONAL_ENCODER.setMeasurementPeriod((10));
+        TRANSLATIONAL_ENCODER.setAverageDepth((2));
+        
+        getDescriptor().TranslationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
+        getDescriptor().RotationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
+      }
+
+      getDescriptor().RotationalEncoder.getConfigurator()
+        .apply(new CANcoderConfiguration()
+          .withMagnetSensor(new MagnetSensorConfigs()
+            .withAbsoluteSensorRange(AbsoluteSensorRangeValue.Unsigned_0To1)));
+      getDescriptor().RotationalEncoder.getAbsolutePosition().setUpdateFrequency((25D));
+      getDescriptor().RotationalEncoder.optimizeBusUtilization();
+
+      getDescriptor().TranslationalController.burnFlash();
+      getDescriptor().RotationalController.burnFlash();
+
+      getDescriptor().TranslationalController.setCANTimeout((0));
+      getDescriptor().RotationalController.setCANTimeout((0));
+
       ((PIDController) getDescriptor().RotationalFeedback).enableContinuousInput(-Math.PI, Math.PI);
     }
   }
 
   @Override
+  public synchronized void cease() {
+    getDescriptor().TranslationalController.disable();
+    getDescriptor().RotationalController.disable();
+  }
+
+  @Override
   public synchronized void close() {
+    getDescriptor().TranslationalController.close();
+    getDescriptor().RotationalController.close();
+
+    getDescriptor().RotationalEncoder.close();
+
     TRANSLATIONAL_POSITIONS.clear();
     ROTATIONAL_POSITIONS.clear();
     UPDATE_TIMESTAMPS.clear();
@@ -110,34 +159,32 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
   public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull SwerveModulePosition> Record) {
     final var Article = (Report) Record;
 
-    DISCRETE_AGGREGATOR.aggregate();
-
-    getDescriptor().TranslationalController.update(DISCRETE_AGGREGATOR.getAggregated());
-    getDescriptor().RotationalController.update(DISCRETE_AGGREGATOR.getAggregated());
-
     synchronized(Article) {
-      Article.setTranslationalVoltage(getInput().orElseThrow().speedMetersPerSecond);
-      Article.setTranslationalAmperage(Math.abs(getDescriptor().TranslationalController.getCurrentDrawAmps()));
-      Article.setTranslationalVelocity(getDescriptor().TranslationalController.getAngularVelocityRadPerSec() / getDescriptor().TranslationalReduction * getDescriptor().Radius);
-      Article.setTranslationalConnected((true));
+      Article.setTranslationalVoltage(getDescriptor().TranslationalController.getBusVoltage() * getDescriptor().TranslationalController.getAppliedOutput());
+      Article.setTranslationalAmperage(getDescriptor().TranslationalController.getOutputCurrent());
+      Article.setTranslationalVelocity(TRANSLATIONAL_ENCODER.getVelocity() / getDescriptor().TranslationalReduction * getDescriptor().Radius);
+      Article.setTranslationalConnected(getDescriptor().TranslationalController.getLastError().equals(REVLibError.kOk));
 
-      Article.setRotationalVoltage(getInput().orElseThrow().angle.getRotations());
-      Article.setRotationalAmperage(Math.abs(getDescriptor().RotationalController.getCurrentDrawAmps()));
-      Article.setRotationalVelocity(getDescriptor().RotationalController.getAngularVelocityRadPerSec() / getDescriptor().RotationalReduction);
-      Article.setRotationalConnected((true));   
+      Article.setRotationalVoltage(getDescriptor().RotationalController.getBusVoltage() * getDescriptor().RotationalController.getAppliedOutput());
+      Article.setRotationalAmperage(getDescriptor().RotationalController.getOutputCurrent());
+      Article.setRotationalVelocity(getDescriptor().RotationalEncoder.getVelocity().refresh().getValue() / getDescriptor().RotationalReduction);
+      Article.setRotationalConnected(getDescriptor().RotationalController.getLastError().equals(REVLibError.kOk));   
 
-      Article.setOutput(
-        new SwerveModuleState(
-          Article.TranslationalVelocity,
-          Rotation2d.fromRotations(
-            getDescriptor().RotationalController.getAngularPositionRotations())
-              .minus(getDescriptor().RotationalOffset)
-              // .div(getDescriptor().RotationalReduction) <--- This wraps angles weirdly?
+      Article.setOutput(new SwerveModuleState(
+        Article.getTranslationalVelocity(),
+        Rotation2d.fromRotations(
+          getDescriptor().RotationalEncoder
+            .getAbsolutePosition()
+            .refresh()
+            .getValue())
+          .minus(getDescriptor().RotationalOffset)
+          .div(getDescriptor().RotationalReduction)
       ));
       Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());
 
       final double[] Translations, Rotations;
       synchronized(TRANSLATIONAL_POSITIONS) {
+        TRANSLATIONAL_POSITIONS.offer(Optional.of(TRANSLATIONAL_ENCODER.getPosition()));
         Translations = TRANSLATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
@@ -146,6 +193,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
         TRANSLATIONAL_POSITIONS.clear();
       }
       synchronized(ROTATIONAL_POSITIONS) {
+        ROTATIONAL_POSITIONS.offer(Optional.of(getDescriptor().RotationalEncoder.getAbsolutePosition().refresh().getValue()));
         Rotations = ROTATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
@@ -154,20 +202,20 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
         ROTATIONAL_POSITIONS.clear();
       }
       synchronized(UPDATE_TIMESTAMPS) {
+        UPDATE_TIMESTAMPS.offer(HALUtil.getFPGATime() / 1e6);
         Article.setTimestamps(UPDATE_TIMESTAMPS
           .stream()
           .mapToDouble(Number::doubleValue)
           .toArray());
         UPDATE_TIMESTAMPS.clear();
-      }
-
+      }        
       Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
-          Translations[Index] / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
+          (Translations[Index] - getDescriptor().TranslationalOffset) / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
           Rotation2d.fromRotations(Rotations[Index])
             .minus(getDescriptor().RotationalOffset)
             .div(getDescriptor().RotationalReduction))
-      ).toArray(SwerveModulePosition[]::new));      
+      ).toArray(SwerveModulePosition[]::new));
     }
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
@@ -176,7 +224,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
    * @param Demand Voltage sent to the controller object 
    */
   protected void setTranslationalVoltage(final double Demand) {
-    getDescriptor().TranslationalController.setInputVoltage(MathUtil.clamp(Demand, (-12D), (12D)));
+    getDescriptor().TranslationalController.set(MathUtil.clamp(Demand, (-12D), (12D)));
   }
 
   /**
@@ -184,6 +232,6 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
    * @param Demand Voltage sent to the controller object 
    */
   protected void setRotationalVoltage(final double Demand) {
-    getDescriptor().RotationalController.setInputVoltage(MathUtil.clamp(Demand, (-12D), (12D)));
+    getDescriptor().RotationalController.set(MathUtil.clamp(Demand, (-12D), (12D)));
   }
 }

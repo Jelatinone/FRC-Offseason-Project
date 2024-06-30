@@ -47,7 +47,8 @@ public interface Actuator<@NonNull Reference extends StructSerializable, @NonNul
   }
 
   /**
-   * Immediately stops this actuator in such a way that {@link #set(StructSerializable)} can be called again after.
+   * Immediately stops the actuation of hardware; such that calls to {@link #set(StructSerializable)} can still be made. Used as a 
+   * safety feature to prevent unsafe actuator movements.
    */
   void cease();
 

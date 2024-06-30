@@ -69,6 +69,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
 
   @Override
   public synchronized SwerveModuleState set(@NonNull SwerveModuleState Demand) {
+    //TODO: Implement Orbit-style module accelleration limits (forward, skid, tilt, etc)
     STATUS.setState(Demand = SwerveModuleState.optimize(Demand, getOutput().orElseThrow().angle));
     return Demand;
   }
@@ -77,17 +78,16 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   public synchronized void periodic() {
     synchronized(STATUS) {
       update(STATUS);
-      //TODO: Implement Orbit-style module limits (accelleration, skid, tilt, etc)
-      final var Reference = getState().orElseThrow();
+      final var State = getState().orElseThrow();
       final var Output = getOutput().orElseThrow();
-      final var Effort = new SwerveModuleState();
+      final var Input = new SwerveModuleState();
       if(getConnection()) {
         setTranslationalVoltage((
-          Effort.speedMetersPerSecond = unwrap(
+          Input.speedMetersPerSecond = unwrap(
             DESCRIPTION.TranslationalFeedback.calculate(
               VecBuilder.fill(
                 STATUS.TranslationalVelocity, 
-                Reference.speedMetersPerSecond 
+                State.speedMetersPerSecond 
                           * 
                 Math.cos(unwrap(DESCRIPTION.RotationalFeedback.getError())) 
                           / 
@@ -96,14 +96,14 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
             )
           )
         );
-        if(Reference.angle != (null)) {
+        if(State.angle != (null)) {
           setRotationalVoltage(
-            (Effort.angle = Rotation2d.fromRotations(unwrap(
+            (Input.angle = Rotation2d.fromRotations(unwrap(
                 DESCRIPTION.RotationalFeedback.calculate(
                   VecBuilder.fill(
                     Output.angle
                       .getRotations(), 
-                    Reference.angle
+                    State.angle
                       .getRotations())
                 )
               ))
@@ -113,7 +113,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
       } else {
         cease();
       }
-      STATUS.setInput(Effort);
+      STATUS.setInput(Input);
     }
     Logger.processInputs(
       getIdentity(),STATUS);   
@@ -142,7 +142,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
    * @return Position of the rotational controller's axis of rotation in radians as a Rotation2d Object
    */
   public Optional<Rotation2d> getRotationalPosition() {
-    return getMeasurement().map(Measurement -> Measurement.angle.minus(DESCRIPTION.RotationalOffset));
+    return getMeasurement().map((Measurement) -> Measurement.angle.minus(DESCRIPTION.RotationalOffset));
   }
 
   /**
@@ -151,7 +151,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
    * @return Position of the translational controller's axis of rotation in meters as a Double Object
    */
   public Optional<Double> getTranslationPosition() {
-    return getMeasurement().map(Measurement -> Measurement.distanceMeters - DESCRIPTION.TranslationalOffset);
+    return getMeasurement().map((Measurement) -> Measurement.distanceMeters - DESCRIPTION.TranslationalOffset);
   }
   
   @Override

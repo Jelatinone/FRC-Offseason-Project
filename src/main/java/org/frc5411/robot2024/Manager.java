@@ -18,9 +18,11 @@ package org.frc5411.robot2024;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
+import org.frc5411.lib.utility.Aggregator;
 
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
+import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
@@ -67,6 +69,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
   static Double BUFFER_SIZE = (2D);
   static Matrix<N2,N1> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Matrix<N2,N1> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
+  static Aggregator<Double> DISCRETE_AGGREGATOR;
 
   ReadWriteLock WHEEL_UPDATE_LOCK;
   ReadWriteLock VISION_UPDATE_LOCK;  
@@ -107,6 +110,11 @@ public final class Manager implements Singleton<Manager>, Runnable {
   } static {
     //<--- Fetch All Managed Subsystems --->
     DrivebaseSubsystem.getInstance();
+
+    //<--- Construct static fields --->
+    DISCRETE_AGGREGATOR = new Aggregator<>(
+      () -> HALUtil.getFPGATime() / 1e6, 
+      (Previous, Current) -> Current - Previous);
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
 
@@ -146,7 +154,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
         try {
           WHEEL_UPDATE_LOCK.readLock().lock();
           WHEEL_UPDATE_QUEUE.forEach((final WheelObservation Observation) -> {
-
+            FILTER.predict(VecBuilder.fill((0D), (0D)), DISCRETE_AGGREGATOR.aggregate());
 
           });
           WHEEL_UPDATE_QUEUE.clear();

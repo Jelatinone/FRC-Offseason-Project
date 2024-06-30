@@ -68,12 +68,14 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
   /**
    * Force re-configures the underlying hardware to the standard specifications of this type. Ideally, a blocking operation is also performed which
    * ensures correct, hardware-safe application of relevant configurations before {@link #periodic() periodic} operation.
+   * @implSpec Default implementation has no behavior
    */
   default void configure() {}
 
   /**
    * Force resets this Component's states and hardware, may fix issues. Should ideally not be called repeatedly or often such as during 
    * {@link #periodic()}.
+   * @implSpec Default implementation has no behavior
    */
   default void reset() {}
 
@@ -81,7 +83,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * Performs any necessary logic that this device may need with each update, such as maintaining the position of itself using a controller, or 
    * updating relevant internal values.
    * 
-   * @implNote Default implementation assumes that no periodic update operations must occur other than updating the {@link #getReport() report} via
+   * @implSpec Default implementation assumes that no periodic update operations must occur other than updating the {@link #getReport() report} via
    * {@link #update(Report)}.
    */
   default void periodic() {
@@ -95,6 +97,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * Closes this instance immediately and performs locking-operations to ensure the complete closure of all hardware references. This renders any
    * references to this instance unusable, and should essentially only be done when robot-code has finished operations.
    * @throws IOException When a fatal exception has occurred during an input or output operation.
+   * @implSpec Default implementation has no behavior
    */
   default void close() throws IOException {}
 
@@ -139,8 +142,8 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
 
   /**
    * Provides the identity (name), as a string, of this component instance that is used for logging purposes 
+   * @implSpec Default implementation provides the canonical name, followed by the hash code of this object
    * @return Identity of this component
-   * @implNote Default implementation provides the canonical name, followed by the hash code of this object
    */
   default String getIdentity() {
     return String.format(
@@ -153,6 +156,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
   /**
    * Provides the real-world description of the component, essentially an object makeup of the system's mechanical constants
    * @return Descriptor of this component, null by default
+   * @implSpec Default implementation returns {@link Descriptor#empty()}
    */
   default Descriptor<Component<Measurement>> getDescriptor() {
     return Descriptor.empty();
@@ -162,8 +166,10 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * <p> Provides a full {@link Report} of the measurements of this Component from the last {@link #update(Report)} cycle until now. If {@link #update(Report)}
    * has not been called for a significant amount of time, information may be stale, or out of date.
    * 
-   * <p>Ideally, the provided Report is never a {@link #clone() cloned} copy of the original report instance, this prevents unnecessary copies being created by internal caused
-   * used throughout the Component framework. However, downstream implementations when calling this method should also call {@link Report#clone()} <p>
+   * @implNote Ideally, the provided Report is never a {@link #clone() cloned} copy of the original report instance, this prevents unnecessary copies being created by internal caused
+   * used throughout the Component framework. However, downstream implementations when calling this method should also call {@link Report#clone()}
+   * 
+   * @implSpec Default implementation has no behavior
    * 
    * @return Report of measurements, by default an empty report.
    */
@@ -172,8 +178,8 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
   }  
 
   /**
-   * Provides the current status of connection to this instance's real-world hardware, if this robot is being simulated, then this should always be 
-   * true, unless running Unit Tests.
+   * Provides the current status of connection to this instance's real-world hardware, if this robot is being simulated, then this should always 
+   * remain true.
    * @return Status of connection to hardware
    */
   default Boolean getConnection() {
@@ -183,7 +189,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
   /**
    * Provides the current timestamp Reported during the last {@link #update(Report)} cycle, which means it may be out-of-date if {@link #update(Report)}
    * has not been called for a significant amount of time.
-   * @return Latest Timestamp 
+   * @return Latest timestamp as an optional
    */
   default Optional<Double> getTimestamp() {
     final var Timestamps = getTimestamps();
@@ -203,7 +209,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
   /**
    * Provides the current measurement Reported during the last {@link #update(Report)} cycle, which means it may be out-of-date if {@link #update(Report)}
    * has not been called for a significant amount of time.
-   * @return Latest Measurement 
+   * @return Latest measurement as an optional
    */
   default Optional<Measurement> getMeasurement() {
     final var Measurements = getMeasurements();

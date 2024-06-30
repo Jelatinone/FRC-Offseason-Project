@@ -15,8 +15,7 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Setpoint</h1>
@@ -25,4 +24,4 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
  * 
  * @author Cody Washington
  */
-public record Setpoint(ChassisSpeeds Speeds, SwerveModuleState[] States) {}
+public record Position() {}
