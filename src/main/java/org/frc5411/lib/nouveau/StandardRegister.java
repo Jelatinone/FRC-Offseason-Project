@@ -47,12 +47,12 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class StandardRegister implements Register<Supplier<Optional<Number>>>{
+public non-sealed class StandardRegister implements Register<Supplier<Optional<Number>>>{
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 84309938899889961L;
   static Integer QUEUE_SIZE = (20);
-  static Integer UPDATE_FREQUENCY = (100);
+  static Integer UPDATE_FREQUENCY = (250);
 
   List<Queue<Double>> TIMESTAMPS;  
   List<Queue<Optional<Number>>> RESPONSES;
@@ -221,6 +221,11 @@ public class StandardRegister implements Register<Supplier<Optional<Number>>>{
   @Override
   public ReadWriteLock getSignalLock() {
     return SIGNAL_LOCK;
+  }
+
+  @Override
+  public Integer getFrequency() {
+    return UPDATE_FREQUENCY;
   }
 
   @Override

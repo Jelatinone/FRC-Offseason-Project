@@ -21,6 +21,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -58,7 +59,6 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
       STATUS.setState(new SwerveModuleState());
       STATUS.setInput(new SwerveModuleState());
       STATUS.setOutput(new SwerveModuleState());
-      STATUS.setMeasurements(new SwerveModulePosition[] {new SwerveModulePosition()});
     }
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
@@ -69,7 +69,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
 
   @Override
   public synchronized SwerveModuleState set(@NonNull SwerveModuleState Demand) {
-    //TODO: Implement Orbit-style module accelleration limits (forward, skid, tilt, etc)
+    //TODO: Implement Orbit-style module acceleration limits (forward, skid, tilt, etc)
     STATUS.setState(Demand = SwerveModuleState.optimize(Demand, getOutput().orElseThrow().angle));
     return Demand;
   }
@@ -82,16 +82,14 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
       final var Output = getOutput().orElseThrow();
       final var Input = new SwerveModuleState();
       if(getConnection()) {
-        setTranslationalVoltage((
-          Input.speedMetersPerSecond = unwrap(
+        setTranslationalVoltage(
+          (Input.speedMetersPerSecond = unwrap(
             DESCRIPTION.TranslationalFeedback.calculate(
               VecBuilder.fill(
                 STATUS.TranslationalVelocity, 
                 State.speedMetersPerSecond 
-                          * 
-                Math.cos(unwrap(DESCRIPTION.RotationalFeedback.getError())) 
-                          / 
-                DESCRIPTION.Radius)
+                            * 
+                Math.cos(Units.rotationsToRadians(unwrap(DESCRIPTION.RotationalFeedback.getError()))))
               )
             )
           )

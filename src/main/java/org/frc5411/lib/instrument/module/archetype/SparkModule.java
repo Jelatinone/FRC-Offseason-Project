@@ -15,14 +15,12 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module.archetype;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.control.archetype.PIDController;
 import org.frc5411.lib.instrument.module.Descriptor;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Report;
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Figure;
 
-import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -73,16 +71,20 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
     TRANSLATIONAL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.ofNullable(
-        getConnection()? 
-        TRANSLATIONAL_ENCODER.getPosition(): 
-        null));
+          getConnection()? 
+            TRANSLATIONAL_ENCODER.getPosition(): 
+            (null)
+        )
+      );
     
     ROTATIONAL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.ofNullable(
-        getConnection()? 
-        Descriptor.RotationalEncoder.getAbsolutePosition().refresh().getValue(): 
-        null));
+          getConnection()? 
+            Descriptor.RotationalEncoder.getAbsolutePosition().refresh().getValue(): 
+            (null)
+        )
+      );
         
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
@@ -124,7 +126,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         .apply(new CANcoderConfiguration()
           .withMagnetSensor(new MagnetSensorConfigs()
             .withAbsoluteSensorRange(AbsoluteSensorRangeValue.Unsigned_0To1)));
-      getDescriptor().RotationalEncoder.getAbsolutePosition().setUpdateFrequency((25D));
+      getDescriptor().RotationalEncoder.getAbsolutePosition().setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
       getDescriptor().RotationalEncoder.optimizeBusUtilization();
 
       getDescriptor().TranslationalController.burnFlash();
@@ -132,8 +134,6 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
 
       getDescriptor().TranslationalController.setCANTimeout((0));
       getDescriptor().RotationalController.setCANTimeout((0));
-
-      ((PIDController) getDescriptor().RotationalFeedback).enableContinuousInput(-Math.PI, Math.PI);
     }
   }
 
@@ -168,23 +168,23 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
       Article.setRotationalVoltage(getDescriptor().RotationalController.getBusVoltage() * getDescriptor().RotationalController.getAppliedOutput());
       Article.setRotationalAmperage(getDescriptor().RotationalController.getOutputCurrent());
       Article.setRotationalVelocity(getDescriptor().RotationalEncoder.getVelocity().refresh().getValue() / getDescriptor().RotationalReduction);
-      Article.setRotationalConnected(getDescriptor().RotationalController.getLastError().equals(REVLibError.kOk));   
+      Article.setRotationalConnected(getDescriptor().RotationalController.getLastError().equals(REVLibError.kOk)); 
 
+      Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());
       Article.setOutput(new SwerveModuleState(
-        Article.getTranslationalVelocity(),
-        Rotation2d.fromRotations(
-          getDescriptor().RotationalEncoder
+        Article
+          .getTranslationalVelocity(),
+        Rotation2d
+          .fromRotations(getDescriptor().RotationalEncoder
             .getAbsolutePosition()
             .refresh()
             .getValue())
           .minus(getDescriptor().RotationalOffset)
           .div(getDescriptor().RotationalReduction)
       ));
-      Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());
 
       final double[] Translations, Rotations;
       synchronized(TRANSLATIONAL_POSITIONS) {
-        TRANSLATIONAL_POSITIONS.offer(Optional.of(TRANSLATIONAL_ENCODER.getPosition()));
         Translations = TRANSLATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
@@ -193,7 +193,6 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         TRANSLATIONAL_POSITIONS.clear();
       }
       synchronized(ROTATIONAL_POSITIONS) {
-        ROTATIONAL_POSITIONS.offer(Optional.of(getDescriptor().RotationalEncoder.getAbsolutePosition().refresh().getValue()));
         Rotations = ROTATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
@@ -202,17 +201,18 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         ROTATIONAL_POSITIONS.clear();
       }
       synchronized(UPDATE_TIMESTAMPS) {
-        UPDATE_TIMESTAMPS.offer(HALUtil.getFPGATime() / 1e6);
         Article.setTimestamps(UPDATE_TIMESTAMPS
           .stream()
           .mapToDouble(Number::doubleValue)
           .toArray());
         UPDATE_TIMESTAMPS.clear();
       }        
+
       Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
           (Translations[Index] - getDescriptor().TranslationalOffset) / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
-          Rotation2d.fromRotations(Rotations[Index])
+          Rotation2d
+            .fromRotations(Rotations[Index])
             .minus(getDescriptor().RotationalOffset)
             .div(getDescriptor().RotationalReduction))
       ).toArray(SwerveModulePosition[]::new));

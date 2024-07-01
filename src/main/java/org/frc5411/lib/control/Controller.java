@@ -15,9 +15,8 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.control;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Num;
-import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.Vector;
 
 import lombok.NonNull;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
@@ -39,7 +38,7 @@ public interface Controller<@NonNull States extends Num, @NonNull Inputs extends
    * Corrects the state-matrix observer given the correct observed actual state-matrix, {@code Y}
    * @param Outputs Plant observed state-matrix the actuators are actually at
    */
-  default void correct(final Matrix<Outputs,N1> Outputs) {}
+  default void correct(final Vector<Outputs> Outputs) {}
 
   /**
    * Shape-unsafe calculation of the controller's next control output, {@code U}, based on the mode of calculation and the given
@@ -47,24 +46,24 @@ public interface Controller<@NonNull States extends Num, @NonNull Inputs extends
    * @param Reference Resized reference consisting of the allowed controller variables
    * @return Calculated controller output, {@code  U}, of any dimensions.
    */
-  Matrix<Inputs,N1> calculate(final Matrix<States,N1> Reference);
+  Vector<Inputs> calculate(final Vector<States> Reference);
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
 
   /**
    * Provides a matrix (vector) of the device's 'set point', or reference states
    * @return Matrix of system states
    */
-  Matrix<States,N1> getStates();
+  Vector<States> getStates();
 
   /**
    * Provides a matrix (vector) of the device's most-recent control cycle outputs
    * @return Matrix of system Outputs
    */
-  Matrix<Inputs,N1> getInputs();
+  Vector<Inputs> getInputs();
 
   /**
    * Provides a matrix (vector) of the error of device's most-recent plant cycle outputs and the current reference.
    * @return Matrix of system inputs
    */
-  Matrix<Outputs,N1> getError();
+  Vector<Outputs> getError();
 }

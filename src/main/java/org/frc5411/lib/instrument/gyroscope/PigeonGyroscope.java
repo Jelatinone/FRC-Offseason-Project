@@ -56,15 +56,21 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
     YAW_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
-        Descriptor.Hardware.getYaw().getValue()));
+        Descriptor.Hardware.getYaw().getValue()
+        )
+      );
     PITCH_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
-        Descriptor.Hardware.getPitch().getValue()));
+        Descriptor.Hardware.getPitch().getValue()
+        )
+      );
     ROLL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
-        Descriptor.Hardware.getRoll().getValue()));
+        Descriptor.Hardware.getRoll().getValue()
+        )
+      );
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
       .timestamp();
@@ -75,10 +81,17 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
   @Override
   public synchronized void configure() {
     synchronized(this) {
-      getDescriptor().Hardware.getYaw().setUpdateFrequency(1D / 100D);
-      getDescriptor().Hardware.getPitch().setUpdateFrequency(1D / 100D);
-      getDescriptor().Hardware.getRoll().setUpdateFrequency(1D / 100D);
-      getDescriptor().Hardware.optimizeBusUtilization();
+      getDescriptor().Hardware
+        .getYaw()
+        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
+      getDescriptor().Hardware
+        .getPitch()
+        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
+      getDescriptor().Hardware
+        .getRoll()
+        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
+      getDescriptor().Hardware
+        .optimizeBusUtilization();
 
       getDescriptor().Hardware.getConfigurator().apply(new Pigeon2Configuration());
     }

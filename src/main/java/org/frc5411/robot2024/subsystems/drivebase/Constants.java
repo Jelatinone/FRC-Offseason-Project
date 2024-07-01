@@ -16,7 +16,9 @@
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.control.archetype.PIDConstants;
+import org.frc5411.lib.control.archetype.PIDController;
 import org.frc5411.lib.instrument.module.Limit;
+import org.frc5411.lib.utility.Figure;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -123,6 +125,7 @@ public class Constants {
       DESCRIPTOR = Descriptor
         .Identity(this)
         .build();
+      ((PIDController) DESCRIPTOR.RotationalFeedback).enableContinuousInput(-Figure.PI, Figure.PI);
     }
 
     /**

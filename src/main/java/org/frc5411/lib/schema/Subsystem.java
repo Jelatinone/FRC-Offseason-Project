@@ -47,7 +47,7 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
    * @param Name Referencable name by which to refer the subsystem, this is an entirely objective value to programmer preferences
    */
   protected Subsystem(final ReadWriteLock Lock, final String Name) {
-    super(Objects.requireNonNull(Name));
+    super(Objects.requireNonNull(Name.strip()));
     OPERATION_LOCK = Objects.requireNonNull(Lock);
     SUBSYSTEMS.add(this);
   }

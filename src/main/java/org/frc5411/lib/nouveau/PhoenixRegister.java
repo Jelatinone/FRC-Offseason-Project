@@ -54,12 +54,12 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class PhoenixRegister extends Thread implements Register<StatusSignal<Number>> {
+public non-sealed class PhoenixRegister extends Thread implements Register<StatusSignal<Number>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 55742622883094958L;
   static Integer QUEUE_SIZE = (20);
-  static Integer UPDATE_FREQUENCY = (100);
+  static Integer UPDATE_FREQUENCY = (250);
 
   List<Queue<Double>> TIMESTAMPS;  
   List<Queue<Optional<Number>>> RESPONSES;
@@ -305,6 +305,11 @@ public class PhoenixRegister extends Thread implements Register<StatusSignal<Num
   @Override
   public ReadWriteLock getSignalLock() {
     return SIGNAL_LOCK;
+  }
+
+  @Override
+  public Integer getFrequency() {
+    return UPDATE_FREQUENCY;
   }
 
   @Override

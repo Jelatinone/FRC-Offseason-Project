@@ -17,9 +17,9 @@ package org.frc5411.lib.control.archetype;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.control.Controller;
 
-import edu.wpi.first.math.MatBuilder;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.Nat;
+
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 
@@ -53,23 +53,23 @@ public class PIDController extends edu.wpi.first.math.controller.PIDController i
   }  
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
-  public synchronized Matrix<@NonNull N1, N1> calculate(Matrix<@NonNull N2, N1> Reference) {
-    return MatBuilder.fill(Nat.N1(), Nat.N1(), Effort = calculate(Reference.get((0), (0)), Reference.get((1), (0))));
+  public synchronized Vector<@NonNull N1> calculate(Vector<@NonNull N2> Reference) {
+    return VecBuilder.fill(Effort = calculate(Reference.get((0), (0)), Reference.get((1), (0))));
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
-  public Matrix<@NonNull N2, N1> getStates() {
+  public Vector<@NonNull N2> getStates() {
     final var Setpoint = getSetpoint();
-    return MatBuilder.fill(Nat.N2(), Nat.N1(), (Setpoint - getPositionError()) ,Setpoint);
+    return VecBuilder.fill((Setpoint - getPositionError()) ,Setpoint);
   }
 
   @Override
-  public Matrix<@NonNull N1, N1> getInputs() {
-    return MatBuilder.fill(Nat.N1(), Nat.N1(), Effort);
+  public Vector<@NonNull N1> getInputs() {
+    return VecBuilder.fill(Effort);
   }
 
   @Override
-  public Matrix<@NonNull N1, N1> getError() {
-    return MatBuilder.fill(Nat.N1(), Nat.N1(), getPositionError());
+  public Vector<@NonNull N1> getError() {
+    return VecBuilder.fill(getPositionError());
   }
 }

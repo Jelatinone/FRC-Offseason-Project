@@ -15,7 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module.archetype;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.control.archetype.PIDController;
 import org.frc5411.lib.instrument.module.Descriptor;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Report;
@@ -65,12 +64,16 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
 
     TRANSLATIONAL_POSITIONS = StandardRegister
       .getInstance()
-      .register(() -> Optional.ofNullable(
-        Descriptor.TranslationalController.getAngularPositionRad()));
+      .register(() -> Optional.of(
+          Descriptor.TranslationalController.getAngularPositionRad()
+        )
+      );
     ROTATIONAL_POSITIONS = StandardRegister
       .getInstance()
-      .register(() -> Optional.ofNullable(
-        Descriptor.RotationalController.getAngularPositionRad()));
+      .register(() -> Optional.of(
+          Descriptor.RotationalController.getAngularPositionRad()
+        )
+      );
         
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
@@ -84,8 +87,10 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public synchronized void cease() {
-    getDescriptor().TranslationalController.setInputVoltage((0D));
-    getDescriptor().RotationalController.setInputVoltage((0D));
+    getDescriptor().TranslationalController
+      .setInputVoltage((0D));
+    getDescriptor().RotationalController
+      .setInputVoltage((0D));
   }
 
   @Override
@@ -93,12 +98,11 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
     cease();
     synchronized(this) {
       getDescriptor().TranslationalController.setState(
-        Units.rotationsToRadians(getDescriptor().TranslationalOffset), 
+        Units.rotationsToRadians(Math.random()), 
         (0D));
       getDescriptor().RotationalController.setState(
-        getDescriptor().RotationalReduction, 
+        Units.rotationsToRadians(Math.random()), 
         (0D));
-      ((PIDController) getDescriptor().RotationalFeedback).enableContinuousInput(-Math.PI, Math.PI);
     }
   }
 
@@ -121,43 +125,42 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
     synchronized(Article) {
       Article.setTranslationalVoltage(getInput().orElseThrow().speedMetersPerSecond);
       Article.setTranslationalAmperage(Math.abs(getDescriptor().TranslationalController.getCurrentDrawAmps()));
-      Article.setTranslationalVelocity(getDescriptor().TranslationalController.getAngularVelocityRadPerSec() / getDescriptor().TranslationalReduction * getDescriptor().Radius);
+      Article.setTranslationalVelocity(getDescriptor().TranslationalController.getAngularVelocityRadPerSec() * getDescriptor().Radius);
       Article.setTranslationalConnected((true));
 
       Article.setRotationalVoltage(getInput().orElseThrow().angle.getRotations());
       Article.setRotationalAmperage(Math.abs(getDescriptor().RotationalController.getCurrentDrawAmps()));
-      Article.setRotationalVelocity(getDescriptor().RotationalController.getAngularVelocityRadPerSec() / getDescriptor().RotationalReduction);
+      Article.setRotationalVelocity(getDescriptor().RotationalController.getAngularVelocityRadPerSec());
       Article.setRotationalConnected((true));   
 
+      Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());
       Article.setOutput(
         new SwerveModuleState(
-          Article.getTranslationalVelocity(),
-          Rotation2d.fromRotations(getDescriptor().RotationalController.getAngularPositionRotations())
+          Article
+            .getTranslationalVelocity(),
+          Rotation2d
+            .fromRotations(getDescriptor().RotationalController.getAngularPositionRotations())
             .minus(getDescriptor().RotationalOffset)
       ));
-      Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());
 
       final double[] Translations, Rotations;
       synchronized(TRANSLATIONAL_POSITIONS) {
-        TRANSLATIONAL_POSITIONS.offer(Optional.of(getDescriptor().TranslationalController.getAngularPositionRad()));
         Translations = TRANSLATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue())
+            Position.orElseThrow().doubleValue())
           .toArray();
         TRANSLATIONAL_POSITIONS.clear();
       }
       synchronized(ROTATIONAL_POSITIONS) {
-        ROTATIONAL_POSITIONS.offer(Optional.of(getDescriptor().RotationalController.getAngularPositionRad()));
         Rotations = ROTATIONAL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue())
+            Position.orElseThrow().doubleValue())
           .toArray();
         ROTATIONAL_POSITIONS.clear();
       }
       synchronized(UPDATE_TIMESTAMPS) {
-        UPDATE_TIMESTAMPS.offer(HALUtil.getFPGATime() / 1e6);
         Article.setTimestamps(UPDATE_TIMESTAMPS
           .stream()
           .mapToDouble(Number::doubleValue)
@@ -167,8 +170,9 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
 
       Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
-          Translations[Index] / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
-          Rotation2d.fromRadians(Rotations[Index])
+          (Translations[Index] - getDescriptor().TranslationalOffset) * getDescriptor().Radius, 
+          Rotation2d
+            .fromRadians(Rotations[Index])
             .minus(getDescriptor().RotationalOffset))
       ).toArray(SwerveModulePosition[]::new));      
     }

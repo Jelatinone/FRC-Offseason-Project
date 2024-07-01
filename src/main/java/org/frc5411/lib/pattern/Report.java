@@ -64,8 +64,10 @@ public abstract class Report<@NonNull Measurement extends StructSerializable> im
   volatile double[] Timestamps = {};
   /**
    * -- GETTER --
-   *  Provides a collection (array) of measurements that have been recorded in the interval between {@link Component#update(Report) update} cycles
-   *  @implNote Not necessarily equivalent in collection size to {@link #getTimestamps() timestamps}
+   * Provides a collection (array) of measurements that have been recorded in the interval between {@link Component#update(Report) update} cycles
+   * @implNote Not necessarily equivalent in collection size to {@link #getTimestamps() timestamps}, additionally because of the nature of 
+   * generic array types, this must be set with an initial value (often an empty array of the needed type) to ensure {@link Component#getMeasurements()}
+   * or {@link Component#getMeasurement()} do not throw {@link NullPointerException}.
    * @return Hardware measurements
    */
   volatile Measurement @NonNull[] Measurements; // <---- This property must be set at downstream implementations of Component or ClassCastException is thrown!

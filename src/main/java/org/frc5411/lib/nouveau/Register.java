@@ -35,9 +35,10 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public interface Register<@NonNull Source> extends Runnable, Singleton<Register<Source>> {
+public sealed interface Register<@NonNull Source> extends Runnable, Singleton<Register<Source>> permits PhoenixRegister, StandardRegister {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Double STANDARD_FREQUENCY_HERTZ = (250d);
+  Double STANDARD_FREQUENCY_HERTZ = (250D);
+  Integer STANDARD_QUEUE_ELEMENTS = (20);
   Integer STARTING_THREAD_PRIORITY = (1);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
@@ -111,6 +112,12 @@ public interface Register<@NonNull Source> extends Runnable, Singleton<Register<
       getQueueLock().readLock().unlock();
     }
   }
+
+  /**
+   * Provides the frequency, in hertz, that this register's {@link #run() update} cycles occur at
+   * @return Frequency of update cycles
+   */
+  Integer getFrequency();
 
   /**
    * Provides the lock responsible for locking state-update operations and signal and timestamp update operations.

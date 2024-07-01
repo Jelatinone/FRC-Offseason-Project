@@ -15,9 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.annotation.Unit;
-import org.frc5411.lib.annotation.Unit.Measured;
-
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
@@ -41,23 +38,19 @@ import lombok.experimental.FieldDefaults;
 @AutoLog
 public class Report extends org.frc5411.lib.pattern.actuator.Report<SwerveModuleState,SwerveModulePosition> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  @Unit(measures = Measured.VELOCITY)
   volatile double TranslationalVelocity;
 
-  @Unit(measures = Measured.VOLTAGE)
   volatile double TranslationalVoltage;
 
-  @Unit(measures = Measured.AMPERAGE)
   volatile double TranslationalAmperage;
+
   volatile boolean TranslationalConnected;
 
-  @Unit(measures = Measured.VELOCITY)
   volatile double RotationalVelocity;
 
-  @Unit(measures = Measured.VOLTAGE)
   volatile double RotationalVoltage;
 
-  @Unit(measures = Measured.AMPERAGE)
   volatile double RotationalAmperage;
+  
   volatile boolean RotationalConnected;  
 }

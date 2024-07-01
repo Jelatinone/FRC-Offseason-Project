@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.ArrayDeque;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -85,6 +86,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
   ExtendedKalmanFilter<N2,N2,N2> FILTER;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
+  static volatile SwerveDriveWheelPositions Positions;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
@@ -107,6 +109,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
       1D / UPDATE_FREQUENCY);
     KINEMATICS = (null);
     ODOMETRY = (null);
+    Positions = new SwerveDriveWheelPositions(DrivebaseSubsystem.getInstance().getModulePositions());
   } static {
     //<--- Fetch All Managed Subsystems --->
     DrivebaseSubsystem.getInstance();
@@ -151,10 +154,10 @@ public final class Manager implements Singleton<Manager>, Runnable {
   public synchronized void run() {
     if(Instance != null) {
       synchronized(Manager.class) {
+        DISCRETE_AGGREGATOR.aggregate();
         try {
           WHEEL_UPDATE_LOCK.readLock().lock();
           WHEEL_UPDATE_QUEUE.forEach((final WheelObservation Observation) -> {
-            FILTER.predict(VecBuilder.fill((0D), (0D)), DISCRETE_AGGREGATOR.aggregate());
 
           });
           WHEEL_UPDATE_QUEUE.clear();
