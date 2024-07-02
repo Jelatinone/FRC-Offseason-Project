@@ -14,6 +14,7 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
+import org.frc5411.lib.schema.Singleton;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.utility.Aggregator;
 
@@ -281,8 +282,8 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   /**
-   * Retrieves the existing instance of this static utility class
-   * @return Utility class's instance
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
+   * @return This singleton's instance
    */
   public static synchronized PhoenixRegister getInstance() {
     PhoenixRegister Result = Instance;

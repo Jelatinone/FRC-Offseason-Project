@@ -269,8 +269,8 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
-   * Retrieves the existing instance of this static utility class
-   * @return Utility class's instance
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
+   * @return This singleton's instance
    */
   public static synchronized Robot getInstance() {
     Robot Result = Instance;

@@ -14,6 +14,7 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.math.kinematics.*;
 import org.frc5411.lib.external.SwerveSetpointGenerator;
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
@@ -48,6 +49,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
@@ -172,13 +174,22 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
       synchronized(DrivebaseSubsystem.class) {
-        MODULES.forEach((Module) -> {
-          try {
-            Module.close();
-          } catch(final IOException Ignored) {}
-        });
+        MODULES
+          .stream()
+          .parallel()
+          .forEach((Module) -> {
+            try {
+              Module
+                .close();
+            } catch (final IOException Ignored) {}
+          });
         try {
-          GYROSCOPE.close();
+          GYROSCOPE
+            .close();
+        } catch (final IOException Ignored) {}
+        try {
+          IDENTITY
+            .close();
         } catch (final IOException Ignored) {}
         Instance = (null);
         Mode = (null);
@@ -245,25 +256,35 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
       synchronized(Instance) {
-        Effort = GENERATOR.generateSetpoint(
-          IDENTITY.getDescriptor().Limits, 
-          Effort, 
-          Mode.apply(Control), 
-          DISCRETE_AGGREGATOR.aggregate());   
-        GYROSCOPE.periodic();
-        MODULES.forEach((Module) -> {
-          Module.periodic();
-          if(DriverStation.isDisabled()) {
-            Module.cease();
-          } else {
-            Module.set(Effort.States()[Module.getDescriptor().Identity.ordinal()]);
-          }
-        });
-        if(!IDENTITY.getMeasurements().isEmpty()) {
-
-        }
+        DISCRETE_AGGREGATOR
+          .aggregate();
+        Effort = GENERATOR
+          .generateSetpoint(
+            IDENTITY
+              .getDescriptor().Limits, 
+            Effort, 
+            Mode
+              .apply(Control), 
+            DISCRETE_AGGREGATOR.getAggregated());
+        GYROSCOPE
+          .periodic();
+        MODULES
+          .stream()
+          .parallel()
+          .forEach((Module) -> {
+            Module
+              .periodic();
+            if(DriverStation.isDisabled()) {
+              Module
+                .cease();
+            } else {
+              Module
+                .set(Effort.States()[Module.getDescriptor().Identity.ordinal()]);
+            }
+          });
       }
     } finally {
+      update();
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
   }
@@ -276,7 +297,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public synchronized void apply(final Twist2d Effort) {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
-      Control = Effort;
+      Control = Objects
+        .requireNonNull(Effort);
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
@@ -393,8 +415,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   }
 
   /**
-   * Retrieves the existing instance of this static utility class
-   * @return Utility class's instance
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
+   * @return This singleton's instance
    */
   public static synchronized DrivebaseSubsystem getInstance() {
     DrivebaseSubsystem Result = Instance;
@@ -465,9 +487,11 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
    * @return Output ChassisSpeeds based on the arguments
    */
   public final ChassisSpeeds apply(final Twist2d Twist) {
-    return FUNCTION.apply(Twist);
+    return FUNCTION
+      .apply(Twist);
   }
 }
+
 /**
  * <h1>Named</h1>
  * 

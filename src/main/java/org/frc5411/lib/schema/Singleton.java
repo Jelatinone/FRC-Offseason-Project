@@ -68,6 +68,27 @@ public interface Singleton<@NonNull Type> extends Serializable, Closeable, Clone
    * @throws CloneNotSupportedException When the method is called, because a singleton may only permit a single instance
    */
   default Type clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getSimpleName()));
+    throw new CloneNotSupportedException(
+      String.format(
+        ("[%s] Instances Cannot Be Cloned"), 
+        getClass()
+          .getSimpleName()));
+  }
+
+  /**
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
+   * @return This singleton's instance
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  static <Type> Type getInstance() {
+    throw new UnsupportedOperationException(
+      String.format(
+          ("%s must override method 'getInstance()!'"), 
+          Thread
+            .currentThread()
+            .getStackTrace()[0]
+            .getClassName()
+        )
+      );
   }
 }

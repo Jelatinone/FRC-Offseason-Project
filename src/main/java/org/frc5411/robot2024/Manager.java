@@ -26,6 +26,7 @@ import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -68,8 +69,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
   static Integer UPDATE_FREQUENCY = (100);
   static Integer QUEUE_SIZE = (20);
   static Double BUFFER_SIZE = (2D);
-  static Matrix<N2,N1> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
-  static Matrix<N2,N1> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
+  static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
+  static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Aggregator<Double> DISCRETE_AGGREGATOR;
 
   ReadWriteLock WHEEL_UPDATE_LOCK;
@@ -215,8 +216,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
-   * Retrieves the existing instance of this static utility class
-   * @return Utility class's instance
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
+   * @return This singleton's instance
    */
   public static synchronized Manager getInstance() {
     Manager Result = Instance;

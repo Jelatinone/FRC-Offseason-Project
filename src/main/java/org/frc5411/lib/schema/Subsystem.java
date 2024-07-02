@@ -81,6 +81,7 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
    * @return State of this instance
    */
   public abstract State getState();
+  
   /**
    * Provides the lock member-variable of this subsystem used during it's {@link #periodic() periodic} operations.
    * @return Synchronization lock of this subsystem

@@ -20,10 +20,13 @@ import org.frc5411.lib.control.archetype.PIDController;
 import org.frc5411.lib.instrument.module.Limit;
 import org.frc5411.lib.utility.Figure;
 
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -153,6 +156,8 @@ public class Constants {
 
     static Double MAXIMUM_LINEAR_VELOCITY = Units.feetToMeters((19.1D));
     static Double MAXIMUM_ANGULAR_VELOCITY = MAXIMUM_LINEAR_VELOCITY / CHASSIS_RADIUS_METERS;
+
+    static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
 
     static Pose2d POSE_PRESET = new Pose2d();  // <--- We'll eventually get this from vision, but we don't have it yet
   }
