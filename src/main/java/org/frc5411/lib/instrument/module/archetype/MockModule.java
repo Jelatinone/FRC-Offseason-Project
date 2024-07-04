@@ -20,7 +20,7 @@ import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Report;
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Aggregator;
-import org.frc5411.lib.utility.Figure;
+import org.frc5411.lib.utility.Figures;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.MathUtil;
@@ -168,7 +168,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
         UPDATE_TIMESTAMPS.clear();
       }
 
-      Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
+      Article.setMeasurements(IntStream.range((0), (int) Figures.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
           (Translations[Index] - getDescriptor().TranslationalOffset) * getDescriptor().Radius, 
           Rotation2d

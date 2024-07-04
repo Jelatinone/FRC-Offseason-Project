@@ -32,7 +32,7 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
-import static org.frc5411.lib.utility.Figure.*;
+import static org.frc5411.lib.utility.Figures.*;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Module</h1>
@@ -100,9 +100,9 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
                 DESCRIPTION.RotationalFeedback.calculate(
                   VecBuilder.fill(
                     Output.angle
-                      .getRotations(), 
+                      .getRadians(), 
                     State.angle
-                      .getRotations())
+                      .getRadians())
                 )
               ))
             ).getRotations()

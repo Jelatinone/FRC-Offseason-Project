@@ -14,16 +14,18 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
+import org.frc5411.lib.coordination.archetype.TeleoperatedCoordinator;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import edu.wpi.first.math.kinematics.*;
 import org.frc5411.lib.external.SwerveSetpointGenerator;
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 import org.frc5411.lib.instrument.gyroscope.PigeonGyroscope;
+import org.frc5411.lib.instrument.module.Limit;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Setpoint;
 import org.frc5411.lib.instrument.module.archetype.MockModule;
 import org.frc5411.lib.instrument.module.archetype.SparkModule;
 import org.frc5411.lib.schema.Registrable;
+import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
@@ -35,6 +37,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.kinematics.*;
 import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -86,11 +89,13 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
   SwerveSetpointGenerator GENERATOR;
+  Limit LIMITS;
+  //---------------------------------------------------------------------[Coordinators]-------------------------------------------------------------------------//
+  TeleoperatedCoordinator TELEOPERATED_COORDINATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
   static volatile State Mode;
   static volatile Setpoint Effort;
-  static volatile Twist2d Control;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Drivebase Subsystem Constructor.
@@ -136,15 +141,22 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .toArray(SwerveModulePosition[]::new),
       Identity.POSE_PRESET
     );
-    GENERATOR = SwerveSetpointGenerator.builder()
+    GENERATOR = SwerveSetpointGenerator
+      .builder()
       .kinematics(KINEMATICS)
       .moduleLocations(LOCATIONS)
       .build();
+    LIMITS = new Limit(
+      Identity.MAXIMUM_LINEAR_VELOCITY, 
+      Identity.MAXIMUM_LINEAR_VELOCITY, 
+      Identity.MAXIMUM_ANGULAR_VELOCITY);
+    TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator(
+      (0D),
+       LIMITS);
     Mode = State.RELATIVE;
     Effort = new Setpoint(
       new ChassisSpeeds(), 
       getModuleStates());
-    Control = new Twist2d((0D), (0D), (1D));
     MODULES.forEach((Module) -> 
       addChild(Module.getIdentity(), Module));  
     addChild(GYROSCOPE.getIdentity(), GYROSCOPE);
@@ -174,6 +186,14 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
       synchronized(DrivebaseSubsystem.class) {
+        try {
+          GYROSCOPE
+            .close();
+        } catch (final IOException Ignored) {}
+        try {
+          IDENTITY
+            .close();
+        } catch (final IOException Ignored) {}
         MODULES
           .stream()
           .parallel()
@@ -183,14 +203,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
                 .close();
             } catch (final IOException Ignored) {}
           });
-        try {
-          GYROSCOPE
-            .close();
-        } catch (final IOException Ignored) {}
-        try {
-          IDENTITY
-            .close();
-        } catch (final IOException Ignored) {}
         Instance = (null);
         Mode = (null);
       }
@@ -258,14 +270,16 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       synchronized(Instance) {
         DISCRETE_AGGREGATOR
           .aggregate();
-        Effort = GENERATOR
-          .generateSetpoint(
-            IDENTITY
-              .getDescriptor().Limits, 
-            Effort, 
+        Effort = GENERATOR.generateSetpoint(
+          IDENTITY
+            .getDescriptor().Limits, 
+          Effort, 
+          ChassisSpeeds.discretize(
             Mode
-              .apply(Control), 
-            DISCRETE_AGGREGATOR.getAggregated());
+              .apply(TELEOPERATED_COORDINATOR.update()), 
+            DISCRETE_AGGREGATOR
+              .getAggregated()), 
+          DISCRETE_AGGREGATOR.getAggregated());
         GYROSCOPE
           .periodic();
         MODULES
@@ -297,8 +311,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public synchronized void apply(final Twist2d Effort) {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
-      Control = Objects
-        .requireNonNull(Effort);
+      TELEOPERATED_COORDINATOR
+        .coordinate(Objects.requireNonNull(Effort));
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }

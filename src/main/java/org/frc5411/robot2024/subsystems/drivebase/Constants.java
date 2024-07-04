@@ -15,10 +15,9 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.control.archetype.PIDConstants;
-import org.frc5411.lib.control.archetype.PIDController;
 import org.frc5411.lib.instrument.module.Limit;
-import org.frc5411.lib.utility.Figure;
+import org.frc5411.lib.nascent.PIDController;
+import org.frc5411.lib.utility.Figures;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
@@ -61,6 +60,7 @@ public class Constants {
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public enum Module implements Supplier<org.frc5411.lib.instrument.module.Descriptor<?,?>> {
+    //---------------------------------------------------------------------[Values]----------------------------------------------------------------------------//
     FRONT$LEFT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
@@ -113,9 +113,9 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
         .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2))));
-
+    //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
     org.frc5411.lib.instrument.module.Descriptor<?,?> DESCRIPTOR;
-
+    //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
     /**
      * Module Constructor.
      * @param Descriptor {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builder} which contains the relevant module constants
@@ -128,9 +128,14 @@ public class Constants {
       DESCRIPTOR = Descriptor
         .Identity(this)
         .build();
-      ((PIDController) DESCRIPTOR.RotationalFeedback).enableContinuousInput(-Figure.PI, Figure.PI);
+      ((PIDController) DESCRIPTOR.RotationalFeedback).continuous(
+        VecBuilder.fill(
+          -Figures.PI, 
+          +Figures.PI
+        )
+      );
     }
-
+    //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
     /**
      * Provides the descriptor of this enum constant's stored value, which at runtime via {@link RobotBase#isReal()} determines the correct (real or mock) descriptor
      * to use.
@@ -155,6 +160,7 @@ public class Constants {
     static Double CHASSIS_RADIUS_METERS = Math.hypot(CHASSIS_LENGTH / (2d), CHASSIS_WIDTH / (2d));
 
     static Double MAXIMUM_LINEAR_VELOCITY = Units.feetToMeters((19.1D));
+    static Double MAXIMUM_LINEAR_ACCELERATION = MAXIMUM_LINEAR_VELOCITY / 1D; // <--- Choose a more realistic factor eventually
     static Double MAXIMUM_ANGULAR_VELOCITY = MAXIMUM_LINEAR_VELOCITY / CHASSIS_RADIUS_METERS;
 
     static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
@@ -183,10 +189,10 @@ class Descriptions {
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDConstants.builder().Proportional((0.2D)).Integral((0D)).Derivative((5e-1D)).build().toController())
+      .TranslationalFeedback(PIDController.Descriptor.builder().Proportional((0.2D)).Integral((0D)).Derivative((5e-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
-      .RotationalFeedback(PIDConstants.builder().Proportional((2.81D)).Integral((0D)).Derivative((5e-1D)).build().toController())
+      .RotationalFeedback(PIDController.Descriptor.builder().Proportional((2.81D)).Integral((0D)).Derivative((5e-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .Radius(Units.inchesToMeters((4D)))
       .Limits(new Limit(Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_ANGULAR_VELOCITY));
 
@@ -195,11 +201,11 @@ class Descriptions {
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDConstants.builder().Proportional((0.35D)).Integral((0D)).Derivative((0D)).build().toController())
+      .TranslationalFeedback(PIDController.Descriptor.builder().Proportional((0.35D)).Integral((0D)).Derivative((0D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
       .RotationalEncoder(Optional.empty())
-      .RotationalFeedback(PIDConstants.builder().Proportional((4.05e1D)).Integral((0D)).Derivative((0D)).build().toController())
+      .RotationalFeedback(PIDController.Descriptor.builder().Proportional((4.05e1D)).Integral((0D)).Derivative((0D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .Radius(Units.inchesToMeters((4D)))
       .Limits(new Limit(Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_ANGULAR_VELOCITY));
 }

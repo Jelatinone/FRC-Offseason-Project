@@ -19,7 +19,7 @@ import org.frc5411.lib.instrument.module.Descriptor;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Report;
 import org.frc5411.lib.nouveau.StandardRegister;
-import org.frc5411.lib.utility.Figure;
+import org.frc5411.lib.utility.Figures;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -208,7 +208,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         UPDATE_TIMESTAMPS.clear();
       }        
 
-      Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
+      Article.setMeasurements(IntStream.range((0), (int) Figures.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
           (Translations[Index] - getDescriptor().TranslationalOffset) / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
           Rotation2d

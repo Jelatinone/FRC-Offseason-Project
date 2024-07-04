@@ -16,7 +16,7 @@
 package org.frc5411.lib.instrument.gyroscope;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.StandardRegister;
-import org.frc5411.lib.utility.Figure;
+import org.frc5411.lib.utility.Figures;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 
@@ -30,7 +30,6 @@ import java.util.stream.IntStream;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Pigeon Gyroscope</h1>
@@ -44,8 +43,6 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Queue<Optional<Number>> YAW_POSITIONS, PITCH_POSITIONS, ROLL_POSITIONS;
   Queue<Double> UPDATE_TIMESTAMPS;
-  //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  @NonFinal volatile Rotation3d Adjustment;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Simulated Module Constructor.
@@ -74,7 +71,6 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
       .timestamp();
-    Adjustment = new Rotation3d();
     configure();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
@@ -95,6 +91,11 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
 
       getDescriptor().Hardware.getConfigurator().apply(new Pigeon2Configuration());
     }
+  }
+
+  @Override
+  public synchronized void reset() {
+    getDescriptor().Hardware.reset();
   }
 
   @Override
@@ -123,7 +124,7 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
         Yaw = YAW_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue() - getDescriptor().Offset.getZ() - Adjustment.getZ())
+            Position.orElse(Double.NaN).doubleValue() - getDescriptor().Offset.getZ())
           .toArray();
         YAW_POSITIONS.clear();
       }
@@ -131,7 +132,7 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
         Pitch = PITCH_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue() - getDescriptor().Offset.getY() - Adjustment.getY())
+            Position.orElse(Double.NaN).doubleValue() - getDescriptor().Offset.getY())
           .toArray();
         PITCH_POSITIONS.clear();
       }
@@ -139,7 +140,7 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
         Roll = ROLL_POSITIONS
           .stream()
           .mapToDouble((Position) -> 
-            Position.orElse(Double.NaN).doubleValue() - getDescriptor().Offset.getX() - Adjustment.getX())
+            Position.orElse(Double.NaN).doubleValue() - getDescriptor().Offset.getX())
           .toArray();
         ROLL_POSITIONS.clear();
       }
@@ -150,20 +151,12 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
           .toArray());
         UPDATE_TIMESTAMPS.clear();
       }        
-      Article.setMeasurements(IntStream.range((0), (int) Figure.minimum(Yaw.length, Pitch.length, Roll.length)).mapToObj((Index) -> 
+      Article.setMeasurements(IntStream.range((0), (int) Figures.minimum(Yaw.length, Pitch.length, Roll.length)).mapToObj((Index) -> 
         new Rotation3d(
           Roll[Index],
           Pitch[Index],
           Yaw[Index])
       ).toArray(Rotation3d[]::new));
     }
-  }
-  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
-  @Override
-  public synchronized void set(final Rotation3d Rotation) {
-    Adjustment = getMeasurement()
-      .orElse(new Rotation3d())
-      .unaryMinus()
-      .plus(Rotation);
   }
 }

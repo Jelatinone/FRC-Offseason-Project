@@ -15,7 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 import org.frc5411.lib.schema.Singleton;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.utility.Aggregator;
 
 import edu.wpi.first.hal.HALUtil;
@@ -27,7 +26,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.ArrayDeque;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -137,7 +136,7 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
 
   @Override
   public synchronized Queue<Optional<Number>> register(final @NonNull Supplier<Optional<Number>> Signal) {
-    final var Buffer = new ArrayDeque<Optional<Number>>(QUEUE_SIZE);
+    final var Buffer = new ArrayBlockingQueue<Optional<Number>>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
       SIGNALS.add(Signal);
@@ -150,7 +149,7 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
 
   @Override
   public synchronized Queue<Double> timestamp() {
-    final var Buffer = new ArrayDeque<Double>(QUEUE_SIZE);
+    final var Buffer = new ArrayBlockingQueue<Double>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
       TIMESTAMPS.add(Buffer);

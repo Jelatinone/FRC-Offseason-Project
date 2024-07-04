@@ -19,6 +19,7 @@ import edu.wpi.first.hal.util.BoundaryException;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Num;
 import edu.wpi.first.math.numbers.N0;
+import edu.wpi.first.util.struct.StructSerializable;
 
 import com.jcabi.aspects.Immutable.Array;
 
@@ -36,12 +37,12 @@ import lombok.experimental.FieldDefaults;
  * 
  * <h1>Vector</h1>
  * 
- * <p>Simple utility wrapper class for an immutable generic array of elements with a pre-defined size.<p>
+ * <p>Simple utility wrapper class for an immutable generic array of elements with a pre-defined size; implementation is not thread-safe.<p>
  * 
  * @author Cody Washington (@Jelatinone) 
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public class Vector<@NonNull Type, @NonNull Elements extends Num> {
+public class Vector<@NonNull Type, @NonNull Elements extends Num> implements StructSerializable {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   static Vector<Object,N0> EMPTY = new Vector<>(Nat.N0());
   

@@ -13,32 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.control;
+package org.frc5411.lib.nascent;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import edu.wpi.first.math.Num;
-import edu.wpi.first.math.Vector;
+
+import org.frc5411.lib.pattern.Component;
+import org.frc5411.lib.utility.Vector;
 
 import lombok.NonNull;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
- * <h1>Component</h1>
+ * <h1>Controller</h1>
  * 
  * <p>
  * 
  * @author Cody Washington
  */
-public interface Controller<@NonNull States extends Num, @NonNull Inputs extends Num, @NonNull Outputs extends Num> {
+public interface Controller<@NonNull States extends Num, @NonNull Inputs extends Num, @NonNull Outputs extends Num> extends Component<Vector<Double,Inputs>> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
-  /**
-   * Resets this controller to a given initial position and all other relevant data.
-   */
-  default void reset() {}
-
   /**
    * Corrects the state-matrix observer given the correct observed actual state-matrix, {@code Y}
    * @param Outputs Plant observed state-matrix the actuators are actually at
    */
-  default void correct(final Vector<Outputs> Outputs) {}
+  default void correct(final edu.wpi.first.math.Vector<Outputs> Outputs) {}
 
   /**
    * Shape-unsafe calculation of the controller's next control output, {@code U}, based on the mode of calculation and the given
@@ -46,24 +43,31 @@ public interface Controller<@NonNull States extends Num, @NonNull Inputs extends
    * @param Reference Resized reference consisting of the allowed controller variables
    * @return Calculated controller output, {@code  U}, of any dimensions.
    */
-  Vector<Inputs> calculate(final Vector<States> Reference);
+  edu.wpi.first.math.Vector<Inputs> calculate(final edu.wpi.first.math.Vector<States> Reference);
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
-
   /**
    * Provides a matrix (vector) of the device's 'set point', or reference states
    * @return Matrix of system states
    */
-  Vector<States> getStates();
+  edu.wpi.first.math.Vector<States> getStates();
 
   /**
    * Provides a matrix (vector) of the device's most-recent control cycle outputs
    * @return Matrix of system Outputs
    */
-  Vector<Inputs> getInputs();
+  edu.wpi.first.math.Vector<Inputs> getInputs();
+
+  /**
+   * Provides a matrix (vector) of the outputs of device's most-recent plant cycle outputs and the current reference.
+   * @return Matrix of system outputs
+   */
+  edu.wpi.first.math.Vector<Outputs> getOutputs();
 
   /**
    * Provides a matrix (vector) of the error of device's most-recent plant cycle outputs and the current reference.
-   * @return Matrix of system inputs
+   * @return Matrix of differences between plant output(s) and control setpoint(s)
    */
-  Vector<Outputs> getError();
+  edu.wpi.first.math.Vector<Outputs> getError();
+
+
 }

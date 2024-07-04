@@ -15,7 +15,7 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.module;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.control.Controller;
+import org.frc5411.lib.nascent.Controller;
 import org.frc5411.lib.pattern.Component;
 
 import edu.wpi.first.math.geometry.Rotation2d;

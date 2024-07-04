@@ -14,8 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
-import org.frc5411.lib.schema.Singleton;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.utility.Aggregator;
 
 import edu.wpi.first.hal.HALUtil;
@@ -32,7 +32,7 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.ArrayDeque;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -153,7 +153,7 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
 
   @Override
   public synchronized Queue<Optional<Number>> register(final @NonNull StatusSignal<Number> Signal) {
-    final var Buffer = new ArrayDeque<Optional<Number>>(QUEUE_SIZE);
+    final var Buffer = new ArrayBlockingQueue<Optional<Number>>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
       Signal.setUpdateFrequency(UPDATE_FREQUENCY);
@@ -212,7 +212,7 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
 
   @Override
   public synchronized Queue<Double> timestamp() {
-    final var Buffer = new ArrayDeque<Double>(QUEUE_SIZE);
+    final var Buffer = new ArrayBlockingQueue<Double>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
       TIMESTAMPS.add(Buffer);
