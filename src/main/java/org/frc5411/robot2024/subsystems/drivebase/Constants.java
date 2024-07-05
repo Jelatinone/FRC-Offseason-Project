@@ -16,7 +16,7 @@
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.module.Limit;
-import org.frc5411.lib.nascent.PIDController;
+import org.frc5411.lib.nascent.archetype.PIDController;
 import org.frc5411.lib.utility.Figures;
 
 import edu.wpi.first.math.VecBuilder;
@@ -141,6 +141,7 @@ public class Constants {
   }
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   static org.frc5411.lib.instrument.gyroscope.Descriptor<?> GYROSCOPE_DESCRIPTOR = Descriptions.REAL_GYROSCOPE_DESCRIPTOR.build();  
+  static org.frc5411.lib.nascent.archetype.ProfiledPIDController.Descriptor HEADING_COORDINATOR_DESCRIPTOR = Descriptions.HEADING_COORDINATOR_DESCRIPTION.build();
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**
    * <h1>Identity<h1>
@@ -169,6 +170,15 @@ public class Constants {
  */
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
 class Descriptions {
+
+  static org.frc5411.lib.nascent.archetype.ProfiledPIDController.Descriptor.DescriptorBuilder HEADING_COORDINATOR_DESCRIPTION = 
+    org.frc5411.lib.nascent.archetype.ProfiledPIDController.Descriptor.builder()
+      .Proportional((5D))
+      .Integral((0D))
+      .Derivative((5e-1D))
+      .Velocity((8D))
+      .Acceleration((20D));
+
   static org.frc5411.lib.instrument.gyroscope.Descriptor.DescriptorBuilder<?> REAL_GYROSCOPE_DESCRIPTOR = 
     org.frc5411.lib.instrument.gyroscope.Descriptor.<Pigeon2>builder()
       .Identity((0))

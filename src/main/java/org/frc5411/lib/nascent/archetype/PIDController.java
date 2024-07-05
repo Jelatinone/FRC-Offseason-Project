@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.nascent;
+package org.frc5411.lib.nascent.archetype;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.numbers.N1;
@@ -22,6 +22,7 @@ import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.VecBuilder;
 
 import org.frc5411.lib.external.LoggedTunableNumber;
+import org.frc5411.lib.nascent.Controller;
 import org.frc5411.lib.pattern.Report;
 
 import lombok.AccessLevel;

@@ -14,6 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.coordination.archetype.HeadingCoordinator;
 import org.frc5411.lib.coordination.archetype.TeleoperatedCoordinator;
 import org.frc5411.lib.external.SwerveSetpointGenerator;
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
@@ -23,6 +25,7 @@ import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Setpoint;
 import org.frc5411.lib.instrument.module.archetype.MockModule;
 import org.frc5411.lib.instrument.module.archetype.SparkModule;
+import org.frc5411.lib.nascent.archetype.ProfiledPIDController;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
@@ -91,6 +94,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   Limit LIMITS;
   //---------------------------------------------------------------------[Coordinators]-------------------------------------------------------------------------//
   TeleoperatedCoordinator TELEOPERATED_COORDINATOR;
+  HeadingCoordinator HEADING_COORDINATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
   static volatile State Mode;
@@ -154,6 +158,9 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator(
       (0D),
       LIMITS);
+    HEADING_COORDINATOR = new HeadingCoordinator(
+      new ProfiledPIDController(Constants.HEADING_COORDINATOR_DESCRIPTOR), 
+      () -> getGyroscopePosition().toRotation2d());
     Mode = State.RELATIVE;
     Effort = new Setpoint(
       new ChassisSpeeds(), 
@@ -277,7 +284,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           Effort, 
           ChassisSpeeds.discretize(
             Mode
-              .apply(TELEOPERATED_COORDINATOR.update()), 
+              .apply(TELEOPERATED_COORDINATOR.update()),
             DISCRETE_AGGREGATOR
               .getAggregated()), 
           DISCRETE_AGGREGATOR.getAggregated());
@@ -312,8 +319,12 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public synchronized void apply(final Twist2d Effort) {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
+      final var Demand = Objects.requireNonNull(Effort);
+      HEADING_COORDINATOR
+        .coordinate(Rotation2d.fromRadians(Demand.dtheta));
+      Effort.dtheta = HEADING_COORDINATOR.update();
       TELEOPERATED_COORDINATOR
-        .coordinate(Objects.requireNonNull(Effort));
+        .coordinate(Demand);
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
