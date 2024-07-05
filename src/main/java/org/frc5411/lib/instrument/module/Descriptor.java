@@ -75,7 +75,6 @@ public class Descriptor<@NonNull Actuator, @NonNull Encoder> extends org.frc5411
       Position,
       Radius,
       Identity,
-      Limits
-    );
+      Limits);
   }
 }

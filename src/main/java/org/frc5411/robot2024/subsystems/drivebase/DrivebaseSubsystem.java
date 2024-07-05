@@ -15,10 +15,9 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 import org.frc5411.lib.coordination.archetype.TeleoperatedCoordinator;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.external.SwerveSetpointGenerator;
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
-import org.frc5411.lib.instrument.gyroscope.PigeonGyroscope;
+import org.frc5411.lib.instrument.gyroscope.archetype.PigeonGyroscope;
 import org.frc5411.lib.instrument.module.Limit;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Setpoint;
@@ -139,20 +138,22 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           .getMeasurement()
           .orElseGet(() -> new SwerveModulePosition(Double.NaN, new Rotation2d(Double.NaN))))
         .toArray(SwerveModulePosition[]::new),
-      Identity.POSE_PRESET
+      Identity.PRESET
     );
     GENERATOR = SwerveSetpointGenerator
       .builder()
       .kinematics(KINEMATICS)
       .moduleLocations(LOCATIONS)
       .build();
-    LIMITS = new Limit(
-      Identity.MAXIMUM_LINEAR_VELOCITY, 
-      Identity.MAXIMUM_LINEAR_VELOCITY, 
-      Identity.MAXIMUM_ANGULAR_VELOCITY);
+    LIMITS = Limit
+      .builder()
+      .TranslationalVelocity(Identity.LINEAR_VELOCITY)
+      .TranslationalAcceleration(Identity.LINEAR_ACCELERATION)
+      .RotationalVelocity(Identity.ANGULAR_VELOCITY)
+      .build();
     TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator(
       (0D),
-       LIMITS);
+      LIMITS);
     Mode = State.RELATIVE;
     Effort = new Setpoint(
       new ChassisSpeeds(), 

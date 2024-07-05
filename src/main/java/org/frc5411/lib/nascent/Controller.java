@@ -16,6 +16,7 @@
 package org.frc5411.lib.nascent;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import edu.wpi.first.math.Num;
+import edu.wpi.first.math.numbers.N2;
 
 import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.utility.Vector;
@@ -36,6 +37,21 @@ public interface Controller<@NonNull States extends Num, @NonNull Inputs extends
    * @param Outputs Plant observed state-matrix the actuators are actually at
    */
   default void correct(final edu.wpi.first.math.Vector<Outputs> Outputs) {}
+
+  /**
+   * Enables continuous input by considering the minimum and maximum bounds to be the same point, allowing the shortest route
+   * between them to be calculated
+   * @param Bounds a vector containing two elements, the first is the lower bound, and the second the upper bound
+   * @see #discontinuous()
+   */
+  default void continuous(final edu.wpi.first.math.Vector<N2> Bounds) {}
+
+  /**
+   * Disables continuous input, which allows for the shortest route between two points, a minimum and maximum bound, to be found by
+   * considering them the same point.
+   * @see #continuous(Vector)
+   */
+  default void discontinuous() {}
 
   /**
    * Shape-unsafe calculation of the controller's next control output, {@code U}, based on the mode of calculation and the given

@@ -48,17 +48,16 @@ import lombok.experimental.FieldDefaults;
  * 
  * @see DrivebaseSubsystem
  * @author Cody Washington
- * 
  */
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
 public class Constants {
-  //----------------------------------------------------------------------[Internal]---------------------------------------------------------------------------//
+  //-----------------------------------------------------------------------[Enums]-----------------------------------------------------------------------------//
   /**
    * <h1>Module</h1>
    * 
    * @implNote Enum Constants are named {LOCATION}${SIDE} to prevent AdvantageScope from folding the tabs...
    */
-  @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
+  @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
   public enum Module implements Supplier<org.frc5411.lib.instrument.module.Descriptor<?,?>> {
     //---------------------------------------------------------------------[Values]----------------------------------------------------------------------------//
     FRONT$LEFT(
@@ -68,12 +67,12 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations((0.724121D)))
         .RotationalEncoder(new CANcoder((31), ("CTREBUS")))
         .RotationalController(new CANSparkMax((21), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.CHASSIS_WIDTH)  / (2), (Identity.CHASSIS_LENGTH) / (2))):
+        .Position(new Translation2d((Identity.WIDTH)  / (2), (Identity.LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d((Identity.CHASSIS_WIDTH)  / (2), (Identity.CHASSIS_LENGTH) / (2)))),
+        .Position(new Translation2d((Identity.WIDTH)  / (2), (Identity.LENGTH) / (2)))),
     FRONT$RIGHT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
@@ -81,12 +80,12 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations((0.726074D)))
         .RotationalEncoder(new CANcoder((32), ("CTREBUS")))
         .RotationalController(new CANSparkMax((22), MotorType.kBrushless))
-        .Position(new Translation2d((Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2))):
+        .Position(new Translation2d((Identity.WIDTH)  / (2), -(Identity.LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d((Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2)))),
+        .Position(new Translation2d((Identity.WIDTH)  / (2), -(Identity.LENGTH) / (2)))),
     REAR$LEFT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
@@ -94,12 +93,12 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations((0.609863D)))
         .RotationalEncoder(new CANcoder((33), ("CTREBUS")))
         .RotationalController(new CANSparkMax((23), MotorType.kBrushless))
-        .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), (Identity.CHASSIS_LENGTH) / (2))):
+        .Position(new Translation2d(-(Identity.WIDTH)  / (2), (Identity.LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), (Identity.CHASSIS_LENGTH) / (2)))),
+        .Position(new Translation2d(-(Identity.WIDTH)  / (2), (Identity.LENGTH) / (2)))),
     REAR$RIGHT(
       RobotBase.isReal()?
       Descriptions.REAL_MODULE_DESCRIPTOR
@@ -107,15 +106,15 @@ public class Constants {
         .RotationalOffset(Rotation2d.fromRotations((0.382568D)))
         .RotationalEncoder(new CANcoder((34), ("CTREBUS")))
         .RotationalController(new CANSparkMax((24), MotorType.kBrushless))
-        .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2))):
+        .Position(new Translation2d(-(Identity.WIDTH)  / (2), -(Identity.LENGTH) / (2))):
       Descriptions.MOCK_MODULE_DESCRIPTOR
         .TranslationalController(new DCMotorSim(DCMotor.getNEO((1)), (6.75D), (0.025D)))
         .RotationalOffset(Rotation2d.fromRotations(Math.random()))
         .RotationalController((new DCMotorSim(DCMotor.getNEO((1)), ((150D) / (7D)), (0.004D))))
-        .Position(new Translation2d(-(Identity.CHASSIS_WIDTH)  / (2), -(Identity.CHASSIS_LENGTH) / (2))));
-    //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+        .Position(new Translation2d(-(Identity.WIDTH)  / (2), -(Identity.LENGTH) / (2))));
+    //-----------------------------------------------------------------------[Constants]-----------------------------------------------------------------------//
     org.frc5411.lib.instrument.module.Descriptor<?,?> DESCRIPTOR;
-    //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
+    //---------------------------------------------------------------------[Constructor(s)]--------------------------------------------------------------------//
     /**
      * Module Constructor.
      * @param Descriptor {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builder} which contains the relevant module constants
@@ -128,14 +127,8 @@ public class Constants {
       DESCRIPTOR = Descriptor
         .Identity(this)
         .build();
-      ((PIDController) DESCRIPTOR.RotationalFeedback).continuous(
-        VecBuilder.fill(
-          -Figures.PI, 
-          +Figures.PI
-        )
-      );
     }
-    //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+    //-----------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
     /**
      * Provides the descriptor of this enum constant's stored value, which at runtime via {@link RobotBase#isReal()} determines the correct (real or mock) descriptor
      * to use.
@@ -146,26 +139,25 @@ public class Constants {
       return DESCRIPTOR;
     }
   }
-
-  static org.frc5411.lib.instrument.gyroscope.Descriptor<?> GYROSCOPE_DESCRIPTOR = Descriptions.GYROSCOPE_DESCRIPTOR_BUILDER.build();
-
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  static org.frc5411.lib.instrument.gyroscope.Descriptor<?> GYROSCOPE_DESCRIPTOR = Descriptions.REAL_GYROSCOPE_DESCRIPTOR.build();  
+  //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**
    * <h1>Identity<h1>
-   * 
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public static class Identity {
-    static Double CHASSIS_WIDTH = Units.inchesToMeters((24.6D));
-    static Double CHASSIS_LENGTH = Units.inchesToMeters((24.6D));
-    static Double CHASSIS_RADIUS_METERS = Math.hypot(CHASSIS_LENGTH / (2d), CHASSIS_WIDTH / (2d));
+    static Double WIDTH = Units.inchesToMeters((24.25D));
+    static Double LENGTH = Units.inchesToMeters((24.25D));
+    static Double RADIUS = Math.hypot(LENGTH / (2d), WIDTH / (2d));
 
-    static Double MAXIMUM_LINEAR_VELOCITY = Units.feetToMeters((19.1D));
-    static Double MAXIMUM_LINEAR_ACCELERATION = MAXIMUM_LINEAR_VELOCITY / 1D; // <--- Choose a more realistic factor eventually
-    static Double MAXIMUM_ANGULAR_VELOCITY = MAXIMUM_LINEAR_VELOCITY / CHASSIS_RADIUS_METERS;
+    static Double LINEAR_VELOCITY = (4.8D);
+    static Double LINEAR_ACCELERATION = LINEAR_VELOCITY * (5D);
+    static Double ANGULAR_VELOCITY = LINEAR_VELOCITY / RADIUS;
 
-    static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
+    static Vector<N2> DEVIATIONS = VecBuilder.fill((25e-2D),(25e-2D)); 
 
-    static Pose2d POSE_PRESET = new Pose2d();  // <--- We'll eventually get this from vision, but we don't have it yet
+    static Pose2d PRESET = new Pose2d(); 
   }
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
@@ -177,8 +169,7 @@ public class Constants {
  */
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
 class Descriptions {
-
-  static org.frc5411.lib.instrument.gyroscope.Descriptor.DescriptorBuilder<?> GYROSCOPE_DESCRIPTOR_BUILDER = 
+  static org.frc5411.lib.instrument.gyroscope.Descriptor.DescriptorBuilder<?> REAL_GYROSCOPE_DESCRIPTOR = 
     org.frc5411.lib.instrument.gyroscope.Descriptor.<Pigeon2>builder()
       .Identity((0))
       .Hardware(new Pigeon2((0)))
@@ -194,7 +185,7 @@ class Descriptions {
       .RotationalInverted((false))
       .RotationalFeedback(PIDController.Descriptor.builder().Proportional((2.81D)).Integral((0D)).Derivative((5e-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .Radius(Units.inchesToMeters((4D)))
-      .Limits(new Limit(Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_ANGULAR_VELOCITY));
+      .Limits(Limit.builder().TranslationalVelocity((4.8D)).TranslationalAcceleration((4.8D) * (5D)).RotationalVelocity((24) * Figures.PI).build());
 
   static org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<DCMotorSim,Optional<Object>> MOCK_MODULE_DESCRIPTOR =
     org.frc5411.lib.instrument.module.Descriptor.<DCMotorSim,Optional<Object>>builder()
@@ -207,5 +198,5 @@ class Descriptions {
       .RotationalEncoder(Optional.empty())
       .RotationalFeedback(PIDController.Descriptor.builder().Proportional((4.05e1D)).Integral((0D)).Derivative((0D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .Radius(Units.inchesToMeters((4D)))
-      .Limits(new Limit(Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_LINEAR_VELOCITY, Constants.Identity.MAXIMUM_ANGULAR_VELOCITY));
+      .Limits(Limit.builder().TranslationalVelocity((4.8D)).TranslationalAcceleration((4.8D) * (5D)).RotationalVelocity((24) * Figures.PI).build());
 }

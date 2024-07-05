@@ -43,7 +43,6 @@ public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Com
     return new Descriptor<>(
       Offset,
       Hardware,
-      Identity
-    );
+      Identity);
   }
 }

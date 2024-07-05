@@ -103,6 +103,7 @@ public class PIDController implements Controller<N2,N1,N1> {
    * @param Bounds a vector containing two elements, the first is the lower bound, and the second the upper bound
    * @see #discontinuous()
    */
+  @Override
   public synchronized void continuous(final Vector<N2> Bounds) {
     CONTROLLER.enableContinuousInput(
       Bounds.get(
@@ -119,6 +120,7 @@ public class PIDController implements Controller<N2,N1,N1> {
    * considering them the same point.
    * @see #continuous(Vector)
    */
+  @Override
   public synchronized void discontinuous() {
     synchronized(CONTROLLER) {
       CONTROLLER
@@ -145,11 +147,8 @@ public class PIDController implements Controller<N2,N1,N1> {
     return VecBuilder.fill(
       CONTROLLER
         .getSetpoint(), 
-      CONTROLLER
-        .getSetpoint() 
-            - 
-      CONTROLLER
-        .getPositionError()
+      getOutputs()
+        .get((0), (0))
     );
   }
 
@@ -163,7 +162,7 @@ public class PIDController implements Controller<N2,N1,N1> {
     return VecBuilder.fill(
       CONTROLLER
         .getSetpoint() 
-            - 
+            + 
       CONTROLLER
         .getPositionError());
   }

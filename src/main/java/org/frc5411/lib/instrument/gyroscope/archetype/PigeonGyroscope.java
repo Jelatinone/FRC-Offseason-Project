@@ -13,7 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
-package org.frc5411.lib.instrument.gyroscope;
+package org.frc5411.lib.instrument.gyroscope.archetype;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.instrument.gyroscope.Descriptor;
+import org.frc5411.lib.instrument.gyroscope.Gyroscope;
+import org.frc5411.lib.instrument.gyroscope.Report;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Figures;
@@ -54,20 +58,17 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
       .getInstance()
       .register(() -> Optional.of(
         Descriptor.Hardware.getYaw().getValue()
-        )
-      );
+      ));
     PITCH_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
         Descriptor.Hardware.getPitch().getValue()
-        )
-      );
+      ));
     ROLL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
         Descriptor.Hardware.getRoll().getValue()
-        )
-      );
+      ));
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
       .timestamp();

@@ -22,6 +22,7 @@ import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Figures;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -72,19 +73,21 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
       .getInstance()
       .register(() -> Optional.ofNullable(
           getConnection()? 
-            TRANSLATIONAL_ENCODER.getPosition(): 
+            TRANSLATIONAL_ENCODER
+              .getPosition(): 
             (null)
-        )
-      );
+      ));
     
     ROTATIONAL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.ofNullable(
           getConnection()? 
-            Descriptor.RotationalEncoder.getAbsolutePosition().refresh().getValue(): 
+            Descriptor.RotationalEncoder
+              .getAbsolutePosition()
+              .refresh()
+              .getValue(): 
             (null)
-        )
-      );
+      ));
         
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
@@ -121,26 +124,32 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         getDescriptor().TranslationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
         getDescriptor().RotationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
       }
-
-      getDescriptor().RotationalEncoder.getConfigurator()
-        .apply(new CANcoderConfiguration()
-          .withMagnetSensor(new MagnetSensorConfigs()
-            .withAbsoluteSensorRange(AbsoluteSensorRangeValue.Unsigned_0To1)));
-      getDescriptor().RotationalEncoder.getAbsolutePosition().setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
-      getDescriptor().RotationalEncoder.optimizeBusUtilization();
-
       getDescriptor().TranslationalController.burnFlash();
       getDescriptor().RotationalController.burnFlash();
 
       getDescriptor().TranslationalController.setCANTimeout((0));
       getDescriptor().RotationalController.setCANTimeout((0));
+
+      getDescriptor().RotationalEncoder.getConfigurator()
+        .apply(new CANcoderConfiguration()
+          .withMagnetSensor(new MagnetSensorConfigs()
+            .withAbsoluteSensorRange(AbsoluteSensorRangeValue.Unsigned_0To1)));
+      getDescriptor().RotationalEncoder.getAbsolutePosition()
+        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
+      getDescriptor().RotationalEncoder.optimizeBusUtilization();
+
+      getDescriptor().RotationalFeedback.continuous(
+        VecBuilder.fill(
+          -Figures.PI, 
+          +Figures.PI
+      ));
     }
   }
 
   @Override
   public synchronized void cease() {
-    getDescriptor().TranslationalController.disable();
-    getDescriptor().RotationalController.disable();
+    getDescriptor().TranslationalController.stopMotor();
+    getDescriptor().RotationalController.stopMotor();
   }
 
   @Override

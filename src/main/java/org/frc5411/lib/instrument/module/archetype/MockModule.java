@@ -24,6 +24,7 @@ import org.frc5411.lib.utility.Figures;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -103,6 +104,11 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
       getDescriptor().RotationalController.setState(
         Units.rotationsToRadians(Math.random()), 
         (0D));
+      getDescriptor().RotationalFeedback.continuous(
+        VecBuilder.fill(
+          -Figures.PI, 
+          +Figures.PI
+      ));
     }
   }
 
