@@ -31,7 +31,6 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
-
 import org.frc5411.robot2024.subsystems.drivebase.Constants.Identity;
 
 import edu.wpi.first.hal.HALUtil;
@@ -223,6 +222,20 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public synchronized void update() {
     Logger.recordOutput(
       String.format(
+        ("%s/Timestamps"), getName()),
+      IDENTITY
+        .getTimestamps()
+        .size()
+    );
+    Logger.recordOutput(
+      String.format(
+        ("%s/Measurements"), getName()),
+      IDENTITY
+        .getMeasurements()
+        .size()
+    );
+    Logger.recordOutput(
+      String.format(
         ("%s/Measurement"), getName()),
       MODULES
         .stream()
@@ -278,13 +291,15 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       synchronized(Instance) {
         DISCRETE_AGGREGATOR
           .aggregate();
+        final var Demand = Mode
+          .apply(TELEOPERATED_COORDINATOR.update());
+        Demand.omegaRadiansPerSecond = HEADING_COORDINATOR
+          .update();
         Effort = GENERATOR.generateSetpoint(
-          IDENTITY
-            .getDescriptor().Limits, 
+          LIMITS, 
           Effort, 
           ChassisSpeeds.discretize(
-            Mode
-              .apply(TELEOPERATED_COORDINATOR.update()),
+            Demand,
             DISCRETE_AGGREGATOR
               .getAggregated()), 
           DISCRETE_AGGREGATOR.getAggregated());
@@ -296,7 +311,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           .forEach((Module) -> {
             Module
               .periodic();
-            if(DriverStation.isDisabled()) {
+            if(DriverStation.isDisabled() || DriverStation.isEStopped()) {
               Module
                 .cease();
             } else {
@@ -319,12 +334,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public synchronized void apply(final Twist2d Effort) {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
-      final var Demand = Objects.requireNonNull(Effort);
-      HEADING_COORDINATOR
-        .coordinate(Rotation2d.fromRadians(Demand.dtheta));
-      Effort.dtheta = HEADING_COORDINATOR.update();
       TELEOPERATED_COORDINATOR
-        .coordinate(Demand);
+        .coordinate(Objects.requireNonNull(Effort));
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
@@ -408,7 +419,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    * Provides the current position of all child {@link Module modules} of this drivebase as a {@link SwerveModulePosition} object
    * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Module#getMeasurement() measurement} values
    * @return Array (ordered) of positions of each module
-   * @throws java.util.NoSuchElementException One or more modules could not produce a measurement within the last {@link Module#periodic() periodic} cycle, indicative of a hardware error
    * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link org.frc5411.robot2024.Manager}
    */
   public SwerveModulePosition[] getModulePositions() {
@@ -417,7 +427,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       return MODULES
         .stream()
         .map((Module) -> 
-          Module.getMeasurement().orElseThrow())
+          Module.getMeasurement().orElse(new SwerveModulePosition(Double.NaN, Rotation2d.fromRadians(Double.NaN))))
         .toArray(SwerveModulePosition[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
@@ -428,13 +438,13 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    * Provides the current position of child {@link Gyroscope gyroscope} of this drivebase as a {@link Rotation3d} object
    * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Gyroscope#getMeasurement() measurement} values
    * @return Gyroscope measured position on axes x (roll), y (pitch), and z (yaw)
-   * @throws java.util.NoSuchElementException Gyroscope could not produce a measurement within the last {@link Gyroscope#periodic() periodic} cycle, indicative of a hardware error
    * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link org.frc5411.robot2024.Manager}
    */
   public Rotation3d getGyroscopePosition() {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
-      return GYROSCOPE.getMeasurement().orElseThrow();
+      return GYROSCOPE.getMeasurement()
+        .orElse(new Rotation3d(Double.NaN, Double.NaN, Double.NaN));
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
     } 

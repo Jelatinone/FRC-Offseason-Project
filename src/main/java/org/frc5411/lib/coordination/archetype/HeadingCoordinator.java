@@ -57,6 +57,7 @@ public class HeadingCoordinator implements Coordinator<Double> {
       .requireNonNull(Observer);
     CONTROLLER
       .reset();
+    Setpoint = new Rotation2d();
   } 
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**

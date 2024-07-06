@@ -19,7 +19,7 @@ package org.frc5411.robot2024;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
-
+import org.frc5411.robot2024.Constants.Preferences;
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
 import edu.wpi.first.hal.HALUtil;
@@ -31,18 +31,22 @@ import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveDriveWheelPositions;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
+import java.util.function.Supplier;
 import java.util.ArrayDeque;
 import java.util.Optional;
 import java.util.Queue;
@@ -51,6 +55,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+
+import static org.frc5411.robot2024.Constants.Robot.*;
+import static org.frc5411.robot2024.Constants.Preferences.*;
+import static org.frc5411.robot2024.Constants.Keybindings.*;
+import static edu.wpi.first.math.MathUtil.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -86,7 +95,6 @@ public final class Manager implements Singleton<Manager>, Runnable {
   ExtendedKalmanFilter<N2,N2,N2> FILTER;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
-  static volatile SwerveDriveWheelPositions Positions;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
@@ -108,8 +116,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
     KINEMATICS = (null);
-    ODOMETRY = (null);
-    Positions = new SwerveDriveWheelPositions(DrivebaseSubsystem.getInstance().getModulePositions());
+    ODOMETRY = (null);    
+    configure();
   } static {
     //<--- Fetch All Managed Subsystems --->
     DrivebaseSubsystem.getInstance();
@@ -144,6 +152,47 @@ public final class Manager implements Singleton<Manager>, Runnable {
       });      
       Instance = (null);
     }
+  }
+
+  /**
+   * Performs all configurations, for all subsystems, on all valid operators of this subsystem.
+   */
+  private synchronized void configure() { 
+    DrivebaseSubsystem
+      .getInstance()
+      .setDefaultCommand(new InstantCommand(() -> 
+        DrivebaseSubsystem
+          .getInstance()
+          .apply(new Twist2d(
+            -applyDeadband(
+              DRIVER
+                .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
+                .get()
+                .get(), 
+              DRIVER
+                .<Double>getPreference(CONTROL_ZONE_X)
+                .get()),
+            -applyDeadband(
+              DRIVER
+                .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
+                .get()
+                .get(), 
+              DRIVER
+                .<Double>getPreference(CONTROL_ZONE_Y)
+                .get()),
+            -applyDeadband(
+              DRIVER
+                .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
+                .get()
+                .get(), 
+              DRIVER
+                .<Double>getPreference(CONTROL_ZONE_T)
+                .get())
+            )
+          ), 
+        DrivebaseSubsystem
+          .getInstance()
+    ));
   }
 
   /**
@@ -239,7 +288,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
    * <h1>WheelObservation</h1>
    *
    */
-  public record WheelObservation(SwerveDriveWheelPositions Position, Optional<Rotation2d> Rotation, Double Timestamp) {}
+  public record WheelObservation(SwerveModulePosition[] Position, Optional<Rotation2d> Rotation, Double Timestamp) {}
 
   /**
    *

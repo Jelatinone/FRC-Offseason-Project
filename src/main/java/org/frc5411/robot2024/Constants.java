@@ -62,8 +62,8 @@ public final class Constants {
     };
     static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController((0));
     static CommandXboxController OPERATOR_CONTROLLER = new CommandXboxController((1));
-    static Profile DRIVER =  TYPE.equals(Type.COMPBOT)? Profile.COMP_DRIVER: Profile.DEV_DRIVER;
-    static Profile OPERATOR = TYPE.equals(Type.COMPBOT)? Profile.COMP_OPERATOR: Profile.DEV_OPERATOR;
+    static org.frc5411.lib.utility.Profile<Keybindings,Preferences> DRIVER =  (TYPE.equals(Type.COMPBOT)? Profile.COMP_DRIVER: Profile.DEV_DRIVER).get();
+    static org.frc5411.lib.utility.Profile<Keybindings,Preferences> OPERATOR = (TYPE.equals(Type.COMPBOT)? Profile.COMP_OPERATOR: Profile.DEV_OPERATOR).get();
   }
 
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
@@ -107,31 +107,37 @@ public final class Constants {
    * and robot operation
    */
   @SuppressWarnings("resource")
-  public enum Profile implements Supplier<org.frc5411.lib.utility.Profile<?,?>> {
+  public enum Profile implements Supplier<org.frc5411.lib.utility.Profile<Keybindings,Preferences>> {
 
     DEV_DRIVER(
-      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
+      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_DRIVER"))
+        .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> Robot.DRIVER_CONTROLLER.getRawAxis((1)))
+        .add(Preferences.CONTROL_ZONE_X, (2e-1))
+        .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> Robot.DRIVER_CONTROLLER.getRawAxis((0)))
+        .add(Preferences.CONTROL_ZONE_Y, (2e-1))
+        .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> Robot.DRIVER_CONTROLLER.getRawAxis((4)))
+        .add(Preferences.CONTROL_ZONE_T, (2e-1))
     ),
 
     DEV_OPERATOR(
-      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
+      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_OPERATOR"))
     ),
 
     COMP_DRIVER(
-      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
+      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("COMP_DRIVER"))
     ),
 
     COMP_OPERATOR(
-      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("JOHN DOE"))
+      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("COMP_OPERATOR"))
     );
 
-    private final org.frc5411.lib.utility.Profile<?,?> PROFILE;
+    private final org.frc5411.lib.utility.Profile<Keybindings,Preferences> PROFILE;
 
     /**
      * Profile Constructor
      * @param Profile Individual's profile with selected preferences and keybindings which act as settings for different robot functionality
      */
-    Profile(final org.frc5411.lib.utility.Profile<?,?> Profile) {
+    Profile(final org.frc5411.lib.utility.Profile<Keybindings,Preferences> Profile) {
       PROFILE = Profile;
     }
 
@@ -140,7 +146,7 @@ public final class Constants {
      * @return Retained profile instance
      */
     @Override
-    public final org.frc5411.lib.utility.Profile<?,?> get() {
+    public final org.frc5411.lib.utility.Profile<Keybindings,Preferences> get() {
       return PROFILE;
     }
   }
