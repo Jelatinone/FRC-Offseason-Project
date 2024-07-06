@@ -289,8 +289,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
       synchronized(Instance) {
-        DISCRETE_AGGREGATOR
-          .aggregate();
+        DISCRETE_AGGREGATOR.aggregate();
         final var Demand = Mode
           .apply(TELEOPERATED_COORDINATOR.update());
         Demand.omegaRadiansPerSecond = HEADING_COORDINATOR
@@ -336,6 +335,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       SUBSYSTEM_LOCK.writeLock().lock();
       TELEOPERATED_COORDINATOR
         .coordinate(Objects.requireNonNull(Effort));
+      HEADING_COORDINATOR.coordinate(Rotation2d
+        .fromRotations(Effort.dtheta));
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
@@ -370,7 +371,13 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       return MODULES
         .stream()
         .map((Module) -> 
-          Module.getState().orElseThrow())
+          Module
+            .getState()
+            .map((Option) -> {
+              Option.speedMetersPerSecond *= Module.getDescriptor().Limits.TranslationalVelocity();
+              return Option;
+            })
+            .orElseThrow())
         .toArray(SwerveModuleState[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();

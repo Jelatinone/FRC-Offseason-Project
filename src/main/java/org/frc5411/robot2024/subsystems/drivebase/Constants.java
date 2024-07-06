@@ -173,7 +173,7 @@ class Descriptions {
 
   static org.frc5411.lib.nascent.archetype.ProfiledPIDController.Descriptor.DescriptorBuilder HEADING_COORDINATOR_DESCRIPTION = 
     org.frc5411.lib.nascent.archetype.ProfiledPIDController.Descriptor.builder()
-      .Proportional((5D))
+      .Proportional((9D))
       .Integral((0D))
       .Derivative((5e-1D))
       .Velocity((8D))
