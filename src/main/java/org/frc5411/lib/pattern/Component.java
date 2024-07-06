@@ -155,8 +155,10 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
 
   /**
    * Provides the real-world description of the component, essentially an object makeup of the system's mechanical constants
-   * @return Descriptor of this component, null by default
+   * 
    * @implSpec Default implementation returns {@link Descriptor#empty()}
+   * 
+   * @return Descriptor of this component
    */
   default Descriptor<Component<Measurement>> getDescriptor() {
     return Descriptor.empty();
@@ -169,9 +171,9 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * @implNote Ideally, the provided Report is never a {@link #clone() cloned} copy of the original report instance, this prevents unnecessary copies being created by internal caused
    * used throughout the Component framework. However, downstream implementations when calling this method should also call {@link Report#clone()}
    * 
-   * @implSpec Default implementation has no behavior
+   * @implSpec Default implementation returns {@link Report#empty()}
    * 
-   * @return Report of measurements, by default an empty report.
+   * @return Report of measurements
    */
   default Report<Measurement> getReport() {
     return Report.empty();
@@ -193,7 +195,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    */
   default Optional<Double> getTimestamp() {
     final var Timestamps = getTimestamps();
-    return Optional.ofNullable(Timestamps.isEmpty() ? (null): Timestamps.get(Timestamps.size() - (1)));
+    return Timestamps.isEmpty()? Optional.empty(): Optional.of(Timestamps.get(Timestamps.size() - (1)));
   }
 
   /**
@@ -213,7 +215,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    */
   default Optional<Measurement> getMeasurement() {
     final var Measurements = getMeasurements();
-    return Optional.ofNullable(Measurements.isEmpty() ? (null): Measurements.get(Measurements.size() - (1)));
+    return Measurements.isEmpty()? Optional.empty(): Optional.of(Measurements.get(Measurements.size() - (1)));
   }  
 
   /**

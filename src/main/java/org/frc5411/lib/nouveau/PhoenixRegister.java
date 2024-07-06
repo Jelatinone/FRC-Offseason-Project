@@ -222,12 +222,11 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
     return Buffer;
   }
 
-  @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
   @Override
   public synchronized void run() {
     synchronized(Instance) {
       while(isAlive() && !isInterrupted()) {
-        State.Running = (true);
+        State.setRunning((true));
         synchronized(PhoenixRegister.class) {
           if(!SIGNALS.isEmpty()) {
             final StatusCode Status;
@@ -247,16 +246,14 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
                 .mapToDouble((Signal) -> Signal.getTimestamp().getLatency())
                 .average()
                 .orElse((0D));
-              RESPONSES.forEach((final Queue<Optional<Number>> Queue) -> {
-                synchronized(Queue) {
-                  Queue.offer(Optional.ofNullable(Providers.next().getValue()));
-                }
-              });
-              TIMESTAMPS.forEach((final Queue<Double> Queue) ->  {
-                synchronized(Queue) {
-                  Queue.offer(Timestamp);
-                }
-              });
+              RESPONSES.forEach((Queue) ->
+                  Queue
+                    .offer(Optional.ofNullable(Providers.next().getValue()))
+              );
+              TIMESTAMPS.forEach((Queue) ->  
+                  Queue
+                    .offer(Timestamp)
+              );
             } finally {
               SIGNAL_LOCK.writeLock().unlock();
             }
@@ -265,18 +262,17 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
               CLIENTS.forEach((Hash, Applicator) -> Applicator.accept(REQUESTS.get(Hash)));
             } finally {
               REQUEST_LOCK.readLock().unlock();
+              State.setRunning((false));              
             }
-            State.Priority = getPriority(); 
-            State.Status = Status.value;
-            State.Period = DISCRETE_AGGREGATOR.aggregate(); 
-            State.Average = LOW_PASS.calculate(
-              PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated()));
-            State.Timestamp = DISCRETE_AGGREGATOR.getRetained();
-            State.Registered = SIGNALS.size(); 
-            State.Failed = Status.isError()? 1: 0;            
+            State.setPriority(getPriority());
+            State.setStatus(Status.value);
+            State.setPeriod(DISCRETE_AGGREGATOR.aggregate());
+            State.setAverage(LOW_PASS.calculate(PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated())));
+            State.setTimestamp(DISCRETE_AGGREGATOR.getRetained());
+            State.setRegistered(SIGNALS.size());
+            State.setFailed(Status.isError()? 1: 0);      
           }
         }
-        State.Running = (false);
       }
     }
   }
@@ -314,7 +310,7 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
   }
 
   @Override
-  public Report getReport() {
+  public ReportAutoLogged getReport() {
     try {
       SIGNAL_LOCK.readLock().lock();
       return State;

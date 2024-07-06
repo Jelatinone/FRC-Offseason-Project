@@ -111,9 +111,10 @@ public class Figures {
    * @param Numbers Collection (array) of data to find the minimum of
    * @return Minimum value of collection (array) of data
    */
-  public static Number minimum(final Number... Numbers) {
-    Number Minimum = Double.MAX_VALUE;
-    for(final Number Element: Numbers) {
+  @SuppressWarnings("unchecked")
+  public static <Figure extends Number> Figure minimum(final Figure... Numbers) {
+    Figure Minimum = Numbers[0];
+    for(final Figure Element: Numbers) {
       if(Element.doubleValue() < Minimum.doubleValue()) {
         Minimum = Element;
       }
@@ -126,9 +127,10 @@ public class Figures {
    * @param Numbers Collection (array) of data to find the maximum of
    * @return Maximum value of collection (array) of data
    */
-  public static Number maximum(final Number... Numbers) {
-    Number Maximum = Double.MIN_VALUE;
-    for(final Number Element: Numbers) {
+  @SuppressWarnings("unchecked")
+  public static <Figure extends Number> Figure maximum(final Figure... Numbers) {
+    Figure Maximum = Numbers[0];
+    for(final Figure Element: Numbers) {
       if(Element.doubleValue() > Maximum.doubleValue()) {
         Maximum = Element;
       }

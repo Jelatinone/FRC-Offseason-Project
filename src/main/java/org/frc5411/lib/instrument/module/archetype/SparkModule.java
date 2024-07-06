@@ -77,7 +77,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
               .getPosition(): 
             (null)
       ));
-    
+
     ROTATIONAL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.ofNullable(
@@ -124,6 +124,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         getDescriptor().TranslationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
         getDescriptor().RotationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
       }
+      
       getDescriptor().TranslationalController.burnFlash();
       getDescriptor().RotationalController.burnFlash();
 
@@ -217,7 +218,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         UPDATE_TIMESTAMPS.clear();
       }        
 
-      Article.setMeasurements(IntStream.range((0), (int) Figures.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
+      Article.setMeasurements(IntStream.range((0), Figures.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
           (Translations[Index] - getDescriptor().TranslationalOffset) / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
           Rotation2d

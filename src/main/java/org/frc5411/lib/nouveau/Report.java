@@ -14,12 +14,14 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.util.struct.StructSerializable;
 
 import org.littletonrobotics.junction.AutoLog;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
@@ -32,6 +34,7 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
+@Setter
 @AutoLog
 public class Report {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//

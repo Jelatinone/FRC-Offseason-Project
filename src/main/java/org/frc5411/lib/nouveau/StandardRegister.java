@@ -14,11 +14,11 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.utility.Aggregator;
 
 import edu.wpi.first.hal.HALUtil;
-import edu.wpi.first.hal.ThreadsJNI;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.wpilibj.Notifier;
@@ -52,7 +52,7 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   @Serial 
   static long serialVersionUID = 84309938899889961L;
   static Integer QUEUE_SIZE = (20);
-  static Integer UPDATE_FREQUENCY = (250);
+  static Integer UPDATE_FREQUENCY = (1000);
 
   List<Queue<Double>> TIMESTAMPS;  
   List<Queue<Optional<Number>>> RESPONSES;
@@ -164,36 +164,32 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
     CALLBACK.startPeriodic(1D/UPDATE_FREQUENCY);
   }
 
-  @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
   @Override
   public synchronized void run() {
-    State.Running = (true);
+    State.setRunning((true));
     if(!SIGNALS.isEmpty()) {
       try {
         SIGNAL_LOCK.readLock().lock();
         final var Providers = SIGNALS.iterator();
         final var Timestamp = HALUtil.getFPGATime() / 1e6;
-        RESPONSES.forEach((final Queue<Optional<Number>> Queue) -> {
-          synchronized(Queue) {
-            Queue.offer(Providers.next().get());
-          }
-        });
-        TIMESTAMPS.forEach((final Queue<Double> Queue) -> {
-          synchronized(Queue) {
-            Queue.offer(Timestamp);
-          }
-        });
+        RESPONSES.forEach((Queue) -> 
+          Queue
+            .offer(Providers.next().get())
+        );
+        TIMESTAMPS.forEach((Queue) -> 
+          Queue
+            .offer(Timestamp)
+        );
       } finally {
         SIGNAL_LOCK.readLock().unlock();
+        State.setRunning((false));
       }
-      State.Period = DISCRETE_AGGREGATOR.aggregate();
-      State.Average = LOW_PASS.calculate(
-        PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated()));
-      State.Timestamp = DISCRETE_AGGREGATOR.getRetained();
-      State.Priority = ThreadsJNI.getCurrentThreadPriority();
-      State.Registered = SIGNALS.size();      
     }
-    State.Running = (false);
+    State.setPeriod(DISCRETE_AGGREGATOR.aggregate());
+    State.setAverage(LOW_PASS.calculate(PEAK_REMOVER.calculate(DISCRETE_AGGREGATOR.getAggregated())));
+    State.setTimestamp(DISCRETE_AGGREGATOR.getRetained());
+    State.setPriority(Thread.currentThread().getPriority());
+    State.setRegistered(SIGNALS.size());       
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   /**
@@ -229,7 +225,7 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   }
 
   @Override
-  public Report getReport() {
+  public ReportAutoLogged getReport() {
     try {
       SIGNAL_LOCK.readLock().lock();
       return State;

@@ -103,11 +103,12 @@ public sealed interface Register<@NonNull Source> extends Runnable, Singleton<Re
   /**
    * Provides the current state of this Thread, which can be serialized as a struct value and sent over the network.
    * @return Current state report
+   * @implNote Provides {@link Report#empty()} by default
    */
-  default Report getReport() {
+  default ReportAutoLogged getReport() {
     try {
       getQueueLock().readLock().lock();
-      return Report.empty();
+      return (ReportAutoLogged) Report.empty();
     } finally {
       getQueueLock().readLock().unlock();
     }
