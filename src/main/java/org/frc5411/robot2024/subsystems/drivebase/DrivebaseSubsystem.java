@@ -313,6 +313,9 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
                 .set(Effort.States()[Module.getDescriptor().Identity.ordinal()]);
             }
           });
+        Manager
+          .getInstance()
+          .add(Effort.Speeds());
       }
     } finally {
       Manager

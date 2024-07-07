@@ -265,7 +265,8 @@ public final class Manager implements Singleton<Manager>, Runnable {
   public synchronized void run() {
     synchronized(Manager.class) {
       update();
-      DISCRETE_AGGREGATOR.aggregate();
+      DISCRETE_AGGREGATOR
+        .aggregate();
       try {
         WHEEL_UPDATE_LOCK.readLock().lock();
         WHEEL_UPDATE_QUEUE.forEach((final WheelObservation Observation) -> {
@@ -290,7 +291,11 @@ public final class Manager implements Singleton<Manager>, Runnable {
               Observation.Timestamps().get(Update), 
               ODOMETRY.update(Rotation, Positions)
             );  
-            FILTER.predict(VecBuilder.fill((0D), (0D)), DISCRETE_AGGREGATOR.getAggregated()); // <--- Vision Error Propagation                     
+            FILTER.predict( // <--- Vision Error Propagation   
+              VecBuilder.fill(
+                (0D), 
+                (0D)), 
+              DISCRETE_AGGREGATOR.getAggregated());                   
           }
         });
         WHEEL_UPDATE_QUEUE.clear();
