@@ -61,6 +61,9 @@ import java.util.Optional;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -82,21 +85,24 @@ import static edu.wpi.first.math.MathUtil.*;
  */
 @SuppressWarnings("unused")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public final class Manager implements Singleton<Manager>, Runnable {
+public final class Manager implements Singleton<Manager> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   static long serialVersionUID = 2389697764281159320L;
-  static Double UPDATE_FREQUENCY = (100D);
+  static Integer PARALLEL_THREADS = (8);
   static Integer QUEUE_SIZE = (20);
   static Double BUFFER_SIZE = (2D);
+  static Double UPDATE_FREQUENCY = (100D);
   static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
-  static Aggregator<Double> DISCRETE_AGGREGATOR;
+  static Aggregator<Double> WHEEL_TIME_AGGREGATOR;
 
   static @NonFinal Integer MODULES;
 
   ReadWriteLock WHEEL_UPDATE_LOCK;
   ReadWriteLock VISION_UPDATE_LOCK;  
+
+  ExecutorService CALLBACK;
 
   Queue<WheelObservation> WHEEL_UPDATE_QUEUE;
   Queue<VisionObservation> VISION_UPDATE_QUEUE;
@@ -124,6 +130,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
     //<--- Initialize Variables --->
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));
+    CALLBACK = Executors.newWorkStealingPool(PARALLEL_THREADS);
     WHEEL_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
     VISION_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
     VEHICLE_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
@@ -138,6 +145,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
     KINEMATICS = DrivebaseSubsystem
+      .getInstance()
       .getKinematics();
     ODOMETRY = DrivebaseSubsystem
       .getInstance()
@@ -153,8 +161,9 @@ public final class Manager implements Singleton<Manager>, Runnable {
 
     MODULES = Position.length;
 
+    //<--- Base Sampling --->
     VEHICLE_ODOMETRY.addSample(
-      DISCRETE_AGGREGATOR.attain(), 
+      WHEEL_TIME_AGGREGATOR.attain(), 
       ODOMETRY.update(
         DrivebaseSubsystem
           .getInstance()
@@ -165,11 +174,16 @@ public final class Manager implements Singleton<Manager>, Runnable {
           .getModulePositions()
       ));
 
-    //<--- Apply Operator Configurations --->
+    //<--- Apply Configurations --->
     configure();
+    Robot
+      .getInstance()
+      .add(
+        Instance::update,
+        UPDATE_FREQUENCY);
   } static {
     //<--- Construct static fields --->
-    DISCRETE_AGGREGATOR = new Aggregator<>(
+    WHEEL_TIME_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1e6, 
       (Previous, Current) -> Current - Previous);
   }
@@ -257,63 +271,6 @@ public final class Manager implements Singleton<Manager>, Runnable {
     );
   }
 
-  /**
-   * Performs queued robot-wide actions at a higher frequency than a subsystem instance; such as robot-wide 
-   * odometry or specific sensor updates which require higher update frequencies, but should not be contained
-   * within their own {@link Notifier} or separate {@link Thread} instance(s).
-   */
-  public synchronized void run() {
-    synchronized(Manager.class) {
-      update();
-      DISCRETE_AGGREGATOR
-        .aggregate();
-      try {
-        WHEEL_UPDATE_LOCK.readLock().lock();
-        WHEEL_UPDATE_QUEUE.forEach((final WheelObservation Observation) -> {
-          final var Updates = Figures
-            .minimum(Observation.Positions().size(), Observation.Timestamps().size());
-          for(Integer Update = (0); Update < Updates; Update++) {
-            final var Positions = new SwerveModulePosition[MODULES];
-            final var Deltas = new SwerveModulePosition[MODULES];
-            for(Integer Module = (0); Module < MODULES; Module++) {
-              Positions[Module] = Observation.Positions().get(Module).get(Update);
-              Deltas[Module] = new SwerveModulePosition(
-                Positions[Module].distanceMeters - Position[Module].distanceMeters,
-                Positions[Module].angle);
-              Position[Module] = Positions[Module];
-            }   
-            Measured = KINEMATICS.toTwist2d(Deltas);
-            Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
-              Observation.Rotations().get(Update):
-              Rotation
-                .plus(new Rotation2d(KINEMATICS.toTwist2d(Deltas).dtheta));
-            VEHICLE_ODOMETRY.addSample(
-              Observation.Timestamps().get(Update), 
-              ODOMETRY.update(Rotation, Positions)
-            );  
-            FILTER.predict( 
-              VecBuilder.fill(
-                (0D), 
-                (0D)), 
-              DISCRETE_AGGREGATOR.getAggregated());                   
-          }
-        });
-        WHEEL_UPDATE_QUEUE.clear();
-      } finally {
-        WHEEL_UPDATE_LOCK.readLock().unlock();
-      }
-      try {
-        VISION_UPDATE_LOCK.readLock().lock();
-        VISION_UPDATE_QUEUE.forEach((final VisionObservation Observation) -> {
-
-        });
-        VISION_UPDATE_QUEUE.clear();
-      } finally {
-        VISION_UPDATE_LOCK.readLock().unlock();
-      }
-    }      
-  }
-
   @Override
   public Manager clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(
@@ -335,39 +292,86 @@ public final class Manager implements Singleton<Manager>, Runnable {
           Demand.vxMetersPerSecond,
           Demand.vyMetersPerSecond, 
           Demand.omegaRadiansPerSecond))
-        .rotateBy(
-          getVehicleOdometry().getRotation()));
+        .rotateBy(getVehicleOdometry().getRotation()));
   }
 
+
   /**
-   * <p>Adds a new {@link WheelObservation observation} instance, containing the necessary information to calculate accurate wheel odometry values when the {@link #run()} method 
-   * is called, to the wheel observation queue.
-   * <p>Note that because of the nature of a queue collection, and that the added elements are processed asynchronously, this method can handle dozens of 
-   * repeat calls (such as during Subsystem#periodic()) to calculate far more accurate odometry values
-   * @param Observation Wheel observation to add to the processing queue
+   * <p>Adds a new {@link WheelObservation observation} instance, containing the necessary information to calculate accurate wheel odometry values, to the callback's work-stealing 
+   * execution thread-pool.
+   * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
+   * impacts on the robot-main thread.
+   * @param Observation Wheel observation to add to the processing pool
+   * @see #add(VisionObservation)
+   * @return Future representing the pending completion of the observation
    */
-  public synchronized void add(final WheelObservation Observation) {
-    try {
-      WHEEL_UPDATE_LOCK.writeLock().lock();
-      WHEEL_UPDATE_QUEUE
-        .offer(Objects.requireNonNull(Observation));
-    } finally {
-      WHEEL_UPDATE_LOCK.writeLock().unlock();
-    }
+  public synchronized Future<?> add(final WheelObservation Observation) {
+    return CALLBACK
+      .submit(() -> resolve(Objects.requireNonNull(Observation)));
   }  
 
   /**
-   * <p>Adds a new {@link VisionObservation observation} instance, containing the necessary information to calculate accurate vision odometry values when the {@link #run()} method 
-   * is called, to the vision observation queue.
-   * <p>Note that because of the nature of a queue collection, and that the added elements are processed asynchronously, this method can handle dozens of 
-   * repeat calls (such as during Subsystem#periodic()) to calculate far more accurate odometry values
-   * @param Observation Vision observation to add to the processing queue
+   * Updates wheel-base odometry given the provided observation's set of measurements
+   * @param Observation Pooled value, which has not yet been processed, and represents a set of measurements that occurred over an interval of time
    */
-  public synchronized void add(final VisionObservation Observation) {
+  @Async
+  private synchronized void resolve(final WheelObservation Observation) {
+    try {
+      WHEEL_UPDATE_LOCK.writeLock().lock();
+      final var Updates = Figures
+        .minimum(Observation.Positions().size(), Observation.Timestamps().size());
+      for(Integer Update = (0); Update < Updates; Update++) {
+        final var Positions = new SwerveModulePosition[MODULES];
+        final var Deltas = new SwerveModulePosition[MODULES];
+        for(Integer Module = (0); Module < MODULES; Module++) {
+          Positions[Module] = Observation.Positions().get(Module).get(Update);
+          Deltas[Module] = new SwerveModulePosition(
+            Positions[Module].distanceMeters - Position[Module].distanceMeters,
+            Positions[Module].angle);
+          Position[Module] = Positions[Module];
+        }   
+        Measured = KINEMATICS.toTwist2d(Deltas);
+        Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
+          Observation.Rotations().get(Update):
+          Rotation
+            .plus(new Rotation2d(KINEMATICS.toTwist2d(Deltas).dtheta));
+        VEHICLE_ODOMETRY.addSample(
+          Observation.Timestamps().get(Update), 
+          ODOMETRY.update(Rotation, Positions)
+        );  
+        FILTER.predict( 
+          VecBuilder.fill(
+            (0D), 
+            (0D)), 
+          WHEEL_TIME_AGGREGATOR.getAggregated());                   
+      }
+    } finally {
+      WHEEL_UPDATE_LOCK.writeLock().unlock();
+    }
+  }
+
+  /**
+   * <p>Adds a new {@link VisionObservation observation} instance, containing the necessary information to calculate accurate vision values, to the callback's work-stealing 
+   * execution thread-pool.
+   * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
+   * impacts on the robot-main thread.
+   * @param Observation Vision observation to add to the processing pool
+   * @see #add(WheelObservation)
+   */
+  public synchronized Future<?> add(final VisionObservation Observation) {
+    return CALLBACK
+      .submit(() -> resolve(Objects.requireNonNull(Observation)));
+  }
+
+  /**
+   * Updates vision odometry given the provided observation's measurement
+   * @param Observation Pooled value, which has not yet been processed, and represents a single measurement that occurred at a given point in time
+   */
+  @Async
+  private synchronized void resolve(final VisionObservation Observation) {
     try {
       VISION_UPDATE_LOCK.writeLock().lock();
-      VISION_UPDATE_QUEUE
-        .offer(Objects.requireNonNull(Observation));
+      // <--- TODO: Vision Resolution
     } finally {
       VISION_UPDATE_LOCK.writeLock().unlock();
     }
@@ -388,15 +392,6 @@ public final class Manager implements Singleton<Manager>, Runnable {
       }
     }
     return Result;
-  } static {
-    Robot
-      .getInstance()
-      .add(() -> {
-        if(Instance != (null)) {
-          Instance.run();
-        }
-      }, 
-    UPDATE_FREQUENCY);
   }
 
   /**
@@ -424,7 +419,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
    * @throws java.util.NoSuchElementException When a sample cannot be found for the current time
    */
   public Pose2d getVehicleOdometry() {
-    return getVehicleOdometry(DISCRETE_AGGREGATOR.attain());
+    return getVehicleOdometry(WHEEL_TIME_AGGREGATOR.attain());
   }
 
   /**
