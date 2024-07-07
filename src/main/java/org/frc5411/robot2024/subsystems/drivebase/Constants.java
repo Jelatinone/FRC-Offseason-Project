@@ -14,10 +14,15 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
+import org.frc5411.lib.coordination.archetype.HeadingCoordinator;
+import org.frc5411.lib.coordination.archetype.TeleoperatedCoordinator;
+import org.frc5411.lib.external.SwerveSetpointGenerator;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.module.Limit;
 import org.frc5411.lib.nascent.archetype.PIDController;
+import org.frc5411.lib.nascent.archetype.ProfiledPIDController;
 import org.frc5411.lib.utility.Figures;
+import org.frc5411.robot2024.Manager;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
@@ -25,6 +30,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -39,6 +45,7 @@ import com.revrobotics.CANSparkMax;
 
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -155,8 +162,17 @@ public class Constants {
     static Double LINEAR_VELOCITY = (4.8D);
     static Double LINEAR_ACCELERATION = LINEAR_VELOCITY * (5D);
     static Double ANGULAR_VELOCITY = LINEAR_VELOCITY / RADIUS;
+    static Limit LIMITS = new Limit(LINEAR_VELOCITY, LINEAR_ACCELERATION, ANGULAR_VELOCITY);
+
+    static HeadingCoordinator HEADING_COORDINATOR = new HeadingCoordinator(new ProfiledPIDController(HEADING_COORDINATOR_DESCRIPTOR), () -> Manager.getInstance().getVehicleOdometry().getRotation());
+    static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);
 
     static Vector<N2> DEVIATIONS = VecBuilder.fill((25e-2D),(25e-2D)); 
+
+    static Translation2d[] LOCATIONS = Stream.of(Module.values()).map((Module) -> Module.get().Position).toArray(Translation2d[]::new);
+
+    static SwerveDriveKinematics KINEMATICS = new SwerveDriveKinematics(LOCATIONS);
+    static SwerveSetpointGenerator GENERATOR = new SwerveSetpointGenerator(KINEMATICS, LOCATIONS);
 
     static Pose2d PRESET = new Pose2d(); 
   }

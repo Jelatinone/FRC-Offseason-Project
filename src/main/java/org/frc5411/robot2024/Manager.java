@@ -58,6 +58,7 @@ import java.io.Serial;
 import java.util.function.Supplier;
 import java.util.ArrayDeque;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -137,7 +138,6 @@ public final class Manager implements Singleton<Manager>, Runnable {
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
     KINEMATICS = DrivebaseSubsystem
-      .getInstance()
       .getKinematics();
     ODOMETRY = DrivebaseSubsystem
       .getInstance()
@@ -350,7 +350,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
     try {
       WHEEL_UPDATE_LOCK.writeLock().lock();
       WHEEL_UPDATE_QUEUE
-        .offer(Observation);
+        .offer(Objects.requireNonNull(Observation));
     } finally {
       WHEEL_UPDATE_LOCK.writeLock().unlock();
     }
@@ -367,7 +367,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
     try {
       VISION_UPDATE_LOCK.writeLock().lock();
       VISION_UPDATE_QUEUE
-        .offer(Observation);
+        .offer(Objects.requireNonNull(Observation));
     } finally {
       VISION_UPDATE_LOCK.writeLock().unlock();
     }
@@ -389,11 +389,13 @@ public final class Manager implements Singleton<Manager>, Runnable {
     }
     return Result;
   } static {
-    Robot.add(() -> {
-      if(Instance != (null)) {
-        Instance.run();
-      }
-    }, 
+    Robot
+      .getInstance()
+      .add(() -> {
+        if(Instance != (null)) {
+          Instance.run();
+        }
+      }, 
     UPDATE_FREQUENCY);
   }
 

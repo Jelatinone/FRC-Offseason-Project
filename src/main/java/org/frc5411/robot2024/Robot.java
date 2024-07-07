@@ -246,7 +246,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * @param Callback Periodic operation to perform at an interval
    * @param Period   Time interval (discrete time interval, period, etc.) upon which the operation is scheduled to run at
    */
-  public static void add(final Runnable Callback, final Double Period) {
+  public void add(final Runnable Callback, final Double Period) {
     synchronized(Robot.class) {
       Instance.CALLBACKS.add(new Callback(Callback, 1 / Period));
     }

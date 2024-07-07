@@ -15,9 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.coordination.archetype.HeadingCoordinator;
-import org.frc5411.lib.coordination.archetype.TeleoperatedCoordinator;
-import org.frc5411.lib.external.SwerveSetpointGenerator;
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 import org.frc5411.lib.instrument.gyroscope.archetype.PigeonGyroscope;
 import org.frc5411.lib.instrument.module.Limit;
@@ -25,7 +22,6 @@ import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Setpoint;
 import org.frc5411.lib.instrument.module.archetype.MockModule;
 import org.frc5411.lib.instrument.module.archetype.SparkModule;
-import org.frc5411.lib.nascent.archetype.ProfiledPIDController;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
@@ -37,7 +33,6 @@ import org.frc5411.robot2024.Manager.WheelObservation;
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.*;
 import edu.wpi.first.math.numbers.N4;
@@ -86,17 +81,10 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Module<?,?>,N4> MODULES;
-  Gyroscope<?> GYROSCOPE;
   Module<?,?> IDENTITY;
-  Translation2d[] LOCATIONS;
+  Gyroscope<?> GYROSCOPE;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
-  SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
-  SwerveSetpointGenerator GENERATOR;
-  Limit LIMITS;
-  //---------------------------------------------------------------------[Coordinators]-------------------------------------------------------------------------//
-  TeleoperatedCoordinator TELEOPERATED_COORDINATOR;
-  HeadingCoordinator HEADING_COORDINATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
   static volatile State Mode;
@@ -117,10 +105,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
               .complete(MockModule::new))
         .toArray(Module[]::new)
     );
-    LOCATIONS = MODULES
-      .stream()
-      .map((Module) -> Module.getDescriptor().Position)
-      .toArray(Translation2d[]::new);
     GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR
       .complete(PigeonGyroscope::new);
     IDENTITY = MODULES
@@ -131,7 +115,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       .forEach(Module::periodic);
     GYROSCOPE
       .periodic();
-    KINEMATICS = new SwerveDriveKinematics(LOCATIONS);
     ODOMETRY = new SwerveDriveOdometry(
       KINEMATICS, 
       getGyroscopePosition()
@@ -139,23 +122,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       getModulePositions(),
       PRESET
     );
-    GENERATOR = SwerveSetpointGenerator
-      .builder()
-      .kinematics(KINEMATICS)
-      .moduleLocations(LOCATIONS)
-      .build();
-    LIMITS = Limit
-      .builder()
-      .TranslationalVelocity(LINEAR_VELOCITY)
-      .TranslationalAcceleration(LINEAR_ACCELERATION)
-      .RotationalVelocity(ANGULAR_VELOCITY)
-      .build();
-    TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator(
-      (0D),
-      LIMITS);
-    HEADING_COORDINATOR = new HeadingCoordinator(
-      new ProfiledPIDController(Constants.HEADING_COORDINATOR_DESCRIPTOR), 
-      () -> Manager.getInstance().getVehicleOdometry().getRotation());
     Mode = State.RELATIVE;
     Effort = new Setpoint(
       new ChassisSpeeds(), 
@@ -233,12 +199,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     Logger.recordOutput(
       String.format(
         ("%s/Measurement"), getName()),
-      MODULES
-        .stream()
-        .map((Module) -> Module
-          .getMeasurement()
-          .orElse(new SwerveModulePosition(Double.NaN, new Rotation2d(Double.NaN))))
-        .toArray(SwerveModulePosition[]::new)
+      getModulePositions()
     );
     Logger.recordOutput(
       String.format(
@@ -448,7 +409,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .map((Module) -> 
           Module
             .getMeasurement()
-            .orElse(new SwerveModulePosition(Double.NaN, Rotation2d.fromRadians(Double.NaN))))
+            .orElse(new SwerveModulePosition()))
         .toArray(SwerveModulePosition[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
@@ -472,30 +433,30 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   }
 
   /**
+   * Provides the {@link SwerveDriveOdometry odometry} object of this drivebase' chassis instance, which tracks the position and rotation, {@link Pose2d pose}, of the robot
+   * chassis.
+   * @return Odometry object of this instance
+   */
+  public SwerveDriveOdometry getOdometry() {
+    return ODOMETRY;
+  }
+
+  /**
    * Provides the {@link SwerveDriveKinematics kinematics} object of this drivebase chassis, with the module locations derived from the locations of the {@link Module descriptors}
    * @return Kinematics object constant of this chassis
-   * @implNote The constant nature of module locations relative to the robot drivebase, the Kinematics object returned is always constant regardless of {@link #getInstance()}
+   * @implNote The returned object of this method is always constants regardless of {@link #getInstance() instance}
    */
-  public SwerveDriveKinematics getKinematics() {
+  public static SwerveDriveKinematics getKinematics() {
     return KINEMATICS;
   }
 
   /**
    * Provides the {@link Limits limit} object of this drivebase, which describes the limits of it's movements in two-dimensional space.
    * @return Limits object of this chassis
-   * @implNote The constant nature of the limits to the robot drivebase, the Limit object returned is always constant regardless of {@link #getInstance()}
+   * @implNote The returned object of this method is always constants regardless of {@link #getInstance() instance}
    */
-  public Limit getLimits() {
+  public static Limit getLimits() {
     return LIMITS;
-  }
-
-  /**
-   * Provide the {@link SwerveDriveOdometry odometry} object of this drivebase chassis instance
-   * @return Odometry object of this instance
-   * @implNote The odometry object returned is not necessarily constant between all {@link #getInstance() instances}
-   */
-  public SwerveDriveOdometry getOdometry() {
-    return ODOMETRY;
   }
 
   /**
