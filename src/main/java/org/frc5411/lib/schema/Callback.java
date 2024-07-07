@@ -19,6 +19,8 @@ import org.frc5411.lib.utility.Aggregator;
 
 import edu.wpi.first.hal.HALUtil;
 
+import java.util.Objects;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -42,7 +44,7 @@ public class Callback {
    * @param Period    Period on which to perform the procedure
    */
   public Callback(final Runnable Procedure, final Double Period) {
-    PROCEDURE = Procedure;
+    PROCEDURE = Objects.requireNonNull(Procedure);
     PERIOD = Period;
     DISCRETE_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1e6, 
@@ -58,9 +60,7 @@ public class Callback {
       if(DISCRETE_AGGREGATOR.acquire() >= PERIOD) {
         DISCRETE_AGGREGATOR.retain(
           DISCRETE_AGGREGATOR.getRetained() + DISCRETE_AGGREGATOR.getAggregated());
-        if(PROCEDURE != (null)) {
-          PROCEDURE.run();
-        }
+        PROCEDURE.run();
       }
     }
   }

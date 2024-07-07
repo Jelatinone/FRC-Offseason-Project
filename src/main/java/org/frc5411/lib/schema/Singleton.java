@@ -70,7 +70,7 @@ public interface Singleton<@NonNull Type> extends Serializable, Closeable, Clone
   default Type clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(
       String.format(
-        ("[%s] Instances Cannot Be Cloned"), 
+        ("%s Instances Cannot Be Cloned"), 
         getClass()
           .getSimpleName()));
   }

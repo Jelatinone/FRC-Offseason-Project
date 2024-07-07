@@ -140,7 +140,11 @@ public class PIDController implements Controller<N2,N1,N1> {
 
   @Override
   public final PIDController clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getSimpleName()));
+    throw new CloneNotSupportedException(
+      String.format(
+        ("%s Instances Cannot Be Cloned"), 
+        getClass()
+          .getSimpleName()));
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override

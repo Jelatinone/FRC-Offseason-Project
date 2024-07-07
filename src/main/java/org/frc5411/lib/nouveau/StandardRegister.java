@@ -123,7 +123,11 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
 
   @Override
   public final StandardRegister clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getCanonicalName()));
+    throw new CloneNotSupportedException(
+      String.format(
+        ("%s Instances Cannot Be Cloned"), 
+        getClass()
+          .getSimpleName()));
   }
 
   @Override

@@ -31,7 +31,8 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
-import org.frc5411.robot2024.subsystems.drivebase.Constants.Identity;
+import org.frc5411.robot2024.Manager;
+import org.frc5411.robot2024.Manager.WheelObservation;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -61,6 +62,8 @@ import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+
+import static org.frc5411.robot2024.subsystems.drivebase.Constants.Identity.*;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
@@ -131,17 +134,10 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     KINEMATICS = new SwerveDriveKinematics(LOCATIONS);
     ODOMETRY = new SwerveDriveOdometry(
       KINEMATICS, 
-      GYROSCOPE
-        .getMeasurement()
-        .map(Rotation3d::toRotation2d)
-        .orElse(Rotation2d.fromRotations(Double.NaN)), 
-      MODULES
-        .stream()
-        .map((Module) -> Module
-          .getMeasurement()
-          .orElseGet(() -> new SwerveModulePosition(Double.NaN, new Rotation2d(Double.NaN))))
-        .toArray(SwerveModulePosition[]::new),
-      Identity.PRESET
+      getGyroscopePosition()
+        .toRotation2d(), 
+      getModulePositions(),
+      PRESET
     );
     GENERATOR = SwerveSetpointGenerator
       .builder()
@@ -150,16 +146,16 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       .build();
     LIMITS = Limit
       .builder()
-      .TranslationalVelocity(Identity.LINEAR_VELOCITY)
-      .TranslationalAcceleration(Identity.LINEAR_ACCELERATION)
-      .RotationalVelocity(Identity.ANGULAR_VELOCITY)
+      .TranslationalVelocity(LINEAR_VELOCITY)
+      .TranslationalAcceleration(LINEAR_ACCELERATION)
+      .RotationalVelocity(ANGULAR_VELOCITY)
       .build();
     TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator(
       (0D),
       LIMITS);
     HEADING_COORDINATOR = new HeadingCoordinator(
       new ProfiledPIDController(Constants.HEADING_COORDINATOR_DESCRIPTOR), 
-      () -> getGyroscopePosition().toRotation2d());
+      () -> Manager.getInstance().getVehicleOdometry().getRotation());
     Mode = State.RELATIVE;
     Effort = new Setpoint(
       new ChassisSpeeds(), 
@@ -241,7 +237,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .stream()
         .map((Module) -> Module
           .getMeasurement()
-          .orElseGet(() -> new SwerveModulePosition(Double.NaN, new Rotation2d(Double.NaN))))
+          .orElse(new SwerveModulePosition(Double.NaN, new Rotation2d(Double.NaN))))
         .toArray(SwerveModulePosition[]::new)
     );
     Logger.recordOutput(
@@ -289,18 +285,17 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
       synchronized(Instance) {
-        DISCRETE_AGGREGATOR.aggregate();
+        DISCRETE_AGGREGATOR
+          .aggregate();      
         final var Demand = Mode
           .apply(TELEOPERATED_COORDINATOR.update());
-        Demand.omegaRadiansPerSecond = HEADING_COORDINATOR
-          .update();
+        Demand.omegaRadiansPerSecond = HEADING_COORDINATOR.update();
         Effort = GENERATOR.generateSetpoint(
           LIMITS, 
           Effort, 
           ChassisSpeeds.discretize(
             Demand,
-            DISCRETE_AGGREGATOR
-              .getAggregated()), 
+            DISCRETE_AGGREGATOR.getAggregated()), 
           DISCRETE_AGGREGATOR.getAggregated());
         GYROSCOPE
           .periodic();
@@ -320,6 +315,20 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           });
       }
     } finally {
+      Manager
+      .getInstance()
+      .add(new WheelObservation(
+        MODULES
+          .stream()
+          .map(Module::getMeasurements)
+          .toList(), 
+        IDENTITY
+          .getTimestamps(), 
+        GYROSCOPE
+          .getMeasurements()
+          .stream()
+          .map(Rotation3d::toRotation2d)
+          .toList()));
       update();
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
@@ -335,8 +344,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       SUBSYSTEM_LOCK.writeLock().lock();
       TELEOPERATED_COORDINATOR
         .coordinate(Objects.requireNonNull(Effort));
-      HEADING_COORDINATOR.coordinate(Rotation2d
-        .fromRotations(Effort.dtheta));
+      HEADING_COORDINATOR
+        .coordinate(Rotation2d.fromRotations(Effort.dtheta));
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
@@ -373,10 +382,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .map((Module) -> 
           Module
             .getState()
-            .map((Option) -> {
-              Option.speedMetersPerSecond *= Module.getDescriptor().Limits.TranslationalVelocity();
-              return Option;
-            })
             .orElseThrow())
         .toArray(SwerveModuleState[]::new);
     } finally {
@@ -396,7 +401,9 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       return MODULES
         .stream()
         .map((Module) -> 
-          Module.getInput().orElseThrow())
+          Module
+            .getInput()
+            .orElseThrow())
         .toArray(SwerveModuleState[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
@@ -415,7 +422,9 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       return MODULES
         .stream()
         .map((Module) -> 
-          Module.getOutput().orElseThrow())
+          Module
+            .getOutput()
+            .orElseThrow())
         .toArray(SwerveModuleState[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
@@ -426,7 +435,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    * Provides the current position of all child {@link Module modules} of this drivebase as a {@link SwerveModulePosition} object
    * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Module#getMeasurement() measurement} values
    * @return Array (ordered) of positions of each module
-   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link org.frc5411.robot2024.Manager}
+   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager#getVehicleOdometry(Double) Manager}
    */
   public SwerveModulePosition[] getModulePositions() {
     try {
@@ -434,7 +443,9 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       return MODULES
         .stream()
         .map((Module) -> 
-          Module.getMeasurement().orElse(new SwerveModulePosition(Double.NaN, Rotation2d.fromRadians(Double.NaN))))
+          Module
+            .getMeasurement()
+            .orElse(new SwerveModulePosition(Double.NaN, Rotation2d.fromRadians(Double.NaN))))
         .toArray(SwerveModulePosition[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
@@ -445,16 +456,43 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    * Provides the current position of child {@link Gyroscope gyroscope} of this drivebase as a {@link Rotation3d} object
    * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Gyroscope#getMeasurement() measurement} values
    * @return Gyroscope measured position on axes x (roll), y (pitch), and z (yaw)
-   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link org.frc5411.robot2024.Manager}
+   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager#getVehicleOdometry(Double) Manager}
    */
   public Rotation3d getGyroscopePosition() {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
       return GYROSCOPE.getMeasurement()
-        .orElse(new Rotation3d(Double.NaN, Double.NaN, Double.NaN));
+        .orElse(new Rotation3d());
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
     } 
+  }
+
+  /**
+   * Provides the {@link SwerveDriveKinematics kinematics} object of this drivebase chassis, with the module locations derived from the locations of the {@link Module descriptors}
+   * @return Kinematics object constant of this chassis
+   * @implNote The constant nature of module locations relative to the robot drivebase, the Kinematics object returned is always constant regardless of {@link #getInstance()}
+   */
+  public SwerveDriveKinematics getKinematics() {
+    return KINEMATICS;
+  }
+
+  /**
+   * Provides the {@link Limits limit} object of this drivebase, which describes the limits of it's movements in two-dimensional space.
+   * @return Limits object of this chassis
+   * @implNote The constant nature of the limits to the robot drivebase, the Limit object returned is always constant regardless of {@link #getInstance()}
+   */
+  public Limit getLimits() {
+    return LIMITS;
+  }
+
+  /**
+   * Provide the {@link SwerveDriveOdometry odometry} object of this drivebase chassis instance
+   * @return Odometry object of this instance
+   * @implNote The odometry object returned is not necessarily constant between all {@link #getInstance() instances}
+   */
+  public SwerveDriveOdometry getOdometry() {
+    return ODOMETRY;
   }
 
   /**
@@ -486,9 +524,9 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
    * Control based on the detection of objects located on the field, i.e. Object-Oriented; driving with respect
    * to game pieces and field elements.
    */
-  OBJECTIVE((Twist) ->
-    (null)
-  ),
+  OBJECTIVE((Twist) -> {
+      throw new UnsupportedOperationException();
+  }),
 
   /**
    * Control based on the direction of the absolute rotation (yaw) of the gyroscope , i.e. Field Oriented; driving
@@ -499,7 +537,10 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       Twist.dx, 
       Twist.dy, 
       Twist.dtheta, 
-      new Rotation2d())
+      Manager
+        .getInstance()
+        .getVehicleOdometry()
+        .getRotation())
   ),
 
   /**
@@ -511,7 +552,10 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       Twist.dx, 
       Twist.dy, 
       Twist.dtheta, 
-      new Rotation2d())
+      Manager
+        .getInstance()
+        .getVehicleOdometry()
+        .getRotation())
   );
 
   private final Function<Twist2d, ChassisSpeeds> FUNCTION;

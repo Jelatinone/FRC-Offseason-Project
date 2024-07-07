@@ -21,7 +21,6 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -64,7 +63,11 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public final Module<Controller,Encoder> clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException();
+    throw new CloneNotSupportedException(
+      String.format(
+        ("%s Instances Cannot Be Cloned"), 
+        getClass()
+          .getSimpleName()));
   }
 
   @Override
@@ -86,10 +89,10 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
           (Input.speedMetersPerSecond = unwrap(
             DESCRIPTION.TranslationalFeedback.calculate(
               VecBuilder.fill(
-                STATUS.TranslationalVelocity, 
+                Output.speedMetersPerSecond, 
                 State.speedMetersPerSecond 
                             * 
-                Math.cos(Units.rotationsToRadians(unwrap(DESCRIPTION.RotationalFeedback.getError()))))
+                Math.cos(unwrap(DESCRIPTION.RotationalFeedback.getError())))
               )
             )
           )

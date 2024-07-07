@@ -50,7 +50,11 @@ public abstract class Gyroscope<Hardware> implements Component<Rotation3d> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public final Gyroscope<Hardware> clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException();
+    throw new CloneNotSupportedException(
+      String.format(
+        ("%s Instances Cannot Be Cloned"), 
+        getClass()
+          .getSimpleName()));
   }
 
   @Override

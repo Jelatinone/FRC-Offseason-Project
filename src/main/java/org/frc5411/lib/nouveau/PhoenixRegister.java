@@ -139,7 +139,11 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
 
   @Override
   public final PhoenixRegister clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(String.format(("[%s] Instances Cannot Be Cloned"), getClass().getSimpleName()));
+    throw new CloneNotSupportedException(
+      String.format(
+        ("%s Instances Cannot Be Cloned"), 
+        getClass()
+          .getSimpleName()));
   }
 
   @Override
