@@ -72,7 +72,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
 
   @Override
   public synchronized SwerveModuleState set(@NonNull SwerveModuleState Demand) {
-    //TODO: Implement Orbit-style module acceleration limits (forward, skid, tilt, etc)
+    // <--- TODO: Implement Orbit-style module acceleration limits (forward, skid, tilt, etc)
     STATUS.setState(Demand = SwerveModuleState.optimize(Demand, getOutput().orElseThrow().angle));
     return Demand;
   }

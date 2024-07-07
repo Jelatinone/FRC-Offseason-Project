@@ -49,6 +49,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N5;
+import edu.wpi.first.units.Measure;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
@@ -96,6 +97,7 @@ public final class Manager implements Singleton<Manager> {
   static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Aggregator<Double> WHEEL_TIME_AGGREGATOR;
+  static Aggregator<Double> VISION_TIME_AGGREGATOR;
 
   static @NonFinal Integer MODULES;
 
@@ -184,6 +186,9 @@ public final class Manager implements Singleton<Manager> {
   } static {
     //<--- Construct static fields --->
     WHEEL_TIME_AGGREGATOR = new Aggregator<>(
+      () -> HALUtil.getFPGATime() / 1e6, 
+      (Previous, Current) -> Current - Previous);
+    VISION_TIME_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1e6, 
       (Previous, Current) -> Current - Previous);
   }
@@ -318,9 +323,15 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final WheelObservation Observation) {
     try {
       WHEEL_UPDATE_LOCK.writeLock().lock();
+      WHEEL_TIME_AGGREGATOR.aggregate();
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
       for(Integer Update = (0); Update < Updates; Update++) {
+        FILTER.predict( 
+          VecBuilder.fill(
+            (0D), 
+            (0D)), 
+          WHEEL_TIME_AGGREGATOR.getAggregated());     
         final var Positions = new SwerveModulePosition[MODULES];
         final var Deltas = new SwerveModulePosition[MODULES];
         for(Integer Module = (0); Module < MODULES; Module++) {
@@ -332,18 +343,14 @@ public final class Manager implements Singleton<Manager> {
         }   
         Measured = KINEMATICS.toTwist2d(Deltas);
         Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
-          Observation.Rotations().get(Update):
+          Observation
+            .Rotations().get(Update):
           Rotation
-            .plus(new Rotation2d(KINEMATICS.toTwist2d(Deltas).dtheta));
+            .plus(new Rotation2d(Measured.dtheta));
         VEHICLE_ODOMETRY.addSample(
           Observation.Timestamps().get(Update), 
           ODOMETRY.update(Rotation, Positions)
-        );  
-        FILTER.predict( 
-          VecBuilder.fill(
-            (0D), 
-            (0D)), 
-          WHEEL_TIME_AGGREGATOR.getAggregated());                   
+        );                
       }
     } finally {
       WHEEL_UPDATE_LOCK.writeLock().unlock();
@@ -371,6 +378,7 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final VisionObservation Observation) {
     try {
       VISION_UPDATE_LOCK.writeLock().lock();
+      VISION_TIME_AGGREGATOR.aggregate();
       // <--- TODO: Vision Resolution
     } finally {
       VISION_UPDATE_LOCK.writeLock().unlock();
