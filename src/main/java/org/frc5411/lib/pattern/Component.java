@@ -202,7 +202,7 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * Provides a list of all the timestamps at which {@link #getMeasurements() measurements} have been Reported during the last {@link #update(Report)}
    * cycle until now. This is most often sourced through a queue from a relevant {@link Register} updated asynchronously of the main-robot thread.
    * @return Latest list of measurement timestamps
-   * @see Register#timestamp() timestamp queues
+   * @see Register#timestamp() Timestamp queues
    */
   default List<Double> getTimestamps() {
     return DoubleStream.of(getReport().getTimestamps()).boxed().toList();
@@ -223,9 +223,10 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * {@link #update(Report)} cycle until now. This is most often sourced through a queue from a relevant {@link Register} updated asynchronously
    *  of the main-robot thread.
    * @return Latest list of measurements
-   * @see Register#register(Object) registering queues
+   * @see Register#register(Object) Measurement queues
+   * @throws NullPointerException When {@link Report#getMeasurements() measurements} has not been properly initialized
    */
   default List<Measurement> getMeasurements() {
-    return List.of(getReport().getMeasurements());
+    return List.of(getReport().getMeasurements().clone());
   }
 }

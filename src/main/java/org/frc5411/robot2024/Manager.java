@@ -291,7 +291,7 @@ public final class Manager implements Singleton<Manager>, Runnable {
               Observation.Timestamps().get(Update), 
               ODOMETRY.update(Rotation, Positions)
             );  
-            FILTER.predict( // <--- Vision Error Propagation   
+            FILTER.predict( 
               VecBuilder.fill(
                 (0D), 
                 (0D)), 
