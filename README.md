@@ -1,15 +1,15 @@
 # ![Prosper-Engineering-Team](resources/Banner.png)
 # Offseason Project Robot
 
-[![Build Status](https://github.com/Jelatinone/FRC-Forte-Rewrite/actions/workflows/Build.yml/badge.svg?branch=Production)](https://github.com/Jelatinone/FRC-Forte-Rewrite/actions/workflows/Build.yml)
-[![GitHub Contributors](https://img.shields.io/github/contributors/Jelatinone/FRC-Forte-Rewrite.svg?branch=Production)](https://github.com/Jelatinone/FRC-Forte-Rewrite/graphs/contributors)
-[![GitHub Issues](https://img.shields.io/github/issues/Jelatinone/FRC-Forte-Rewrite.svg?branch=Production)](https://github.com/Jelatinone/FRC-Forte-Rewrite/graphs/issues)
+[![Build Status](https://github.com/Prosper-FRC/robot-offseaosn-synth/actions/workflows/Build.yml/badge.svg?branch=Production)](https://github.com/Prosper-FRC/robot-offseaosn-synth/actions/workflows/Build.yml)
+[![GitHub Contributors](https://img.shields.io/github/contributors/Prosper-FRC/robot-offseaosn-synth.svg?branch=Production)](https://github.com/Prosper-FRC/robot-offseaosn-synth/graphs/contributors)
+[![GitHub Issues](https://img.shields.io/github/issues/Prosper-FRC/robot-offseaosn-synth.svg?branch=Production)](https://github.com/Prosper-FRC/robot-offseaosn-synth/graphs/issues)
 
 ## Installation & Setup
 
 Below is a list of instructions to properly *build* the project, see [requirements](##Requirements)
 
-1. Clone the repository with `git clone https://github.com/Jelatinone/FRC-Forte-Rewrite.git`
+1. Clone the repository with `git clone https://github.com/Prosper-FRC/robot-offseaosn-synth.git`
 2. Build the repository with `./gradlew build` or `./gradlew build` if you do not have a local gradle installation
 
 ## Requirements
