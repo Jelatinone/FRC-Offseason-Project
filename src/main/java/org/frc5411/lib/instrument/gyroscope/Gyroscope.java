@@ -44,7 +44,8 @@ public abstract class Gyroscope<Hardware> implements Component<Rotation3d> {
    * @param Description Real-world description of the system, contains relevant constants to the operation of the gyroscope
    */
   protected Gyroscope(final Descriptor<Hardware> Description) {
-    DESCRIPTION = Objects.requireNonNull(Description);
+    DESCRIPTION = Objects
+      .requireNonNull(Description);
     STATUS = new ReportAutoLogged();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
