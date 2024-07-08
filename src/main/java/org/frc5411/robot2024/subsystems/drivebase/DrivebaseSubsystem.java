@@ -14,8 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
-import org.frc5411.lib.external.SwerveSetpointGenerator;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.external.SwerveSetpointGenerator;
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 import org.frc5411.lib.instrument.gyroscope.archetype.PigeonGyroscope;
 import org.frc5411.lib.instrument.module.Limit;
@@ -28,6 +28,7 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
+
 import org.frc5411.robot2024.Manager;
 import org.frc5411.robot2024.Manager.WheelObservation;
 
@@ -256,12 +257,11 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     );
   }
 
-  @SuppressWarnings("SynchronizeOnNonFinalField")
   @Override
   public synchronized void periodic() {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
-      synchronized(Instance) {
+      synchronized(DrivebaseSubsystem.class) {
         DISCRETE_AGGREGATOR
           .aggregate();      
         final var Demand = Mode

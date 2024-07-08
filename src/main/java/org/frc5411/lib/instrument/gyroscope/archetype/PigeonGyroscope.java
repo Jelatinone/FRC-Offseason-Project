@@ -18,7 +18,6 @@ package org.frc5411.lib.instrument.gyroscope.archetype;
 import org.frc5411.lib.instrument.gyroscope.Descriptor;
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 import org.frc5411.lib.instrument.gyroscope.Report;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.nouveau.StandardRegister;
 import org.frc5411.lib.utility.Figures;
 

@@ -14,8 +14,8 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.vision;
-import org.frc5411.lib.pattern.Component;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.instrument.camera.Camera;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
@@ -23,7 +23,7 @@ import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
 
 import edu.wpi.first.hal.HALUtil;
-import edu.wpi.first.math.numbers.N4;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
@@ -59,8 +59,8 @@ public class VisionSubsystem extends Subsystem<Named,State> {
   static ReadWriteLock SUBSYSTEM_LOCK;
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
-  Vector<Component<?>,N4> CAMERAS;
-  Component<?> IDENTITY;
+  Vector<Camera<?>,N2> CAMERAS;
+  Camera<?> IDENTITY;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
 
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
@@ -120,12 +120,11 @@ public class VisionSubsystem extends Subsystem<Named,State> {
 
   }
 
-  @SuppressWarnings("SynchronizeOnNonFinalField")
   @Override
   public synchronized void periodic() {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
-      synchronized(Instance) {
+      synchronized(VisionSubsystem.class) {
 
       }
     } finally {

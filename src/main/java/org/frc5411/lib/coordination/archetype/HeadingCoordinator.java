@@ -23,8 +23,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 
-import java.util.function.Supplier;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;

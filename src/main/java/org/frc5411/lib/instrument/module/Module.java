@@ -52,7 +52,8 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
    * @param Description Real-world description of the system, contains relevant constants to the operation of the module
    */
   protected Module(final Descriptor<Controller,Encoder> Description) {
-    DESCRIPTION = Objects.requireNonNull(Description);
+    DESCRIPTION = Objects.
+      requireNonNull(Description);
     STATUS = new ReportAutoLogged();
     synchronized(STATUS) {
       STATUS.setState(new SwerveModuleState());

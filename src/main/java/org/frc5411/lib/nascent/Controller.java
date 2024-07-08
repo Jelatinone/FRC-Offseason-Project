@@ -15,11 +15,11 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nascent;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
-import edu.wpi.first.math.Num;
-import edu.wpi.first.math.numbers.N2;
-
 import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.utility.Vector;
+
+import edu.wpi.first.math.Num;
+import edu.wpi.first.math.numbers.N2;
 
 import lombok.NonNull;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//

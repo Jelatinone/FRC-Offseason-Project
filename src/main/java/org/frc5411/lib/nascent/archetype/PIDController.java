@@ -6,7 +6,7 @@
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
-//  
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,15 +15,15 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nascent.archetype;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
-import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.hal.HALUtil;
-import edu.wpi.first.math.VecBuilder;
-
 import org.frc5411.lib.external.LoggedTunableNumber;
 import org.frc5411.lib.nascent.Controller;
 import org.frc5411.lib.pattern.Report;
+
+import edu.wpi.first.hal.HALUtil;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
 
 import lombok.AccessLevel;
 import lombok.Builder;

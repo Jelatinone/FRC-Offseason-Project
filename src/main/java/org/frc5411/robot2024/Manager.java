@@ -15,19 +15,15 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 
-import org.frc5411.lib.instrument.module.Setpoint;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Figures;
 import org.frc5411.lib.utility.Geometry;
-import org.frc5411.robot2024.Constants.Preferences;
-import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.urcl.URCL;
 
-import com.jcabi.aspects.Async;
+import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
+import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Matrix;
@@ -43,39 +39,39 @@ import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
-import edu.wpi.first.math.kinematics.SwerveDriveWheelPositions;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N5;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+
+import com.jcabi.aspects.Async;
+
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.urcl.URCL;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.function.Supplier;
 import java.util.ArrayDeque;
-import java.util.Optional;
+import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
-import static org.frc5411.robot2024.Constants.Robot.*;
-import static org.frc5411.robot2024.Constants.Preferences.*;
-import static org.frc5411.robot2024.Constants.Keybindings.*;
 import static edu.wpi.first.math.MathUtil.*;
+import static org.frc5411.robot2024.Constants.Keybindings.*;
+import static org.frc5411.robot2024.Constants.Preferences.*;
+import static org.frc5411.robot2024.Constants.Robot.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -127,16 +123,21 @@ public final class Manager implements Singleton<Manager> {
    */
   private Manager() {
     //<--- Fetch All Managed Subsystems --->
-    DrivebaseSubsystem.getInstance();
-
+    DrivebaseSubsystem
+      .getInstance();
+    VisionSubsystem
+      .getInstance();
     //<--- Initialize Variables --->
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));
-    CALLBACK = Executors.newWorkStealingPool(PARALLEL_THREADS);
+    CALLBACK = Executors
+      .newWorkStealingPool(PARALLEL_THREADS);
     WHEEL_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
     VISION_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
-    VEHICLE_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
-    FIELD_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
+    VEHICLE_ODOMETRY = TimeInterpolatableBuffer
+      .createBuffer(BUFFER_SIZE);
+    FIELD_ODOMETRY = TimeInterpolatableBuffer
+      .createBuffer(BUFFER_SIZE);
     FILTER = new ExtendedKalmanFilter<>(
       Nat.N2(),
       Nat.N2(),
@@ -161,8 +162,6 @@ public final class Manager implements Singleton<Manager> {
       .getGyroscopePosition()
       .toRotation2d();
 
-    MODULES = Position.length;
-
     //<--- Base Sampling --->
     VEHICLE_ODOMETRY.addSample(
       WHEEL_TIME_AGGREGATOR.attain(), 
@@ -181,8 +180,12 @@ public final class Manager implements Singleton<Manager> {
     Robot
       .getInstance()
       .add(
-        Instance::update,
+        () -> {
+          if(Instance != (null)) 
+            Instance.update();
+        },
         UPDATE_FREQUENCY);
+    MODULES = Position.length;    
   } static {
     //<--- Construct static fields --->
     WHEEL_TIME_AGGREGATOR = new Aggregator<>(
@@ -291,7 +294,7 @@ public final class Manager implements Singleton<Manager> {
    * @param Demand Desired speeds of the drivebase's inputs, which have been properly configured
    */
   public synchronized void add(final ChassisSpeeds Demand) {
-		Predicted = Geometry
+    Predicted = Geometry
       .log(Geometry
         .exp(new Twist2d(
           Demand.vxMetersPerSecond,
