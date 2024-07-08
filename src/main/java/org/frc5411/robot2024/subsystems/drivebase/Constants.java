@@ -14,12 +14,12 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.drivebase;
-import org.frc5411.lib.coordination.archetype.HeadingCoordinator;
-import org.frc5411.lib.coordination.archetype.TeleoperatedCoordinator;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.module.Limit;
 import org.frc5411.lib.nascent.archetype.PIDController;
 import org.frc5411.lib.nascent.archetype.ProfiledPIDController;
+import org.frc5411.lib.coordination.archetype.HeadingCoordinator;
+import org.frc5411.lib.coordination.archetype.TeleoperatedCoordinator;
 import org.frc5411.lib.utility.Figures;
 import org.frc5411.robot2024.Manager;
 

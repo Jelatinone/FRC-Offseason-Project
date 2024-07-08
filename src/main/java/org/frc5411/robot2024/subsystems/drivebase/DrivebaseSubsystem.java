@@ -32,6 +32,7 @@ import org.frc5411.robot2024.Manager;
 import org.frc5411.robot2024.Manager.WheelObservation;
 
 import edu.wpi.first.hal.HALUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -329,6 +330,20 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
   }
+
+  /**
+   * Force resets this Subsystem's states and hardware, may fix issues. Should ideally not be called repeatedly or often such as during 
+   * {@link #periodic()}.
+   */
+  public synchronized void reset() {
+    try {
+      SUBSYSTEM_LOCK.writeLock().lock();
+      GYROSCOPE
+        .reset();
+    } finally {
+      SUBSYSTEM_LOCK.writeLock().unlock();
+    }
+  }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
 
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
@@ -499,6 +514,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
  * robot-oriented (Relative) control differs from field-oriented through the use of a gyroscope as the reference of rotation.
  */
 enum State implements Function<Twist2d, ChassisSpeeds> {
+  //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
   /**
    * Control based on the detection of objects located on the field, i.e. Object-Oriented; driving with respect
    * to game pieces and field elements.
@@ -536,9 +552,9 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
         .getVehicleOdometry()
         .getRotation())
   );
-
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   private final Function<Twist2d, ChassisSpeeds> FUNCTION;
-  
+  //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * State Constructor.
    * @param Function Bi-function which consumes both the desired rotation and translation to produce speeds for the demand.
@@ -546,7 +562,7 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
   State(final Function<Twist2d, ChassisSpeeds> Function) {
     FUNCTION = Function;
   }
-
+  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
   /**
    * Applies the function's given arguments of Translation and Rotation to create ChassisSpeeds.
    * @param Twist Demand translation & rotation in two-dimensional space
@@ -557,7 +573,6 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       .apply(Twist);
   }
 }
-
 /**
  * <h1>Named</h1>
  * 
@@ -565,14 +580,11 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
  * These are referred to externally in PathPlanner by their {@link #name() enum name}.
  */
 enum Named implements Registrable {
-
-  /**
-   * Does nothing, simply a placeholder until real commands are added
-   */
-  EMPTY_PLACEHOLDER(new InstantCommand());
-
+  //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
+  RESET$GYROSCOPE(new InstantCommand(() -> DrivebaseSubsystem.getInstance().reset()));
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   private final Command NAMED_COMMAND;
-
+  //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Named Constructor.
    * @param Command Valid named command to register as a {@link NamedCommands NamedCommand}.
@@ -585,7 +597,7 @@ enum Named implements Registrable {
     }
     register();
   }
-
+  //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public final Command getCommand() {
     return NAMED_COMMAND;

@@ -1,0 +1,226 @@
+//------------------------------------------------------------------------[License]----------------------------------------------------------------------------//
+// Copyright 2024 Cody Washington
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
+package org.frc5411.robot2024.subsystems.vision;
+import org.frc5411.lib.pattern.Component;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.schema.Registrable;
+import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.schema.Subsystem;
+import org.frc5411.lib.utility.Aggregator;
+import org.frc5411.lib.utility.Vector;
+
+import edu.wpi.first.hal.HALUtil;
+import edu.wpi.first.math.numbers.N4;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+
+import com.pathplanner.lib.auto.NamedCommands;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+//------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
+/**
+ *
+ *
+ * <h1>DrivebaseSubsystem</h1>
+ *
+ * <p>Utility class which controls the modules to achieve individual goal set points with an acceptable target range of accuracy and time
+ * efficiency and providing an API for querying new goal states.<p>
+ * 
+ * @see Subsystem
+ * @author Cody Washington
+ * 
+ */
+@FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
+public class VisionSubsystem extends Subsystem<Named,State> {
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  @Serial 
+  static long serialVersionUID = 2571418245449373564L;
+  static ReadWriteLock SUBSYSTEM_LOCK;
+  static Aggregator<Double> DISCRETE_AGGREGATOR;
+  //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
+  Vector<Component<?>,N4> CAMERAS;
+  Component<?> IDENTITY;
+  //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
+
+  //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
+  static volatile VisionSubsystem Instance;
+  static volatile State Mode;
+  //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
+  /**
+   * Drivebase Subsystem Constructor.
+   */
+  private VisionSubsystem() {
+    super(SUBSYSTEM_LOCK, ("Vision-Subsystem"));
+    CAMERAS = Vector
+      .empty();
+    IDENTITY = CAMERAS
+      .stream()
+      .findAny()
+      .orElse((null));
+
+    Mode = State.STALE;
+    DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
+  } static {
+    SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
+    DISCRETE_AGGREGATOR = new Aggregator<>(
+      () -> HALUtil.getFPGATime() / 1e6, 
+      (Previous, Current) -> Current - Previous);
+  }
+  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  @Serial
+  @Override
+  public synchronized VisionSubsystem readResolve() {
+    return Instance;
+  }
+
+  @Serial
+  @Override
+  public synchronized void readObject(final ObjectInputStream Stream) throws IOException, ClassNotFoundException {
+    Stream.defaultReadObject();
+    Instance = (this);
+  }
+
+  @Override
+  public synchronized void close() throws IOException {
+    try {
+      SUBSYSTEM_LOCK.writeLock().lock();
+      synchronized(VisionSubsystem.class) {
+
+        Instance = (null);
+        Mode = (null);
+      }
+    } finally {
+      SUBSYSTEM_LOCK.writeLock().unlock();
+    }
+  }
+
+  @Override
+  public synchronized void update() {
+
+  }
+
+  @SuppressWarnings("SynchronizeOnNonFinalField")
+  @Override
+  public synchronized void periodic() {
+    try {
+      SUBSYSTEM_LOCK.writeLock().lock();
+      synchronized(Instance) {
+
+      }
+    } finally {
+      update();
+      SUBSYSTEM_LOCK.writeLock().unlock();
+    }
+  }
+  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
+
+  //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+  @Override
+  public List<Named> getCommands() {
+    return List.of(Named.values());
+  }
+
+  @Override
+  public State getState() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return Mode;
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+  /**
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
+   * @return This singleton's instance
+   */
+  public static synchronized VisionSubsystem getInstance() {
+    VisionSubsystem Result = Instance;
+    if(Instance == (null)) {
+      synchronized(VisionSubsystem.class) {
+        Result = Instance;
+        if(Instance == (null)) {
+          Instance = Result = new VisionSubsystem();
+        }
+      }
+    }
+    return Result;
+  }
+} 
+//-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
+/**
+ * <h1>State</h1>
+ * 
+ * Represents the named states of operation of vision, which have do not have distinct behavior that differentiate it from other modes of control, but
+ * represent different modes of logic which occur underneath when reading Camera values
+ */
+enum State {
+  //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
+  /**
+   * Represents a stale (or waiting) state of this instance, where {@link VisionSubsystem#periodic()} is not running; therefore the subsystem's 
+   * measurements are considered 'stale' or out-of-date.
+   */
+  STALE,
+
+  /**
+   * Represents an active (or running) state of this instance, where {@link VisionSubsystem#periodic()} is running; therefore the subsystem's 
+   * measurements are considered to be up-to-date (but still possibly in the process of updating).
+   */
+  ACTIVE
+}
+/**
+ * <h1>Named</h1>
+ * 
+ * Represents the named, Pathplanner registrable, commands of this subsystem to run along specific points of an .auto PathPlanner file.
+ * These are referred to externally in PathPlanner by their {@link #name() enum name}.
+ */
+enum Named implements Registrable {
+  //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
+  EMPTY$PLACEHOLDER(new InstantCommand());
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  private final Command NAMED_COMMAND;
+  //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
+  /**
+   * Named Constructor.
+   * @param Command Valid named command to register as a {@link NamedCommands NamedCommand}.
+   */
+  Named(final Command Command) {
+    NAMED_COMMAND = Command;
+    final var Instance = VisionSubsystem.getInstance();
+    if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
+      NAMED_COMMAND.addRequirements(Instance);
+    }
+    register();
+  }
+  //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+  @Override
+  public final Command getCommand() {
+    return NAMED_COMMAND;
+  }
+
+  @Override
+  public final String getName() {
+    return name();
+  }
+}
