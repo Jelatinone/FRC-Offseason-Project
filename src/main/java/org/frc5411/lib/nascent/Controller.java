@@ -49,7 +49,7 @@ public interface Controller<@NonNull States extends Num, @NonNull Inputs extends
   /**
    * Disables continuous input, which allows for the shortest route between two points, a minimum and maximum bound, to be found by
    * considering them the same point.
-   * @see #continuous(Vector)
+   * @see #continuous(edu.wpi.first.math.Vector) 
    */
   default void discontinuous() {}
 

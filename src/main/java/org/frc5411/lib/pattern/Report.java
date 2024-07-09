@@ -42,6 +42,7 @@ import lombok.experimental.FieldDefaults;
  * 
  * @see StructSerializable
  */
+@SuppressWarnings("JavadocDeclaration")
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
 @Setter

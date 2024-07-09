@@ -16,14 +16,17 @@
 package org.frc5411.robot2024.subsystems.vision;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.camera.Camera;
+import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
+import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
@@ -31,6 +34,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.stream.Stream;
 import java.io.Serial;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -61,8 +65,6 @@ public class VisionSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Camera<?>,N2> CAMERAS;
   Camera<?> IDENTITY;
-  //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
-
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile VisionSubsystem Instance;
   static volatile State Mode;
@@ -72,14 +74,23 @@ public class VisionSubsystem extends Subsystem<Named,State> {
    */
   private VisionSubsystem() {
     super(SUBSYSTEM_LOCK, ("Vision-Subsystem"));
-    CAMERAS = Vector
-      .empty();
+    CAMERAS = Vector.fill(
+      Stream.of(Constants.Camera.values())
+        .map((Camera) ->
+          RobotBase.isReal()?
+            Camera.get()
+              .complete((null)):
+            Camera.get()
+              .complete((null)))
+        .toArray(Camera[]::new)
+    );
     IDENTITY = CAMERAS
       .stream()
       .findAny()
-      .orElse((null));
-
+      .orElseThrow();
     Mode = State.STALE;
+    CAMERAS.forEach((Camera) -> 
+      addChild(Camera.getIdentity(), Camera));  
     DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
   } static {
     SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
@@ -106,7 +117,15 @@ public class VisionSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
       synchronized(VisionSubsystem.class) {
-
+        CAMERAS
+          .stream()
+          .parallel()
+          .forEach((Camera) -> {
+            try {
+              Camera
+                .close();
+            } catch (final IOException Ignored) {}
+          });
         Instance = (null);
         Mode = (null);
       }
@@ -117,7 +136,42 @@ public class VisionSubsystem extends Subsystem<Named,State> {
 
   @Override
   public synchronized void update() {
-
+    Logger.recordOutput(
+      String.format(
+        ("%s/Timestamps"), getName()),
+      IDENTITY
+        .getTimestamps()
+        .size()
+    );
+    Logger.recordOutput(
+      String.format(
+        ("%s/Measurements"), getName()),
+      IDENTITY
+        .getMeasurements()
+        .size()
+    );
+    Logger.recordOutput(
+      String.format(
+        ("%s/Latency"), getName()),
+      DISCRETE_AGGREGATOR
+        .attain() 
+            - 
+      IDENTITY
+        .getTimestamp()
+        .orElse(Double.NaN)
+    );    
+    Logger.recordOutput(
+      String.format(
+        ("%s/Connection"), getName()),
+      CAMERAS
+        .stream()
+        .allMatch(Component::getConnection)
+    );
+    Logger.recordOutput(
+      String.format(
+        ("%s/Mode"), getName()),
+      getState()
+    );
   }
 
   @Override
@@ -125,7 +179,10 @@ public class VisionSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.writeLock().lock();
       synchronized(VisionSubsystem.class) {
-
+        CAMERAS
+          .stream()
+          .parallel()
+          .forEach(Component::periodic);
       }
     } finally {
       update();

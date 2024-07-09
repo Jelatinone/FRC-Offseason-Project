@@ -16,15 +16,7 @@
 package org.frc5411.robot2024;
 
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import org.frc5411.lib.schema.Singleton;
-import org.frc5411.lib.schema.Subsystem;
-import org.frc5411.lib.utility.Aggregator;
-import org.frc5411.lib.utility.Figures;
-import org.frc5411.lib.utility.Geometry;
-
-import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
-import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
-
+import com.jcabi.aspects.Async;
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
@@ -44,9 +36,16 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-
-import com.jcabi.aspects.Async;
-
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.schema.Subsystem;
+import org.frc5411.lib.utility.Aggregator;
+import org.frc5411.lib.utility.Figures;
+import org.frc5411.lib.utility.Geometry;
+import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
+import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.urcl.URCL;
 
@@ -64,14 +63,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
-
-import static edu.wpi.first.math.MathUtil.*;
-import static org.frc5411.robot2024.Constants.Keybindings.*;
+import static edu.wpi.first.math.MathUtil.applyDeadband;
 import static org.frc5411.robot2024.Constants.Preferences.*;
-import static org.frc5411.robot2024.Constants.Robot.*;
+import static org.frc5411.robot2024.Constants.Robot.DRIVER;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -232,30 +226,30 @@ public final class Manager implements Singleton<Manager> {
         DrivebaseSubsystem
           .getInstance()
           .apply(new Twist2d(
-            -applyDeadband(
+            applyDeadband(
               DRIVER
                 .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
-                .get()
+                .orElse((() -> 0D))
                 .get(), 
               DRIVER
                 .<Double>getPreference(CONTROL_ZONE_X)
-                .get()),
-            -applyDeadband(
+                .orElse(0D)),
+            applyDeadband(
               DRIVER
                 .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
-                .get()
+                .orElse((() -> 0D))
                 .get(), 
               DRIVER
                 .<Double>getPreference(CONTROL_ZONE_Y)
-                .get()),
-            -applyDeadband(
+                .orElse((0D))),
+            applyDeadband(
               DRIVER
                 .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
-                .get()
+                .orElse((() -> 0D))
                 .get(), 
               DRIVER
                 .<Double>getPreference(CONTROL_ZONE_T)
-                .get())
+                .orElse((0D)))
             )
           ), 
         DrivebaseSubsystem.getInstance()
@@ -290,7 +284,7 @@ public final class Manager implements Singleton<Manager> {
 
   /**
    * Adds a new velocity prediction based on the provided {@link ChassisSpeeds speeds}; which must be properly bounded such that no individual desired module speed is
-   * greater than it's limits, or that that the speeds themselves do not exceed the limits of the drivebase
+   * greater than it's limits, or that the speeds themselves do not exceed the limits of the drivebase
    * @param Demand Desired speeds of the drivebase's inputs, which have been properly configured
    */
   public synchronized void add(final ChassisSpeeds Demand) {
@@ -329,7 +323,7 @@ public final class Manager implements Singleton<Manager> {
       WHEEL_TIME_AGGREGATOR.aggregate();
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
-      for(Integer Update = (0); Update < Updates; Update++) {
+      for(int Update = (0); Update < Updates; Update++) {
         FILTER.predict( 
           VecBuilder.fill(
             (0D), 
@@ -337,7 +331,7 @@ public final class Manager implements Singleton<Manager> {
           WHEEL_TIME_AGGREGATOR.getAggregated());     
         final var Positions = new SwerveModulePosition[MODULES];
         final var Deltas = new SwerveModulePosition[MODULES];
-        for(Integer Module = (0); Module < MODULES; Module++) {
+        for(int Module = (0); Module < MODULES; Module++) {
           Positions[Module] = Observation.Positions().get(Module).get(Update);
           Deltas[Module] = new SwerveModulePosition(
             Positions[Module].distanceMeters - Position[Module].distanceMeters,

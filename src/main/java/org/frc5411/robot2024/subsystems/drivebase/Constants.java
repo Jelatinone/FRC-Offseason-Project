@@ -24,13 +24,10 @@ import org.frc5411.lib.utility.Figures;
 
 import org.frc5411.robot2024.Manager;
 
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -164,8 +161,6 @@ public class Constants {
 
     static HeadingCoordinator HEADING_COORDINATOR = new HeadingCoordinator(new ProfiledPIDController(HEADING_COORDINATOR_DESCRIPTOR), () -> Manager.getInstance().getVehicleOdometry().getRotation());
     static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);
-
-    static Vector<N2> DEVIATIONS = VecBuilder.fill((25e-2D),(25e-2D)); 
 
     static Pose2d PRESET = new Pose2d(); 
   }

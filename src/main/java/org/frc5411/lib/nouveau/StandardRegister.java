@@ -165,7 +165,8 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
 
   @Override
   public synchronized void start() {
-    CALLBACK.startPeriodic(1D/UPDATE_FREQUENCY);
+    CALLBACK
+      .startPeriodic(1D/UPDATE_FREQUENCY);
   }
 
   @Override

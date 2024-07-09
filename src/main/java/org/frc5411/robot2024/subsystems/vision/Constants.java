@@ -15,6 +15,10 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024.subsystems.vision;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import edu.wpi.first.wpilibj.RobotBase;
+
+import java.util.function.Supplier;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -25,7 +29,45 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-public class Constants {
+public class Constants {  
+  //-----------------------------------------------------------------------[Enums]-----------------------------------------------------------------------------//
+  /**
+   * <h1>Camera</h1>
+   * 
+   * @implNote Enum Constants are named {LOCATION}${SIDE} to prevent AdvantageScope from folding the tabs...
+   */
+  @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
+  public enum Camera implements Supplier<org.frc5411.lib.instrument.camera.Descriptor<?>> {
+    //---------------------------------------------------------------------[Values]----------------------------------------------------------------------------//
+    FRONT$LEFT((null)),
+    FRONT$RIGHT((null));
+    //-----------------------------------------------------------------------[Constants]-----------------------------------------------------------------------//
+    org.frc5411.lib.instrument.camera.Descriptor<?> DESCRIPTOR;
+    //---------------------------------------------------------------------[Constructor(s)]--------------------------------------------------------------------//
+    /**
+     * Camera Constructor.
+     * @param Descriptor {@link org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder descriptor builder} which contains the relevant camera constants
+     *              for a real or mock camera to be constructed
+     * @implSpec Each camera enum constant, {@code FRONT_LEFT}; {@code FRONT_RIGHT}; etc., should use the provided base
+     * {@link org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder descriptor builders} from {@link Descriptions} and use
+     * {@link org.frc5411.lib.instrument.camera.Descriptor#clone() Descriptor.clone()} to specify its own descriptor specific to its emplacement on the chassis
+     */
+    Camera(final org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<?> Descriptor) {
+      DESCRIPTOR = Descriptor
+        .Identity(this)
+        .build();
+    }
+    //-----------------------------------------------------------------------[Accessors]-----------------------------------------------------------------------//
+    /**
+     * Provides the descriptor of this enum constant's stored value, which at runtime via {@link RobotBase#isReal()} determines the correct (real or mock) descriptor
+     * to use.
+     * @return Descriptor based on if the robot is real or simulated
+     */
+    @Override
+    public org.frc5411.lib.instrument.camera.Descriptor<?> get() {
+      return DESCRIPTOR;
+    }
+  }
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
 
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//

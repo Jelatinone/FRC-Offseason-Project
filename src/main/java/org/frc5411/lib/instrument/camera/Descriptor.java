@@ -17,9 +17,9 @@ package org.frc5411.lib.instrument.camera;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.networktables.NetworkTable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.experimental.FieldDefaults;
@@ -38,7 +38,7 @@ public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Com
   Transform3d Position;
   Enum<?> Identity;
   Hardware Hardware;
-  NetworkTable Provider;
+  Debouncer Debounce;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public Descriptor<Hardware> clone() {
@@ -46,6 +46,6 @@ public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Com
       Position,
       Identity,
       Hardware,
-      Provider);
+      Debounce);
   }
 }

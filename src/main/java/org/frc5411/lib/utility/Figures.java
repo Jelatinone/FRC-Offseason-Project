@@ -38,6 +38,7 @@ import lombok.experimental.FieldDefaults;
  * 
  * @author Cody Washington (@Jelatinone) 
  */
+@SuppressWarnings("ALL")
 @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
 public class Figures {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
@@ -92,8 +93,6 @@ public class Figures {
    * Performs a standard integration of a {@link UnivariateFunction} along the given bounds using the {@link TrapezoidIntegrator trapezoidal integration} method.
    * @param Evaluations Number of evaluations to perform; more evaluations provide more accuracy, but are more expensive
    * @param Function    Function to integrate along the defined bounds
-   * @param Lower       Lower bound of integral
-   * @param Upper       Upper bound of integral
    * @return Evaluation of the integral
    */
   public static Number integrate(final Number Evaluations, UnivariateFunction Function) {

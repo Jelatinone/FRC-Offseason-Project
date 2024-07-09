@@ -23,6 +23,7 @@ import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Setpoint;
 import org.frc5411.lib.instrument.module.archetype.MockModule;
 import org.frc5411.lib.instrument.module.archetype.SparkModule;
+import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
@@ -176,10 +177,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           GYROSCOPE
             .close();
         } catch (final IOException Ignored) {}
-        try {
-          IDENTITY
-            .close();
-        } catch (final IOException Ignored) {}
         MODULES
           .stream()
           .parallel()
@@ -215,6 +212,23 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     );
     Logger.recordOutput(
       String.format(
+        ("%s/Latency"), getName()),
+      DISCRETE_AGGREGATOR
+        .attain() 
+            - 
+      IDENTITY
+        .getTimestamp()
+        .orElse(Double.NaN)
+    );    
+    Logger.recordOutput(
+      String.format(
+        ("%s/Connection"), getName()),
+      MODULES
+        .stream()
+        .allMatch(Component::getConnection)
+    );    
+    Logger.recordOutput(
+      String.format(
         ("%s/Measurement"), getName()),
       getModulePositions()
     );
@@ -237,23 +251,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       String.format(
         ("%s/Mode"), getName()),
       getState()
-    );
-    Logger.recordOutput(
-      String.format(
-        ("%s/Connection"), getName()),
-      MODULES
-        .stream()
-        .allMatch(Module::getConnection)
-    );
-    Logger.recordOutput(
-      String.format(
-        ("%s/Latency"), getName()),
-      DISCRETE_AGGREGATOR
-        .attain() 
-            - 
-      IDENTITY
-        .getTimestamp()
-        .orElse(Double.NaN)
     );
   }
 
@@ -463,7 +460,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   }
 
   /**
-   * Provides the {@link SwerveDriveOdometry odometry} object of this drivebase' chassis instance, which tracks the position and rotation, {@link Pose2d pose}, of the robot
+   * Provides the {@link SwerveDriveOdometry odometry} object of this drivebase chassis instance, which tracks the position and rotation, {@link Pose2d pose}, of the robot
    * chassis.
    * @return Odometry object of this instance
    */
@@ -481,7 +478,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   }
 
   /**
-   * Provides the {@link Limits limit} object of this drivebase, which describes the limits of it's movements in two-dimensional space.
+   * Provides the {@link Limit} object of this drivebase, which describes the limits of its movements in two-dimensional space.
    * @return Limits object of this chassis
    * @implNote The returned object of this method is always constants regardless of {@link #getInstance() instance}
    */

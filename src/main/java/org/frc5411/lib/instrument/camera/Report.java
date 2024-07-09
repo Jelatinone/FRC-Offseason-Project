@@ -39,5 +39,7 @@ public class Report extends org.frc5411.lib.pattern.Report<Transform2d> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile double Latency = (-1D);
 
-  volatile Pose2d Robot = new Pose2d();
+  volatile int Pipeline = (-1);
+
+  volatile Pose2d[] Poses = new Pose2d[0];
 }

@@ -40,8 +40,8 @@ public abstract class Camera<Hardware> implements Component<Transform2d> {
   ReportAutoLogged STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
-   * Gyroscope Constructor.
-   * @param Description Real-world description of the system, contains relevant constants to the operation of the gyroscope
+   * Camera Constructor.
+   * @param Description Real-world description of the system, contains relevant constants to the operation of the camera
    */
   protected Camera(final Descriptor<Hardware> Description) {
     DESCRIPTION = Objects
