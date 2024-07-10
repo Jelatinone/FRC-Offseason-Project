@@ -16,7 +16,15 @@
 package org.frc5411.robot2024;
 
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
-import com.jcabi.aspects.Async;
+import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.schema.Subsystem;
+import org.frc5411.lib.utility.Aggregator;
+import org.frc5411.lib.utility.Figures;
+import org.frc5411.lib.utility.Geometry;
+
+import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
+import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
+
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
@@ -36,16 +44,9 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
-import org.frc5411.lib.schema.Singleton;
-import org.frc5411.lib.schema.Subsystem;
-import org.frc5411.lib.utility.Aggregator;
-import org.frc5411.lib.utility.Figures;
-import org.frc5411.lib.utility.Geometry;
-import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
-import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
+
+import com.jcabi.aspects.Async;
+
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.urcl.URCL;
 
@@ -62,6 +63,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
+
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
 import static edu.wpi.first.math.MathUtil.applyDeadband;
 import static org.frc5411.robot2024.Constants.Preferences.*;

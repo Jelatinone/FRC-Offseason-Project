@@ -22,7 +22,6 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
-import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.numbers.N2;
@@ -32,13 +31,15 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.pathplanner.lib.auto.NamedCommands;
 
+import org.littletonrobotics.junction.Logger;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.stream.Stream;
 import java.io.Serial;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
