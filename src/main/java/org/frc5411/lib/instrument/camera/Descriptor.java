@@ -17,8 +17,6 @@ package org.frc5411.lib.instrument.camera;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
-import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 import lombok.AccessLevel;
@@ -34,19 +32,17 @@ import lombok.experimental.FieldDefaults;
  */
 @Builder(toBuilder = (true))
 @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
-public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Component<Transform2d>> {
+public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Component<Transform3d>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Transform3d Position;
   Enum<?> Identity;
   Hardware Hardware;
-  Debouncer Debounce;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public Descriptor<Hardware> clone() {
     return new Descriptor<>(
       Position,
       Identity,
-      Hardware,
-      Debounce);
+      Hardware);
   }
 }

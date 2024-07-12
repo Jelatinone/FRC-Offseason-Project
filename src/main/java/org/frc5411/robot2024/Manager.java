@@ -68,9 +68,10 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
-import static edu.wpi.first.math.MathUtil.applyDeadband;
+import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.robot2024.Constants.Preferences.*;
-import static org.frc5411.robot2024.Constants.Robot.DRIVER;
+import static org.frc5411.robot2024.Constants.Robot.*;
+import static org.frc5411.lib.utility.Geometry.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -238,7 +239,7 @@ public final class Manager implements Singleton<Manager> {
                 .get(), 
               DRIVER
                 .<Double>getPreference(CONTROL_ZONE_X)
-                .orElse(0D)),
+                .orElse((0D))),
             applyDeadband(
               DRIVER
                 .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
@@ -292,14 +293,14 @@ public final class Manager implements Singleton<Manager> {
    * greater than it's limits, or that the speeds themselves do not exceed the limits of the drivebase
    * @param Demand Desired speeds of the drivebase's inputs, which have been properly configured
    */
-  public synchronized void add(final ChassisSpeeds Demand) {
-    Predicted = Geometry
-      .log(Geometry
-        .exp(new Twist2d(
-          Demand.vxMetersPerSecond,
-          Demand.vyMetersPerSecond, 
-          Demand.omegaRadiansPerSecond))
-        .rotateBy(getVehicleOdometry().getRotation()));
+  public synchronized void sample(final ChassisSpeeds Demand) {
+    Predicted = log(
+      exp(new Twist2d(
+        Demand.vxMetersPerSecond, 
+        Demand.vyMetersPerSecond, 
+        Demand.omegaRadiansPerSecond))
+      .rotateBy(
+        getVehicleOdometry().getRotation()));
   }
 
 
@@ -309,10 +310,10 @@ public final class Manager implements Singleton<Manager> {
    * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
    * impacts on the robot-main thread.
    * @param Observation Wheel observation to add to the processing pool
-   * @see #add(VisionObservation)
+   * @see #sample(VisionObservation)
    * @return Future representing the pending completion of the observation
    */
-  public synchronized Future<?> add(final WheelObservation Observation) {
+  public synchronized Future<?> sample(final WheelObservation Observation) {
     return CALLBACK
       .submit(() -> resolve(Objects.requireNonNull(Observation)));
   }  
@@ -365,9 +366,9 @@ public final class Manager implements Singleton<Manager> {
    * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
    * impacts on the robot-main thread.
    * @param Observation Vision observation to add to the processing pool
-   * @see #add(WheelObservation)
+   * @see #sample(WheelObservation)
    */
-  public synchronized Future<?> add(final VisionObservation Observation) {
+  public synchronized Future<?> sample(final VisionObservation Observation) {
     return CALLBACK
       .submit(() -> resolve(Objects.requireNonNull(Observation)));
   }
@@ -405,7 +406,7 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the vehicle odometry at the given time provided, which is an estimate based upon the {@link #add(WheelObservation) addition} of 
+   * Provides the vehicle odometry at the given time provided, which is an estimate based upon the {@link #sample(WheelObservation) addition} of 
    * {@link WheelObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of vehicle odometry
    * @return Robot (vehicle)'s odometry position at the given time
@@ -424,7 +425,7 @@ public final class Manager implements Singleton<Manager> {
 
   /**
    * Provides the vehicle odometry at the current time provided by the discretization clock's {@link Aggregator#attain()}, which is an estimate
-   * based upon the {@link #add(WheelObservation) addition} of {@link WheelObservation wheel observations}
+   * based upon the {@link #sample(WheelObservation) addition} of {@link WheelObservation wheel observations}
    * @return Robot (vehicle)'s odometry position
    * @throws java.util.NoSuchElementException When a sample cannot be found for the current time
    */
@@ -433,7 +434,7 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the measured velocity determined via the {@link #add(WheelObservation) addition} of {@link WheelObservation observations}
+   * Provides the measured velocity determined via the {@link #sample(WheelObservation) addition} of {@link WheelObservation observations}
    * @return Measured velocity, calculated by the delta between the most recent positions
    */
   public Twist2d getMeasuredVelocity() {
@@ -446,7 +447,7 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the predicted velocity determined via the {@link #add(ChassisSpeeds) addition} of {@link ChassisSpeeds speeds}
+   * Provides the predicted velocity determined via the {@link #sample(ChassisSpeeds) addition} of {@link ChassisSpeeds speeds}
    * @return Predicted velocity, calculated by the most recently provided speeds
    */
   public Twist2d getPredictedVelocity() {

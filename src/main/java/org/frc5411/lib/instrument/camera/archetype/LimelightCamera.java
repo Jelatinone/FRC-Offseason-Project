@@ -19,17 +19,21 @@ import org.frc5411.lib.instrument.camera.Camera;
 import org.frc5411.lib.instrument.camera.Descriptor;
 import org.frc5411.lib.instrument.camera.Report;
 
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableValue;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.Objects;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>LimelightCamera</h1>
@@ -40,8 +44,8 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
 public class LimelightCamera extends Camera<NetworkTable> {
-  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-
+  //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
+  @NonFinal volatile Double Heartbeat = (0D);
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Limelight Camera Constructor.
@@ -49,14 +53,8 @@ public class LimelightCamera extends Camera<NetworkTable> {
    */
   public LimelightCamera(final Descriptor<NetworkTable> Descriptor) {
     super(Descriptor);
-
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
-  @Override
-  public synchronized void configure() {
-
-  }
-
   @Override
   public synchronized void close() {
 
@@ -76,7 +74,7 @@ public class LimelightCamera extends Camera<NetworkTable> {
    * Mutates a {@link NetworkTableValue network table value} from this Camera's {@link Descriptor descriptor} given the string name of the entry. 
    * @param <Type>   Type of the value to mutate, the supplied value must be an instance of this type
    * @param Property Name of the property in the table as an {@link Mutable enum} value that can be converted to string form to access via {@link NetworkTable#getEntry(String)}
-   * @param Value    Value, of the expected type, to set the mutable entry to
+   * @param Value    Value, of the expected type, to set the mutable entry tow
    */
   public synchronized <Type> void mutate(final Mutable Property, final Type Value) {
     getDescriptor().Hardware
@@ -84,11 +82,21 @@ public class LimelightCamera extends Camera<NetworkTable> {
   }
 
   @Override
-  public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull Transform2d> Record) {
+  public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull Transform3d> Record) {
     final var Article = (Report) Record;
+    final var Position = access(Accessible.TARGET_POSE_ROBOT_RELATIVE)
+      .get()
+      .getDoubleArray();
+    final var Target = access(Accessible.TARGET_POSE_CAMERA_RELATIVE)
+      .get()
+      .getDoubleArray();
 
     synchronized(Article) {
-      
+      Article.setLatency(access(Accessible.CURRENT_PIPELINE_LATENCY).orElseThrow().getDouble());
+      Article.setConnected(Heartbeat < (Heartbeat = access(Accessible.HEART_BEAT_VALUE).get().getDouble()));
+      Article.setPipeline((int) access(Accessible.PIPELINE_INDEX).get().getInteger());
+      Article.setRobot(new Pose3d(new Translation3d(Position[0],Position[1],Position[2]), new Rotation3d(Position[3],Position[4],Position[5])));
+      Article.setMeasurements(new Transform3d[] {new Transform3d(new Translation3d(Target[0],Target[1],Target[2]), new Rotation3d(Target[3],Target[4],Target[5]))});
     }
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//

@@ -22,6 +22,8 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
+import org.frc5411.robot2024.Manager;
+import org.frc5411.robot2024.Manager.VisionObservation;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.numbers.N2;
@@ -183,7 +185,19 @@ public class VisionSubsystem extends Subsystem<Named,State> {
         CAMERAS
           .stream()
           .parallel()
-          .forEach(Component::periodic);
+          .forEach((Camera) -> {
+            Camera
+              .periodic();
+            if(Camera.getConnection()) {
+              Manager
+                .getInstance()
+                .sample(new VisionObservation(
+                  (null), 
+                  (null), 
+                  (null))
+                );
+            }
+          });
       }
     } finally {
       update();

@@ -55,7 +55,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public non-sealed class PhoenixRegister extends Thread implements Register<StatusSignal<Number>> {
+public non-sealed class PhoenixRegister extends Thread implements Register<StatusSignal<Number>, Optional<Number>>, Singleton<PhoenixRegister> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 55742622883094958L;
@@ -120,20 +120,26 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
   @Override
   public synchronized void close() {
     halt();
-    REQUEST_LOCK.writeLock().lock();
-    QUEUE_LOCK.writeLock().lock();
-    synchronized(PhoenixRegister.class) {
-      TIMESTAMPS.forEach(Queue::clear);
-      TIMESTAMPS.clear();
-      RESPONSES.forEach(Queue::clear);
-      RESPONSES.clear();
-      SIGNALS.clear();
-      CLIENTS.clear();
-      REQUESTS.clear();
-      State = (null);
-      Instance = (null);
+    try {
+      REQUEST_LOCK.writeLock().lock();
+      QUEUE_LOCK.writeLock().lock();     
+      synchronized(PhoenixRegister.class) {
+        TIMESTAMPS
+          .forEach(Queue::clear);
+        TIMESTAMPS.clear();
+        RESPONSES
+          .forEach(Queue::clear);
+        RESPONSES.clear();
+        SIGNALS.clear();
+        CLIENTS.clear();
+        REQUESTS.clear();
+        State = (null);
+        Instance = (null);
+
+      }        
+    } finally {
       REQUEST_LOCK.writeLock().unlock();
-      QUEUE_LOCK.writeLock().unlock();
+      QUEUE_LOCK.writeLock().unlock();      
     }
   }
 
@@ -147,11 +153,11 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
   }
 
   @Override
-  public synchronized void halt(final Long Timeout) {
+  public synchronized void halt(final long Timeout) {
     try {
       join(Timeout);
     } catch(final InterruptedException Exception) {
-      currentThread().interrupt();
+      interrupt();
     }
   }
 
@@ -161,8 +167,10 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
     try {
       QUEUE_LOCK.writeLock().lock();
       Signal.setUpdateFrequency(UPDATE_FREQUENCY);
-      SIGNALS.add(Signal);
-      RESPONSES.add(Buffer);
+      SIGNALS
+        .add(Signal);
+      RESPONSES
+        .add(Buffer);
     } finally {
       QUEUE_LOCK.writeLock().unlock();
     }
@@ -184,8 +192,10 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
     final var Hash = Device.getDeviceHash();
     try {
       REQUEST_LOCK.writeLock().unlock();
-      REQUESTS.put(Hash, Request);
-      CLIENTS.put(Hash, Client);
+      REQUESTS
+        .put(Hash, Request);
+      CLIENTS
+        .put(Hash, Client);
     } finally {
       REQUEST_LOCK.writeLock().unlock();
     }
@@ -208,7 +218,8 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
     }
     try {
       REQUEST_LOCK.writeLock().unlock();
-      REQUESTS.put(Hash, Request);
+      REQUESTS
+        .put(Hash, Request);
     } finally {
       REQUEST_LOCK.writeLock().unlock();
     }
@@ -219,7 +230,8 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
     final var Buffer = new ArrayBlockingQueue<Double>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
-      TIMESTAMPS.add(Buffer);
+      TIMESTAMPS
+        .add(Buffer);
     } finally {
       QUEUE_LOCK.writeLock().unlock();
     }

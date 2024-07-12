@@ -263,7 +263,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           .aggregate();      
         final var Demand = Mode
           .apply(TELEOPERATED_COORDINATOR.update());
-        Demand.omegaRadiansPerSecond = HEADING_COORDINATOR.update();
+        Demand.omegaRadiansPerSecond += HEADING_COORDINATOR.update();
         Effort = GENERATOR.generateSetpoint(
           LIMITS, 
           Effort, 
@@ -289,12 +289,12 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           });
         Manager
           .getInstance()
-          .add(Effort.Speeds());
+          .sample(Effort.Speeds());
       }
     } finally {
       Manager
       .getInstance()
-      .add(new WheelObservation(
+      .sample(new WheelObservation(
         MODULES
           .stream()
           .map(Module::getMeasurements)

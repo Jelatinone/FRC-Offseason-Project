@@ -15,16 +15,15 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.utility.Figures;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.io.Closeable;
 
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -35,7 +34,7 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public sealed interface Register<@NonNull Source> extends Runnable, Singleton<Register<Source>> permits PhoenixRegister, StandardRegister {
+public sealed interface Register<@NonNull Source, @NonNull Provides> extends Runnable, Closeable permits PhoenixRegister, StandardRegister, IdentityRegister {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Double STANDARD_FREQUENCY_HERTZ = (250D);
   Integer STANDARD_QUEUE_ELEMENTS = (20);
@@ -63,7 +62,7 @@ public sealed interface Register<@NonNull Source> extends Runnable, Singleton<Re
    * to ensure that it can be used repeatedly in conjunction with {@link #start()}.
    * @param Timeout Milliseconds to wait before joining the thread
    */
-  void halt(final Long Timeout);
+  void halt(final long Timeout);
 
   /**
    * Waits for 'zero' milliseconds and attempts to join this thread into the calling thread. Should provide logic
@@ -85,7 +84,7 @@ public sealed interface Register<@NonNull Source> extends Runnable, Singleton<Re
    * @return Queue, should be retained and used to collect values periodically. 
    * @see Figures#from(DoubleCircularBuffer)
    */
-  Queue<Optional<Number>> register(final Source Signal);
+  Queue<Provides> register(final Source Signal);
 
   /**
    * Creates a new Queue of standard size, and adds it to the collection of timestamp Queues. Each timestamp Queue contains the timestamp from a 

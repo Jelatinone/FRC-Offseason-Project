@@ -15,7 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.nouveau;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.utility.Aggregator;
 
 import edu.wpi.first.hal.HALUtil;
@@ -23,57 +22,55 @@ import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.wpilibj.Notifier;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
- * <h1>StandardRegister</h1>
+ * <h1>IdentityRegister</h1>
  * 
  * <p>
  * 
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public non-sealed class StandardRegister implements Register<Supplier<Optional<Number>>, Optional<Number>>, Singleton<StandardRegister> {
+public non-sealed class IdentityRegister<Identity> extends Thread implements Register<Supplier<Optional<Identity>>, Optional<Identity>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
-  static long serialVersionUID = 84309938899889961L;
+  static long serialVersionUID = 1044457619661863260L;
   static Integer QUEUE_SIZE = (20);
-  static Integer UPDATE_FREQUENCY = (1000);
+  static Integer UPDATE_FREQUENCY = (250);
 
   List<Queue<Double>> TIMESTAMPS;  
-  List<Queue<Optional<Number>>> RESPONSES;
-  List<Supplier<Optional<Number>>> SIGNALS;
+  List<Queue<Optional<Identity>>> RESPONSES;
+  List<Supplier<Optional<Identity>>> SIGNALS;
 
   MedianFilter PEAK_REMOVER;
   LinearFilter LOW_PASS;
-
+  
   ReadWriteLock QUEUE_LOCK;
   ReadWriteLock SIGNAL_LOCK;  
 
   Notifier CALLBACK;
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  static volatile StandardRegister Instance = (null);
-  static volatile ReportAutoLogged State;
+  @NonFinal volatile ReportAutoLogged State;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
-   * Standard Register Constructor.
+   * Phoenix Register Constructor.
    */
-  private StandardRegister() {
+  public IdentityRegister() {
     State = new ReportAutoLogged();
     TIMESTAMPS = new Vector<>();
     RESPONSES = new Vector<>();
@@ -89,66 +86,11 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
     CALLBACK.setName(getClass().getSimpleName());
     start();
   }
+
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
-  @Serial
   @Override
-  public synchronized StandardRegister readResolve() {
-    return Instance;
-  }
-
-  @Serial
-  @Override
-  public synchronized void readObject(final ObjectInputStream Stream) throws IOException, ClassNotFoundException {
-    Stream.defaultReadObject();
-    Instance = (this);
-  }
-
-  @Override
-  public synchronized void close() {
-    halt();
-    try {
-      SIGNAL_LOCK.writeLock().lock();
-      QUEUE_LOCK.writeLock().lock();     
-      synchronized(PhoenixRegister.class) {
-        TIMESTAMPS
-          .forEach(Queue::clear);
-        TIMESTAMPS
-          .clear();
-        RESPONSES
-          .forEach(Queue::clear);
-        RESPONSES
-          .clear();
-        SIGNALS
-          .clear();
-        State = (null);
-        Instance = (null);
-      }        
-    } finally {
-      SIGNAL_LOCK.writeLock().unlock();
-      QUEUE_LOCK.writeLock().unlock();      
-    }
-  }
-
-  @Override
-  public final StandardRegister clone() throws CloneNotSupportedException {
-    throw new CloneNotSupportedException(
-      String.format(
-        ("%s Instances Cannot Be Cloned"), 
-        getClass()
-          .getSimpleName()));
-  }
-
-  @Override
-  public synchronized void halt(final long Timeout) {
-    try {
-      Thread.sleep(Timeout);
-    } catch (final InterruptedException Ignored) {}
-    CALLBACK.close();
-  }
-
-  @Override
-  public synchronized Queue<Optional<Number>> register(final @NonNull Supplier<Optional<Number>> Signal) {
-    final var Buffer = new ArrayBlockingQueue<Optional<Number>>(QUEUE_SIZE);
+  public synchronized Queue<Optional<Identity>> register(final @NonNull Supplier<Optional<Identity>> Signal) {
+    final var Buffer = new ArrayBlockingQueue<Optional<Identity>>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
       SIGNALS
@@ -175,6 +117,45 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   }
 
   @Override
+  public synchronized void close() {
+    halt();
+    try {
+      SIGNAL_LOCK.writeLock().lock();
+      QUEUE_LOCK.writeLock().lock();     
+      synchronized(PhoenixRegister.class) {
+        TIMESTAMPS
+          .forEach(Queue::clear);
+        TIMESTAMPS.clear();
+        RESPONSES
+          .forEach(Queue::clear);
+        RESPONSES.clear();
+        SIGNALS.clear();
+        State = (null);
+      }        
+    } finally {
+      SIGNAL_LOCK.writeLock().unlock();
+      QUEUE_LOCK.writeLock().unlock();      
+    }
+  }
+
+  @Override
+  public final PhoenixRegister clone() throws CloneNotSupportedException {
+    throw new CloneNotSupportedException(
+      String.format(
+        ("%s Instances Cannot Be Cloned"), 
+        getClass()
+          .getSimpleName()));
+  }  
+  
+  @Override
+  public synchronized void halt(final long Timeout) {
+    try {
+      Thread.sleep(Timeout);
+    } catch (final InterruptedException Ignored) {}
+    CALLBACK.close();
+  }
+
+  @Override
   public synchronized void start() {
     CALLBACK
       .startPeriodic(1D/UPDATE_FREQUENCY);
@@ -198,7 +179,8 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
         );
       } finally {
         SIGNAL_LOCK.readLock().unlock();
-        State.setRunning((false));
+        State
+          .setRunning((false));
       }
     }
     State.setPeriod(DISCRETE_AGGREGATOR.aggregate());
@@ -208,23 +190,6 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
     State.setRegistered(SIGNALS.size());       
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
-  /**
-   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @return This singleton's instance
-   */
-  public static synchronized StandardRegister getInstance() {
-    StandardRegister Result = Instance;
-    if(Instance == (null)) {
-      synchronized(StandardRegister.class) {
-        Result = Instance;
-        if(Instance == (null)) {
-          Instance = Result = new StandardRegister();
-        }
-      }
-    }
-    return Result;
-  }
-
   @Override
   public ReadWriteLock getQueueLock() {
     return QUEUE_LOCK;

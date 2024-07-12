@@ -16,6 +16,7 @@
 package org.frc5411.lib.instrument.camera;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Transform3d;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -35,7 +36,7 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @Setter
 @AutoLog
-public class Report extends org.frc5411.lib.pattern.Report<Pose3d> {
+public class Report extends org.frc5411.lib.pattern.Report<Transform3d> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile double Latency = (-1D);
 
