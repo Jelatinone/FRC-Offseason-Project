@@ -79,13 +79,13 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
     synchronized(this) {
       getDescriptor().Hardware
         .getYaw()
-        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
+        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (StandardRegister.STANDARD_QUEUE_ELEMENTS));
       getDescriptor().Hardware
         .getPitch()
-        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
+        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (StandardRegister.STANDARD_QUEUE_ELEMENTS));
       getDescriptor().Hardware
         .getRoll()
-        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (20));
+        .setUpdateFrequency(StandardRegister.getInstance().getFrequency() / (StandardRegister.STANDARD_QUEUE_ELEMENTS));
       getDescriptor().Hardware
         .optimizeBusUtilization();
 

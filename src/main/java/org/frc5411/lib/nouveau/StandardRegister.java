@@ -112,14 +112,11 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
       synchronized(PhoenixRegister.class) {
         TIMESTAMPS
           .forEach(Queue::clear);
-        TIMESTAMPS
-          .clear();
+        TIMESTAMPS.clear();
         RESPONSES
           .forEach(Queue::clear);
-        RESPONSES
-          .clear();
-        SIGNALS
-          .clear();
+        RESPONSES.clear();
+        SIGNALS.clear();
         State = (null);
         Instance = (null);
       }        
