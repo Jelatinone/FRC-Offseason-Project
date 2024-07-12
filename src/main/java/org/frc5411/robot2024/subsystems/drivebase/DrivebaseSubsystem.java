@@ -436,7 +436,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .map((Module) -> 
           Module
             .getMeasurement()
-            .orElse(new SwerveModulePosition()))
+            .orElse(new SwerveModulePosition(Double.NaN, Rotation2d.fromRadians(Double.NaN))))
         .toArray(SwerveModulePosition[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
@@ -453,7 +453,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
       return GYROSCOPE.getMeasurement()
-        .orElse(new Rotation3d());
+        .orElse(new Rotation3d(Double.NaN, Double.NaN, Double.NaN));
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
     } 
