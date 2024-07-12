@@ -134,12 +134,23 @@ public class VisionSubsystem extends Subsystem<Named,State> {
         Mode = (null);
       }
     } finally {
+      update();
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
   }
 
   @Override
   public synchronized void update() {
+    Logger.recordOutput(
+      String.format(
+        ("%s/Latency"), getName()),
+      DISCRETE_AGGREGATOR
+        .attain() 
+            - 
+      IDENTITY
+        .getTimestamp()
+        .orElse(Double.NaN)
+    );     
     Logger.recordOutput(
       String.format(
         ("%s/Timestamps"), getName()),
@@ -154,16 +165,6 @@ public class VisionSubsystem extends Subsystem<Named,State> {
         .getMeasurements()
         .size()
     );
-    Logger.recordOutput(
-      String.format(
-        ("%s/Latency"), getName()),
-      DISCRETE_AGGREGATOR
-        .attain() 
-            - 
-      IDENTITY
-        .getTimestamp()
-        .orElse(Double.NaN)
-    );    
     Logger.recordOutput(
       String.format(
         ("%s/Connection"), getName()),

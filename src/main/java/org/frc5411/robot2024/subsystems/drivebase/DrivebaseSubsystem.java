@@ -198,6 +198,16 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public synchronized void update() {
     Logger.recordOutput(
       String.format(
+        ("%s/Latency"), getName()),
+      DISCRETE_AGGREGATOR
+        .attain() 
+            - 
+      IDENTITY
+        .getTimestamp()
+        .orElse(Double.NaN)
+    );        
+    Logger.recordOutput(
+      String.format(
         ("%s/Timestamps"), getName()),
       IDENTITY
         .getTimestamps()
@@ -210,16 +220,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .getMeasurements()
         .size()
     );
-    Logger.recordOutput(
-      String.format(
-        ("%s/Latency"), getName()),
-      DISCRETE_AGGREGATOR
-        .attain() 
-            - 
-      IDENTITY
-        .getTimestamp()
-        .orElse(Double.NaN)
-    );    
     Logger.recordOutput(
       String.format(
         ("%s/Connection"), getName()),
