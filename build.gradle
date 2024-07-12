@@ -174,17 +174,6 @@ spotless {
   }
 }
 build.dependsOn(spotlessApply)
-
-
-tasks.withType(Javadoc).configureEach {
-  dependsOn(spotlessGroovyGradle)
-  exclude ('org/robotalons/crescendo/**')
-  options.addStringOption('Xdoclint:none', '-quiet')
-  options.addStringOption("docencoding", "utf-8")
-  options.addStringOption("charset", "utf-8")
-  options.addStringOption("encoding", "utf-8")
-  destinationDir = layout.projectDirectory.dir("docs").asFile
-}
 // ------------------------------------------------------------------[Compilation Checks]-----------------------------------------------------------------//
 tasks.register('checkAkitInstall', JavaExec) {
   dependsOn "classes"
