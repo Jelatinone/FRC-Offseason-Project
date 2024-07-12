@@ -78,8 +78,8 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     COMMANDS = new HashMap<>();
     CALLBACKS = new ArrayList<>();
   } static {
-    Logger.recordMetadata(("Robot-Type"), Constants.Robot.TYPE.name());
-    Logger.recordMetadata(("Robot-Mode"), Constants.Robot.MODE.name());
+    Logger.recordMetadata(("Robot-Type"), Constants.Identity.TYPE.name());
+    Logger.recordMetadata(("Robot-Mode"), Constants.Identity.MODE.name());
     Logger.recordMetadata(("Runtime-Type"), getRuntimeType().name());
     Logger.recordMetadata(("Robot-Number"), String.valueOf(RobotController.getTeamNumber()));
     Logger.recordMetadata(("Project-Name"), Metadata.MAVEN_NAME);
@@ -95,7 +95,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //----------------------------------------------------------------------[Robot Scope]------------------------------------------------------------------------//
   @Override
   public synchronized void robotInit() {
-    switch(Constants.Robot.MODE) {
+    switch(Constants.Identity.MODE) {
       case ANONYMOUS:
         break;          
       case ACTUAL:
@@ -110,7 +110,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
         break;
     }
-    if(!Constants.Robot.MODE.equals(Constants.Mode.ANONYMOUS)) {
+    if(!Constants.Identity.MODE.equals(Constants.Mode.ANONYMOUS)) {
       Logger.start();
     }
     CommandScheduler.getInstance()

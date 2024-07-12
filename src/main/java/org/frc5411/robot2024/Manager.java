@@ -70,7 +70,7 @@ import lombok.experimental.NonFinal;
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
 import static org.frc5411.robot2024.Constants.Preferences.*;
-import static org.frc5411.robot2024.Constants.Robot.*;
+import static org.frc5411.robot2024.Constants.Identity.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -122,10 +122,14 @@ public final class Manager implements Singleton<Manager> {
    */
   private Manager() {
     //<--- Fetch All Managed Subsystems --->
-    DrivebaseSubsystem
-      .getInstance();
-    VisionSubsystem
-      .getInstance();
+    if(VISION_SUBSYSTEM_AUTHORIZED) {
+      VisionSubsystem
+        .getInstance();      
+    }    
+    if(DRIVEBASE_SUBSYSTEM_AUTHORIZED) {
+      DrivebaseSubsystem
+        .getInstance();      
+    }
     //<--- Initialize Variables --->
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));
@@ -409,7 +413,7 @@ public final class Manager implements Singleton<Manager> {
    * {@link WheelObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of vehicle odometry
    * @return Robot (vehicle)'s odometry position at the given time
-   * @throws java.util.NoSuchElementException When a sample cannot be found for the provided time
+   * @throws java.util.NoSuchElementException When a sample does not exist for the provided time
    */
   public Pose2d getVehicleOdometry(final Double Timestamp) {
     try {

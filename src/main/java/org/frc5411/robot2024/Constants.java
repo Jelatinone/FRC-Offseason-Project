@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import java.util.function.Supplier;
 
+import org.frc5411.lib.utility.Profile;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -43,13 +45,13 @@ public final class Constants {
    * 
    */
   public static synchronized void main(final String... Options) {
-    if(Robot.TYPE == Type.SIMBOT) {
+    if(Identity.TYPE == Type.SIMBOT) {
       System.exit((1));
     }
   }
   //----------------------------------------------------------------------[Internal]---------------------------------------------------------------------------//
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-  public static final class Robot {
+  public static final class Identity {
     static Type DESIRED_TYPE = Type.SIMBOT;
     static Type TYPE = RobotBase.isReal()? DESIRED_TYPE: Type.SIMBOT;
     static Mode MODE = switch(TYPE) {
@@ -60,20 +62,26 @@ public final class Constants {
       case SIMBOT 
         -> Mode.SIMULATED;
     };
-    static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController((0));
-    static CommandXboxController OPERATOR_CONTROLLER = new CommandXboxController((1));
-    static org.frc5411.lib.utility.Profile<Keybindings,Preferences> DRIVER =  (TYPE.equals(Type.COMPBOT)? Profile.COMP_DRIVER: Profile.DEV_DRIVER).get();
-    static org.frc5411.lib.utility.Profile<Keybindings,Preferences> OPERATOR = (TYPE.equals(Type.COMPBOT)? Profile.COMP_OPERATOR: Profile.DEV_OPERATOR).get();
-  }
 
-  @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-  public static final class Field {
-    static AprilTagFields FIELD = AprilTagFields.k2024Crescendo;
-  }
+    static Boolean DRIVEBASE_SUBSYSTEM_AUTHORIZED = (true);
+    static Boolean VISION_SUBSYSTEM_AUTHORIZED = (false);
 
+    static Integer DRIVER_CONTROL_PORT = (0);
+    static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController(DRIVER_CONTROL_PORT);
+
+    static Integer OPERATOR_CONTROL_PORT = (1);
+    static CommandXboxController OPERATOR_CONTROLLER = new CommandXboxController(OPERATOR_CONTROL_PORT);
+
+    static Profile<Keybindings,Preferences> DRIVER =  (TYPE.equals(Type.COMPBOT)? Character.COMP_DRIVER: Character.DEV_DRIVER).get();
+    static Profile<Keybindings,Preferences> OPERATOR = (TYPE.equals(Type.COMPBOT)? Character.COMP_OPERATOR: Character.DEV_OPERATOR).get();
+
+    static AprilTagFields FIELD = AprilTagFields.kDefaultField;
+  }
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**
-   * Represents the mode of the robot being initialized, i.e. whether we are running on real or simulated hardware, and if we are
+   * <h1>Mode</h1>
+   * 
+   * <p>Represents the mode of the robot being initialized, i.e. whether we are running on real or simulated hardware, and if we are
    * replaying from a logged source.
    */
   public enum Mode {
@@ -88,7 +96,9 @@ public final class Constants {
   }
 
   /**
-   * Represents the pre-set mode a robot is launched into, i.e. a setting to distinguish between the different stages of robot
+   * <h1>Type</h1>
+   * 
+   * <p>Represents the pre-set mode a robot is launched into, i.e. a setting to distinguish between the different stages of robot
    * development for testing purposes.
    */
   public enum Type {
@@ -103,41 +113,43 @@ public final class Constants {
   }
 
   /**
-   * Represents a different pre-set profile for different drivers operating the robot, i. e, drivers with different preferences for keybindings
-   * and robot operation
+   * <h1>Character</h1>
+   * 
+   * <p>Represents a different pre-set profile for different drivers operating the robot, i. e, drivers with different preferences for keybindings
+   * and robot operation.
    */
   @SuppressWarnings("resource")
-  public enum Profile implements Supplier<org.frc5411.lib.utility.Profile<Keybindings,Preferences>> {
+  public enum Character implements Supplier<Profile<Keybindings,Preferences>> {
 
     DEV_DRIVER(
       new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_DRIVER"))
-        .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> Robot.DRIVER_CONTROLLER.getRawAxis((1)))
-        .add(Preferences.CONTROL_ZONE_X, (2e-1))
-        .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> Robot.DRIVER_CONTROLLER.getRawAxis((0)))
-        .add(Preferences.CONTROL_ZONE_Y, (2e-1))
-        .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> Robot.DRIVER_CONTROLLER.getRawAxis((4)))
-        .add(Preferences.CONTROL_ZONE_T, (2e-1))
+        .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> Identity.DRIVER_CONTROLLER.getRawAxis((1)))
+        .add(Preferences.CONTROL_ZONE_X, (2e-1D))
+        .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> Identity.DRIVER_CONTROLLER.getRawAxis((0)))
+        .add(Preferences.CONTROL_ZONE_Y, (2e-1D))
+        .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> Identity.DRIVER_CONTROLLER.getRawAxis((4)))
+        .add(Preferences.CONTROL_ZONE_T, (2e-1D))
     ),
 
     DEV_OPERATOR(
-      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_OPERATOR"))
+      new Profile<Keybindings,Preferences>(("DEV_OPERATOR"))
     ),
 
     COMP_DRIVER(
-      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("COMP_DRIVER"))
+      new Profile<Keybindings,Preferences>(("COMP_DRIVER"))
     ),
 
     COMP_OPERATOR(
-      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("COMP_OPERATOR"))
+      new Profile<Keybindings,Preferences>(("COMP_OPERATOR"))
     );
 
-    private final org.frc5411.lib.utility.Profile<Keybindings,Preferences> PROFILE;
+    private final Profile<Keybindings,Preferences> PROFILE;
 
     /**
      * Profile Constructor
      * @param Profile Individual's profile with selected preferences and keybindings which act as settings for different robot functionality
      */
-    Profile(final org.frc5411.lib.utility.Profile<Keybindings,Preferences> Profile) {
+    Character(final Profile<Keybindings,Preferences> Profile) {
       PROFILE = Profile;
     }
 
@@ -146,13 +158,13 @@ public final class Constants {
      * @return Retained profile instance
      */
     @Override
-    public final org.frc5411.lib.utility.Profile<Keybindings,Preferences> get() {
+    public final Profile<Keybindings,Preferences> get() {
       return PROFILE;
     }
   }
 
   /**
-   * 
+   * <h1>Keybindings</h1>
    */
   public enum Keybindings {
     STATE_TOGGLE,    
@@ -160,7 +172,7 @@ public final class Constants {
   }
 
   /**
-   * 
+   * <h1>Preferences</h1>
    */
   public enum Preferences {
     CONTROL_EFFORT_X,
