@@ -25,12 +25,12 @@ import edu.wpi.first.wpilibj.Notifier;
 import java.io.Serial;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.NonNull;

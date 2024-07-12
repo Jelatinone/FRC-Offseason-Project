@@ -22,6 +22,7 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
+
 import org.frc5411.robot2024.Manager;
 import org.frc5411.robot2024.Manager.VisionObservation;
 

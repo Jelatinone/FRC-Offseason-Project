@@ -20,7 +20,6 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Figures;
-import org.frc5411.lib.utility.Geometry;
 
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
@@ -69,9 +68,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
 import static edu.wpi.first.math.MathUtil.*;
+import static org.frc5411.lib.utility.Geometry.*;
 import static org.frc5411.robot2024.Constants.Preferences.*;
 import static org.frc5411.robot2024.Constants.Robot.*;
-import static org.frc5411.lib.utility.Geometry.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *

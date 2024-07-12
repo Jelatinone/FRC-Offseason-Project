@@ -21,9 +21,9 @@ import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.io.Closeable;
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.io.Closeable;
 
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
