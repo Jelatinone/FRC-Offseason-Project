@@ -16,6 +16,7 @@
 package org.frc5411.robot2024.subsystems.vision;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.instrument.camera.Camera;
+import org.frc5411.lib.instrument.camera.archetype.LimelightCamera;
 import org.frc5411.lib.pattern.Component;
 import org.frc5411.lib.schema.Registrable;
 import org.frc5411.lib.schema.Singleton;
@@ -83,9 +84,9 @@ public class VisionSubsystem extends Subsystem<Named,State> {
         .map((Camera) ->
           RobotBase.isReal()?
             Camera.get()
-              .complete((null)):
+              .complete(LimelightCamera::new):
             Camera.get()
-              .complete((null)))
+              .complete((null))) //<--- MockCamera not yet implemented
         .toArray(Camera[]::new)
     );
     IDENTITY = CAMERAS

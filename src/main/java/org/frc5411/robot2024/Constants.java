@@ -64,7 +64,7 @@ public final class Constants {
     };
 
     static Boolean DRIVEBASE_SUBSYSTEM_AUTHORIZED = (true);
-    static Boolean VISION_SUBSYSTEM_AUTHORIZED = (false);
+    static Boolean VISION_SUBSYSTEM_AUTHORIZED = (true);
 
     static Integer DRIVER_CONTROL_PORT = (0);
     static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController(DRIVER_CONTROL_PORT);
