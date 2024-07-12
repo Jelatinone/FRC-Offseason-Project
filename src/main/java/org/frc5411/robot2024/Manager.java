@@ -96,8 +96,8 @@ public final class Manager implements Singleton<Manager> {
 
   static @NonFinal Integer MODULES;
 
-  ReadWriteLock WHEEL_UPDATE_LOCK;
-  ReadWriteLock VISION_UPDATE_LOCK;  
+  static ReadWriteLock WHEEL_UPDATE_LOCK;
+  static ReadWriteLock VISION_UPDATE_LOCK;  
 
   ExecutorService CALLBACK;
 
@@ -122,17 +122,15 @@ public final class Manager implements Singleton<Manager> {
    */
   private Manager() {
     //<--- Fetch All Managed Subsystems --->
-    if(VISION_SUBSYSTEM_AUTHORIZED) {
+    if(VISION_ENABLED) {
       VisionSubsystem
         .getInstance();      
     }    
-    if(DRIVEBASE_SUBSYSTEM_AUTHORIZED) {
+    if(DRIVEBASE_ENABLED) {
       DrivebaseSubsystem
         .getInstance();      
     }
-    //<--- Initialize Variables --->
-    WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
-    VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));
+    //<--- Initialize Constants --->
     CALLBACK = Executors
       .newWorkStealingPool(PARALLEL_THREADS);
     WHEEL_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
@@ -150,13 +148,13 @@ public final class Manager implements Singleton<Manager> {
       STATE_STANDARD_DEVIATIONS,
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
+
+    //<--- Sample from Subsystems --->
     KINEMATICS = DrivebaseSubsystem
-      .getInstance()
       .getKinematics();
     ODOMETRY = DrivebaseSubsystem
       .getInstance()
       .getOdometry();
-
     Position = DrivebaseSubsystem
       .getInstance()
       .getModulePositions();
@@ -184,13 +182,16 @@ public final class Manager implements Singleton<Manager> {
       .getInstance()
       .add(
         () -> {
-          if(Instance != (null)) 
+          if(Instance != (null)) {
             Instance.update();
+          }
         },
         UPDATE_FREQUENCY);
     MODULES = Position.length;    
   } static {
     //<--- Construct static fields --->
+    WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
+    VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
     WHEEL_TIME_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1e6, 
       (Previous, Current) -> Current - Previous);

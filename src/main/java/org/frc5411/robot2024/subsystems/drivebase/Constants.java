@@ -28,6 +28,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -40,6 +41,7 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 import java.util.function.Supplier;
 
 import lombok.AccessLevel;
@@ -60,7 +62,7 @@ public class Constants {
    * @implNote Enum Constants are named {LOCATION}${SIDE} to prevent AdvantageScope from folding the tabs...
    */
   @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-  public enum Module implements Supplier<org.frc5411.lib.instrument.module.Descriptor<?,?>> {
+  public enum Modules implements Supplier<org.frc5411.lib.instrument.module.Descriptor<?,?>> {
     //---------------------------------------------------------------------[Values]----------------------------------------------------------------------------//
     FRONT$LEFT(
       RobotBase.isReal()?
@@ -125,7 +127,7 @@ public class Constants {
      * {@link org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder descriptor builders} from {@link Descriptions} and use
      * {@link org.frc5411.lib.instrument.module.Descriptor#clone() Descriptor.clone()} to specify its own descriptor specific to its emplacement on the chassis
      */
-    Module(final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<?,?> Descriptor) {
+    Modules(final org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<?,?> Descriptor) {
       DESCRIPTOR = Descriptor
         .Identity(this)
         .build();
@@ -157,12 +159,22 @@ public class Constants {
     static Double LINEAR_VELOCITY = (4.8D);
     static Double LINEAR_ACCELERATION = LINEAR_VELOCITY * (5D);
     static Double ANGULAR_VELOCITY = LINEAR_VELOCITY / RADIUS;
-    static Limit LIMITS = new Limit(LINEAR_VELOCITY, LINEAR_ACCELERATION, ANGULAR_VELOCITY);
-
-    static HeadingCoordinator HEADING_COORDINATOR = new HeadingCoordinator(new ProfiledPIDController(HEADING_COORDINATOR_DESCRIPTOR), () -> Manager.getInstance().getVehicleOdometry().getRotation());
-    static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);
 
     static Pose2d PRESET = new Pose2d(); 
+  }
+
+  /**
+   * <h1>Regulation<h1>
+   */
+  @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
+  public static class Regulation {
+    static Translation2d[] LOCATIONS = Stream.of(Modules.values()).map((Module) -> Module.get().Position).toArray(Translation2d[]::new);
+    static SwerveDriveKinematics KINEMATICS = new SwerveDriveKinematics(LOCATIONS);    
+
+    static Limit LIMITS = new Limit(Identity.LINEAR_VELOCITY, Identity.LINEAR_ACCELERATION, Identity.ANGULAR_VELOCITY);
+
+    static HeadingCoordinator HEADING_COORDINATOR = new HeadingCoordinator(new ProfiledPIDController(HEADING_COORDINATOR_DESCRIPTOR), () -> Manager.getInstance().getVehicleOdometry().getRotation());
+    static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);    
   }
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//

@@ -32,12 +32,12 @@ import org.frc5411.lib.utility.Vector;
 
 import org.frc5411.robot2024.Manager;
 import org.frc5411.robot2024.Manager.WheelObservation;
+import org.frc5411.robot2024.subsystems.drivebase.Constants.Modules;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.*;
 import edu.wpi.first.math.numbers.N4;
@@ -64,6 +64,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 import static org.frc5411.robot2024.subsystems.drivebase.Constants.Identity.*;
+import static org.frc5411.robot2024.subsystems.drivebase.Constants.Regulation.*;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
@@ -86,11 +87,9 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Module<?,?>,N4> MODULES;
-  Module<?,?> IDENTITY;
+  Module<?,?> IDENTITY; 
   Gyroscope<?> GYROSCOPE;
-  Translation2d[] LOCATIONS;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
-  SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
   SwerveSetpointGenerator GENERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
@@ -104,7 +103,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   private DrivebaseSubsystem() {
     super(SUBSYSTEM_LOCK, ("Drivebase-Subsystem"));
     MODULES = Vector.fill(
-      Stream.of(Constants.Module.values())
+      Stream.of(Modules.values())
         .map((Module) ->
           RobotBase.isReal()?
             Module.get()
@@ -113,21 +112,16 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
               .complete(MockModule::new))
         .toArray(Module[]::new)
     );
-    GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR
-      .complete(PigeonGyroscope::new);
     IDENTITY = MODULES
       .stream()
       .findAny()
       .orElseThrow();
+    GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR
+      .complete(PigeonGyroscope::new);      
     MODULES
       .forEach(Module::periodic);
     GYROSCOPE
       .periodic();
-    LOCATIONS = MODULES
-      .stream()
-      .map((Module) -> Module.getDescriptor().Position)
-      .toArray(Translation2d[]::new);
-    KINEMATICS = new SwerveDriveKinematics(LOCATIONS);
     ODOMETRY = new SwerveDriveOdometry(
       KINEMATICS, 
       getGyroscopePosition()
@@ -473,7 +467,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    * @return Kinematics object constant of this chassis
    * @implNote The returned object of this method is always constants regardless of {@link #getInstance() instance}
    */
-  public SwerveDriveKinematics getKinematics() {
+  public static SwerveDriveKinematics getKinematics() {
     return KINEMATICS;
   }
 
