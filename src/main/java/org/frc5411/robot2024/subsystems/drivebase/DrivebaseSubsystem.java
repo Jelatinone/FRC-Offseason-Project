@@ -192,6 +192,17 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public synchronized void update() {
     Logger.recordOutput(
       String.format(
+        ("%s/Nonbound"), getName()),
+      IDENTITY
+        .getTimestamp()
+        .isPresent()
+            &
+      IDENTITY
+        .getMeasurement()
+        .isPresent()
+    );     
+    Logger.recordOutput(
+      String.format(
         ("%s/Latency"), getName()),
       DISCRETE_AGGREGATOR
         .attain() 

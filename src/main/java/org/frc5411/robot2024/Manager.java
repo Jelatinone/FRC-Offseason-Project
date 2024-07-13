@@ -422,6 +422,7 @@ public final class Manager implements Singleton<Manager> {
       return VEHICLE_ODOMETRY
         .getSample(Timestamp)
         .orElseThrow();
+      // <--- TODO: Lookahead Sampling with Predicted Velocity
     } finally {
       WHEEL_UPDATE_LOCK.readLock().unlock();
     }
