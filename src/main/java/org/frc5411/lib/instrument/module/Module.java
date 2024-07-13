@@ -55,11 +55,10 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
     DESCRIPTION = Objects.
       requireNonNull(Description);
     STATUS = new ReportAutoLogged();
-    synchronized(STATUS) {
-      STATUS.setState(new SwerveModuleState());
-      STATUS.setInput(new SwerveModuleState());
-      STATUS.setOutput(new SwerveModuleState());
-    }
+    STATUS.setMeasurements(new SwerveModulePosition[] {});
+    STATUS.setState(new SwerveModuleState());
+    STATUS.setInput(new SwerveModuleState());
+    STATUS.setOutput(new SwerveModuleState());
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override

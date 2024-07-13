@@ -47,6 +47,7 @@ public abstract class Gyroscope<Hardware> implements Component<Rotation3d> {
     DESCRIPTION = Objects
       .requireNonNull(Description);
     STATUS = new ReportAutoLogged();
+    STATUS.setMeasurements(new Rotation3d[] {});
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override

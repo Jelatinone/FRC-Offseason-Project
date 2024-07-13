@@ -47,6 +47,7 @@ public abstract class Camera<Hardware> implements Component<Transform3d> {
     DESCRIPTION = Objects
       .requireNonNull(Description);
     STATUS = new ReportAutoLogged();
+    STATUS.setMeasurements(new Transform3d[] {});
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override

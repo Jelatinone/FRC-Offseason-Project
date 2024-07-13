@@ -122,14 +122,10 @@ public final class Manager implements Singleton<Manager> {
    */
   private Manager() {
     //<--- Fetch All Managed Subsystems --->
-    if(VISION_ENABLED) {
-      VisionSubsystem
-        .getInstance();      
-    }    
-    if(DRIVEBASE_ENABLED) {
-      DrivebaseSubsystem
-        .getInstance();      
-    }
+    VisionSubsystem
+      .getInstance();      
+    DrivebaseSubsystem
+      .getInstance();      
     //<--- Initialize Constants --->
     CALLBACK = Executors
       .newWorkStealingPool(PARALLEL_THREADS);
@@ -426,7 +422,7 @@ public final class Manager implements Singleton<Manager> {
       return VEHICLE_ODOMETRY
         .getSample(Timestamp)
         .orElseThrow();
-      // <--- TODO: Lookahead Sampling with Predicted Velocity
+      // <--- TODO: Look-ahead Sampling
     } finally {
       WHEEL_UPDATE_LOCK.readLock().unlock();
     }
