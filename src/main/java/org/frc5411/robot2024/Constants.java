@@ -64,7 +64,7 @@ public final class Constants {
     };
 
     static Boolean DRIVEBASE_ENABLED = (true);
-    static Boolean VISION_ENABLED = (false);
+    static Boolean VISION_ENABLED = (true);
 
     static Integer DRIVER_CONTROL_PORT = (0);
     static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController(DRIVER_CONTROL_PORT);

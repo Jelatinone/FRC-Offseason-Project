@@ -274,8 +274,12 @@ public final class Manager implements Singleton<Manager> {
   @Async
   public synchronized void update() {
     Logger.recordOutput(
-      ("Robot/Observations"),
-      WHEEL_UPDATE_QUEUE.size() + VISION_UPDATE_QUEUE.size()
+      ("Robot/Wheel"),
+      WHEEL_UPDATE_QUEUE.size()
+    );    
+    Logger.recordOutput(
+      ("Robot/Vision"),
+      VISION_UPDATE_QUEUE.size()
     );
     Logger.recordOutput(
       ("Robot/Vehicle"), 
