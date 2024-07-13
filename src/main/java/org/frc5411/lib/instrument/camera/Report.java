@@ -42,5 +42,5 @@ public class Report extends org.frc5411.lib.pattern.Report<Transform3d> {
 
   volatile int Pipeline = (-1);
 
-  volatile Pose3d Robot = new Pose3d();
+  volatile Pose3d Robot[] = new Pose3d[] {};
 }

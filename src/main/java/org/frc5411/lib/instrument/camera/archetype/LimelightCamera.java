@@ -23,12 +23,15 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableValue;
+import edu.wpi.first.networktables.PubSubOption;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -44,6 +47,9 @@ import lombok.experimental.NonFinal;
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
 public class LimelightCamera extends Camera<NetworkTable> {
+  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+  DoubleArraySubscriber ROBOT_POSE_SOURCE;
+  DoubleArraySubscriber TARGET_POSE_SOURCE;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   @NonFinal volatile Double Heartbeat = (0D);
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
@@ -53,11 +59,22 @@ public class LimelightCamera extends Camera<NetworkTable> {
    */
   public LimelightCamera(final Descriptor<NetworkTable> Descriptor) {
     super(Descriptor);
+
+    ROBOT_POSE_SOURCE = getDescriptor().Hardware
+      .getDoubleArrayTopic(Accessible.ROBOT_POSE_FIELD_RELATIVE.get())
+      .subscribe(new double[] {}, PubSubOption.keepDuplicates((true)), PubSubOption.sendAll((true)));
+
+    TARGET_POSE_SOURCE = getDescriptor().Hardware
+      .getDoubleArrayTopic(Accessible.TARGET_POSE_ROBOT_RELATIVE.get())
+      .subscribe(new double[] {}, PubSubOption.keepDuplicates((true)), PubSubOption.sendAll((true)));
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public synchronized void close() {
-
+    ROBOT_POSE_SOURCE
+      .close();
+    TARGET_POSE_SOURCE
+      .close();
   }
 
   /**
@@ -84,19 +101,36 @@ public class LimelightCamera extends Camera<NetworkTable> {
   @Override
   public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull Transform3d> Record) {
     final var Article = (Report) Record;
-    final var Position = access(Accessible.TARGET_POSE_ROBOT_RELATIVE)
-      .get()
-      .getDoubleArray();
-    final var Target = access(Accessible.TARGET_POSE_CAMERA_RELATIVE)
-      .get()
-      .getDoubleArray();
-
+    final var Robot = ROBOT_POSE_SOURCE
+      .readQueue();      
+    final var Target = TARGET_POSE_SOURCE
+      .readQueue();
     synchronized(Article) {
+      Article.setPipeline((int) access(Accessible.PIPELINE_INDEX).orElseThrow().getInteger());
       Article.setLatency(access(Accessible.CURRENT_PIPELINE_LATENCY).orElseThrow().getDouble());
-      Article.setConnected(Heartbeat < (Heartbeat = access(Accessible.HEART_BEAT_VALUE).get().getDouble()));
-      Article.setPipeline((int) access(Accessible.PIPELINE_INDEX).get().getInteger());
-      Article.setRobot(new Pose3d(new Translation3d(Position[0],Position[1],Position[2]), new Rotation3d(Position[3],Position[4],Position[5])));
-      Article.setMeasurements(new Transform3d[] {new Transform3d(new Translation3d(Target[0],Target[1],Target[2]), new Rotation3d(Target[3],Target[4],Target[5]))});
+      Article.setConnected(Heartbeat < (Heartbeat = access(Accessible.HEART_BEAT_VALUE).orElseThrow().getDouble()));
+      
+      Article.setTimestamps(
+        Stream.of(Target)
+          .mapToDouble((Measurement) -> (Measurement.timestamp / 1e6) - (Measurement.value[6] / 1e3))
+          .toArray()
+      );      
+      Article.setMeasurements(
+        Stream.of(Target)
+          .map((Measurement) -> 
+            new Transform3d(
+              new Translation3d(Measurement.value[0], Measurement.value[1], Measurement.value[2]),
+              new Rotation3d(Measurement.value[3], Measurement.value[4], Measurement.value[5])))
+          .toArray(Transform3d[]::new)
+      );      
+      Article.setRobot(
+        Stream.of(Robot)
+          .map((Measurement) -> 
+            new Pose3d(
+              new Translation3d(Measurement.value[0], Measurement.value[1], Measurement.value[2]),
+              new Rotation3d(Measurement.value[3], Measurement.value[4], Measurement.value[5])))
+          .toArray(Pose3d[]::new)
+      );
     }
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
