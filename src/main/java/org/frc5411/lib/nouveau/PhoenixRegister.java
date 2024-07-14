@@ -171,10 +171,10 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
         .add(Signal);
       RESPONSES
         .add(Buffer);
+      return Buffer;  
     } finally {
       QUEUE_LOCK.writeLock().unlock();
     }
-    return Buffer;
   }
 
   /**
@@ -232,10 +232,10 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
       QUEUE_LOCK.writeLock().lock();
       TIMESTAMPS
         .add(Buffer);
+      return Buffer;  
     } finally {
       QUEUE_LOCK.writeLock().unlock();
     }
-    return Buffer;
   }
 
   @Override
@@ -263,12 +263,12 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
                 .average()
                 .orElse((0D));
               RESPONSES.forEach((Queue) ->
-                  Queue
-                    .offer(Optional.ofNullable(Providers.next().getValue()))
+                Queue
+                  .offer(Optional.ofNullable(Providers.next().getValue()))
               );
               TIMESTAMPS.forEach((Queue) ->  
-                  Queue
-                    .offer(Timestamp)
+                Queue
+                  .offer(Timestamp)
               );
             } finally {
               SIGNAL_LOCK.writeLock().unlock();

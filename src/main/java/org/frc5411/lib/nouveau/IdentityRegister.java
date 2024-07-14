@@ -97,10 +97,10 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
         .add(Signal);
       RESPONSES
         .add(Buffer);
+      return Buffer;  
     } finally {
       QUEUE_LOCK.writeLock().unlock();
     }
-    return Buffer;
   }
 
   @Override
@@ -110,10 +110,10 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
       QUEUE_LOCK.writeLock().lock();
       TIMESTAMPS
         .add(Buffer);
+      return Buffer;  
     } finally {
       QUEUE_LOCK.writeLock().unlock();
     }
-    return Buffer;
   }
 
   @Override

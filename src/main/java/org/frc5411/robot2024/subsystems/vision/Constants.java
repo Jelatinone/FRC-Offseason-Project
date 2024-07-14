@@ -40,12 +40,12 @@ import lombok.experimental.FieldDefaults;
 public class Constants {  
   //-----------------------------------------------------------------------[Enums]-----------------------------------------------------------------------------//
   /**
-   * <h1>Camera</h1>
+   * <h1>Cameras</h1>
    * 
    * @implNote Enum Constants are named {LOCATION}${SIDE} to prevent AdvantageScope from folding the tabs...
    */
   @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-  public enum Camera implements Supplier<org.frc5411.lib.instrument.camera.Descriptor<?>> {
+  public enum Cameras implements Supplier<org.frc5411.lib.instrument.camera.Descriptor<?>> {
     //---------------------------------------------------------------------[Values]----------------------------------------------------------------------------//
     FRONT$LEFT(
       RobotBase.isReal()?
@@ -53,6 +53,7 @@ public class Constants {
         .Hardware(NetworkTableInstance.getDefault().getTable(("LLLeft")))
         .Position(new Transform3d(new Translation3d((3.5e-1D), (3.2e-1D), (3.3e-1D)), new Rotation3d((0D), (-4.45059e-1D), (-3.351032e-1D)))):
       Descriptions.MOCK_CAMERA_DESCRIPTOR
+        .Hardware(() -> Manager.getInstance().getVehicleOdometry())
         .Position(new Transform3d())),
     FRONT$RIGHT(
       RobotBase.isReal()?
@@ -60,6 +61,7 @@ public class Constants {
         .Hardware(NetworkTableInstance.getDefault().getTable(("LLRight")))
         .Position(new Transform3d(new Translation3d((3.5e-1D), -(3.2e-1D), (3.3e-1D)), new Rotation3d((0D), (-4.45059e-1D), (2.565634e-1D)))):
       Descriptions.MOCK_CAMERA_DESCRIPTOR
+        .Hardware(() -> Manager.getInstance().getVehicleOdometry())
         .Position(new Transform3d()));
     //-----------------------------------------------------------------------[Constants]-----------------------------------------------------------------------//
     org.frc5411.lib.instrument.camera.Descriptor<?> DESCRIPTOR;
@@ -72,7 +74,7 @@ public class Constants {
      * {@link org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder descriptor builders} from {@link Descriptions} and use
      * {@link org.frc5411.lib.instrument.camera.Descriptor#clone() Descriptor.clone()} to specify its own descriptor specific to its emplacement on the chassis
      */
-    Camera(final org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<?> Descriptor) {
+    Cameras(final org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<?> Descriptor) {
       DESCRIPTOR = Descriptor
         .Identity(this)
         .build();
@@ -95,9 +97,7 @@ public class Constants {
    * <h1>Identity<h1>
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-  public static class Identity {
-    
-  }
+  public static class Identity {}
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
 /**
@@ -113,6 +113,5 @@ class Descriptions {
     org.frc5411.lib.instrument.camera.Descriptor.<NetworkTable>builder();
 
   static org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<Supplier<Pose2d>> MOCK_CAMERA_DESCRIPTOR =
-    org.frc5411.lib.instrument.camera.Descriptor.<Supplier<Pose2d>>builder()
-      .Hardware(() -> Manager.getInstance().getVehicleOdometry());
+    org.frc5411.lib.instrument.camera.Descriptor.<Supplier<Pose2d>>builder();
 }

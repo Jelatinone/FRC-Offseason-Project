@@ -82,10 +82,8 @@ public class VisionSubsystem extends Subsystem<Named,State> {
    */
   private VisionSubsystem() {
     super(SUBSYSTEM_LOCK, ("Vision-Subsystem"));
-    OpenCVHelp.forceLoadOpenCV();    
-    PhotonCamera.setVersionCheckEnabled((false));
     CAMERAS = Vector.fill(
-      Stream.of(Constants.Camera.values())
+      Stream.of(Constants.Cameras.values())
         .map((Camera) ->
           RobotBase.isReal()?
             Camera.get()
@@ -103,6 +101,8 @@ public class VisionSubsystem extends Subsystem<Named,State> {
       addChild(Camera.getIdentity(), Camera));  
     DISCRETE_AGGREGATOR.reset(DISCRETE_AGGREGATOR.attain());
   } static {
+    OpenCVHelp.forceLoadOpenCV();    
+    PhotonCamera.setVersionCheckEnabled((false));    
     SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
     DISCRETE_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1e6, 

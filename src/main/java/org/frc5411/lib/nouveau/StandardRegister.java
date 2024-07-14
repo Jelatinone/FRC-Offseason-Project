@@ -152,10 +152,10 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
         .add(Signal);
       RESPONSES
         .add(Buffer);
+      return Buffer;  
     } finally {
       QUEUE_LOCK.writeLock().unlock();
     }
-    return Buffer;
   }
 
   @Override
@@ -165,10 +165,10 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
       QUEUE_LOCK.writeLock().lock();
       TIMESTAMPS
         .add(Buffer);
+      return Buffer;  
     } finally {
       QUEUE_LOCK.writeLock().unlock();
     }
-    return Buffer;
   }
 
   @Override

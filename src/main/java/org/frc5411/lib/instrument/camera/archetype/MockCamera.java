@@ -56,7 +56,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   VisionSystemSim WORLD;
   PhotonPoseEstimator ESTIMATOR;
-  PhotonCameraSim CAMERA;
+  PhotonCameraSim SIMULATOR;
 
   Queue<PhotonPipelineResult> CAMERA_RESULTS;
   Queue<Double> UPDATE_TIMESTAMPS;
@@ -82,27 +82,28 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
     Properties.setAvgLatencyMs((90));
     Properties.setLatencyStdDevMs((15));
 
-    CAMERA = new PhotonCameraSim(new PhotonCamera(getIdentity()), Properties);
-    CAMERA.enableDrawWireframe((true));
+    SIMULATOR = new PhotonCameraSim(new PhotonCamera(getIdentity()), Properties);
+    SIMULATOR.enableDrawWireframe((true));
 
     ESTIMATOR = new PhotonPoseEstimator(
       Layout,
       PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-      CAMERA
+      SIMULATOR
         .getCamera(),
       getDescriptor().Position);
     ESTIMATOR.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     WORLD = new VisionSystemSim(getIdentity());
     WORLD.addAprilTags(Layout);
-    WORLD.addCamera(CAMERA, getDescriptor().Position);
+    WORLD.addCamera(SIMULATOR, getDescriptor().Position);
 
     CAMERA_RESULTS = RESULT_REGISTER
       .register(() -> {
-          WORLD.update(getDescriptor().Hardware.get());
-          return CAMERA
-            .getCamera()
-            .getLatestResult();
+          // WORLD.update(getDescriptor().Hardware.get());
+          // return SIMULATOR
+          //   .getCamera()
+          //   .getLatestResult();
+          return new PhotonPipelineResult();
         }
       );
     UPDATE_TIMESTAMPS = RESULT_REGISTER
@@ -113,7 +114,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public synchronized void close() {
-    CAMERA.close();
+    SIMULATOR.close();
 
     CAMERA_RESULTS.clear(); 
     UPDATE_TIMESTAMPS.clear();
@@ -124,29 +125,33 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
     final var Article = (Report) Record;
 
     synchronized(Article) {
-      Article.setConnected(CAMERA.getCamera().isConnected());
-      Article.setPipeline(CAMERA.getCamera().getPipelineIndex());
+      Article.setConnected(SIMULATOR.getCamera().isConnected());
+      Article.setPipeline(SIMULATOR.getCamera().getPipelineIndex());
 
       synchronized(CAMERA_RESULTS) {
-        Article.setObservations(CAMERA_RESULTS
-          .stream()
-          .map((Measurement) -> 
-            ESTIMATOR
-              .update(Measurement)
-              .map((Position) -> Position.estimatedPose))
-          .filter(Optional::isPresent)
-          .toArray(Pose3d[]::new));
-        Article.setMeasurements(CAMERA_RESULTS
-          .stream()
-          .map((Measurement) -> 
-            Measurement.getBestTarget().getBestCameraToTarget())
-          .toArray(Transform3d[]::new)
+        Article.setObservations(
+          CAMERA_RESULTS
+            .stream()
+            .map((Measurement) -> 
+              ESTIMATOR
+                .update(Measurement)
+                .map((Position) -> Position.estimatedPose))
+            .filter(Optional::isPresent)
+            .toArray(Pose3d[]::new));
+        Article.setMeasurements(
+          CAMERA_RESULTS
+            .stream()
+            .filter(PhotonPipelineResult::hasTargets)
+            .map((Measurement) -> 
+              Measurement.getBestTarget().getBestCameraToTarget())
+            .toArray(Transform3d[]::new)
         );
-        Article.setLatency(CAMERA_RESULTS
-          .stream()
-          .findAny()
-          .orElse(new PhotonPipelineResult())
-          .getLatencyMillis() / 1e3);
+        Article.setLatency(
+          CAMERA_RESULTS
+            .stream()
+            .reduce((First, Second) -> Second)
+            .map(PhotonPipelineResult::getLatencyMillis)
+            .orElse((-1D)) / 1e3);
         CAMERA_RESULTS.clear();
       }
       synchronized(UPDATE_TIMESTAMPS) {
