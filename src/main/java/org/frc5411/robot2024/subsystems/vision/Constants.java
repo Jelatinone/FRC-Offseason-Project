@@ -98,7 +98,9 @@ public class Constants {
    * <h1>Identity<h1>
    */
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-  public static class Identity {}
+  public static class Identity {
+    
+  }
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
 /**

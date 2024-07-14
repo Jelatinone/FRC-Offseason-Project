@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj.Notifier;
 
 import java.io.Serial;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -45,7 +44,7 @@ import lombok.experimental.NonFinal;
  * @author Cody Washington
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
-public non-sealed class IdentityRegister<Identity> extends Thread implements Register<Supplier<Optional<Identity>>, Optional<Identity>> {
+public non-sealed class IdentityRegister<Identity> implements Register<Supplier<Identity>, Identity> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 1044457619661863260L;
@@ -53,8 +52,8 @@ public non-sealed class IdentityRegister<Identity> extends Thread implements Reg
   static Integer UPDATE_FREQUENCY = (250);
 
   List<Queue<Double>> TIMESTAMPS;  
-  List<Queue<Optional<Identity>>> RESPONSES;
-  List<Supplier<Optional<Identity>>> SIGNALS;
+  List<Queue<Identity>> RESPONSES;
+  List<Supplier<Identity>> SIGNALS;
 
   MedianFilter PEAK_REMOVER;
   LinearFilter LOW_PASS;
@@ -66,6 +65,7 @@ public non-sealed class IdentityRegister<Identity> extends Thread implements Reg
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   @NonFinal volatile ReportAutoLogged State;
+  @NonFinal volatile Integer Frequency;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Phoenix Register Constructor.
@@ -83,14 +83,13 @@ public non-sealed class IdentityRegister<Identity> extends Thread implements Reg
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
     CALLBACK = new Notifier(this);
-    CALLBACK.setName(getClass().getSimpleName());
-    start();
+    Frequency = UPDATE_FREQUENCY;
   }
 
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Override
-  public synchronized Queue<Optional<Identity>> register(final @NonNull Supplier<Optional<Identity>> Signal) {
-    final var Buffer = new ArrayBlockingQueue<Optional<Identity>>(QUEUE_SIZE);
+  public synchronized Queue<Identity> register(final @NonNull Supplier<Identity> Signal) {
+    final var Buffer = new ArrayBlockingQueue<Identity>(QUEUE_SIZE);
     try {
       QUEUE_LOCK.writeLock().lock();
       SIGNALS
@@ -158,7 +157,7 @@ public non-sealed class IdentityRegister<Identity> extends Thread implements Reg
   @Override
   public synchronized void start() {
     CALLBACK
-      .startPeriodic(1D/UPDATE_FREQUENCY);
+      .startPeriodic(1D/ Frequency);
   }
 
   @Override
@@ -188,6 +187,14 @@ public non-sealed class IdentityRegister<Identity> extends Thread implements Reg
     State.setTimestamp(DISCRETE_AGGREGATOR.getRetained());
     State.setPriority(Thread.currentThread().getPriority());
     State.setRegistered(SIGNALS.size());       
+  }
+  //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
+  /**
+   * Mutates the frequency (hz) at which the internal notifier object of this instance operates at.
+   * @param Frequency Value in hertz, at which this Register should run
+   */
+  public synchronized void setFrequency(final Integer Frequency) {
+    this.Frequency = Frequency;
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override

@@ -55,18 +55,24 @@ public class LimelightCamera extends Camera<NetworkTable> {
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Limelight Camera Constructor.
-   * @param Descriptor Real-world {@link #getDescriptor() descriptor} of the system, contains relevant constants to the operation of the module
+   * @param Descriptor Real-world {@link #getDescriptor() descriptor} of the system, contains relevant constants to the operation of the camera
    */
   public LimelightCamera(final Descriptor<NetworkTable> Descriptor) {
     super(Descriptor);
 
     ROBOT_POSE_SOURCE = getDescriptor().Hardware
       .getDoubleArrayTopic(Accessible.ROBOT_POSE_FIELD_RELATIVE.get())
-      .subscribe(new double[] {}, PubSubOption.keepDuplicates((true)), PubSubOption.sendAll((true)));
+      .subscribe(
+        new double[] {}, 
+        PubSubOption.keepDuplicates((true)), 
+        PubSubOption.sendAll((true)));
 
     TARGET_POSE_SOURCE = getDescriptor().Hardware
       .getDoubleArrayTopic(Accessible.TARGET_POSE_ROBOT_RELATIVE.get())
-      .subscribe(new double[] {}, PubSubOption.keepDuplicates((true)), PubSubOption.sendAll((true)));
+      .subscribe(
+        new double[] {}, 
+        PubSubOption.keepDuplicates((true)), 
+        PubSubOption.sendAll((true)));
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override

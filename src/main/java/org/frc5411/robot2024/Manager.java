@@ -41,7 +41,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.numbers.N5;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.jcabi.aspects.Async;
@@ -473,5 +473,5 @@ public final class Manager implements Singleton<Manager> {
    * <h1>VisionObservation</h1>
    *
    */
-  public record VisionObservation(Pose2d Position, Matrix<N5,N1> Deviations, Double Timestamp) {}
+  public record VisionObservation(Pose2d Position, Matrix<N3,N1> Deviations, Double Timestamp) {}
 }

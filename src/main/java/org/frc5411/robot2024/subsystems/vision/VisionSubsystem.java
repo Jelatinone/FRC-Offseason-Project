@@ -37,6 +37,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.PhotonCamera;
+import org.photonvision.estimation.OpenCVHelp;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -80,6 +82,8 @@ public class VisionSubsystem extends Subsystem<Named,State> {
    */
   private VisionSubsystem() {
     super(SUBSYSTEM_LOCK, ("Vision-Subsystem"));
+    OpenCVHelp.forceLoadOpenCV();    
+    PhotonCamera.setVersionCheckEnabled((false));
     CAMERAS = Vector.fill(
       Stream.of(Constants.Camera.values())
         .map((Camera) ->
