@@ -129,7 +129,7 @@ public class LimelightCamera extends Camera<NetworkTable> {
               new Rotation3d(Measurement.value[3], Measurement.value[4], Measurement.value[5])))
           .toArray(Transform3d[]::new)
       );      
-      Article.setRobot(
+      Article.setObservations(
         Stream.of(Robot)
           .map((Measurement) -> 
             new Pose3d(

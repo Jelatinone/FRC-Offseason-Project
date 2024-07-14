@@ -31,7 +31,9 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
@@ -473,5 +475,5 @@ public final class Manager implements Singleton<Manager> {
    * <h1>VisionObservation</h1>
    *
    */
-  public record VisionObservation(Pose2d Position, Matrix<N3,N1> Deviations, Double Timestamp) {}
+  public record VisionObservation(List<Pose3d> Positions, List<Transform3d> Targets, List<Double> Timestamps) {}
 }

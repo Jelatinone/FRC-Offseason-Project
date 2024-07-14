@@ -128,7 +128,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
       Article.setPipeline(CAMERA.getCamera().getPipelineIndex());
 
       synchronized(CAMERA_RESULTS) {
-        Article.setRobot(CAMERA_RESULTS
+        Article.setObservations(CAMERA_RESULTS
           .stream()
           .map((Measurement) -> 
             ESTIMATOR
