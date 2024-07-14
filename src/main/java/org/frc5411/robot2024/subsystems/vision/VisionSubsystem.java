@@ -211,8 +211,11 @@ public class VisionSubsystem extends Subsystem<Named,State> {
               Manager
                 .getInstance()
                 .sample(new VisionObservation(
-                  Camera
-                    .getObservations(), 
+                  List.of(
+                    Camera
+                      .getReport()
+                      .getObservations()
+                      .clone()), 
                   Camera
                     .getMeasurements(), 
                   Camera 
@@ -223,7 +226,7 @@ public class VisionSubsystem extends Subsystem<Named,State> {
         Mode = CAMERAS
           .stream()
           .allMatch((Camera) -> 
-            Camera.getObservation().isPresent())?
+            Camera.getReport().getObservations().length > (0))?
           State.ACTIVE:
           State.STALE;
       }

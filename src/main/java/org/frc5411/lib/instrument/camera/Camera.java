@@ -14,18 +14,14 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.camera;
-import org.frc5411.lib.nouveau.Register;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 import org.littletonrobotics.junction.Logger;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -80,29 +76,6 @@ public abstract class Camera<Hardware> implements Component<Transform3d> {
   @Override
   public Descriptor<Hardware> getDescriptor() {
     return DESCRIPTION;
-  }
-
-
-  /**
-   * Provides the current observation Reported during the last {@link #update(Report)} cycle, which means it may be out-of-date if {@link #update(Report)}
-   * has not been called for a significant amount of time.
-   * @return Latest observation as an optional
-   */
-  public Optional<Pose3d> getObservation() {
-    final var Measurements = getObservations();
-    return Measurements.isEmpty()? Optional.empty(): Optional.of(Measurements.get(Measurements.size() - (1)));
-  }  
-
-  /**
-   * Provides a list of all observation (more specifically the different between the positions, deltas, in most cases) that have occurred from the last
-   * {@link #update(Report)} cycle until now. This is most often sourced through a queue from a relevant {@link Register} updated asynchronously
-   *  of the main-robot thread.
-   * @return Latest list of observations
-   * @see Register#register(Object) Measurement queues
-   * @throws NullPointerException When {@link Report#getMeasurements() observations} has not been properly initialized
-   */
-  public List<Pose3d> getObservations() {
-    return List.of(getReport().getObservations().clone());
   }
 
   @Override

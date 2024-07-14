@@ -84,6 +84,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
     CALLBACK = new Notifier(this);
     Frequency = UPDATE_FREQUENCY;
+    start();
   }
 
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//

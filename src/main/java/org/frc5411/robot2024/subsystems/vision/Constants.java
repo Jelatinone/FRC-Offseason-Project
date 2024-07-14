@@ -16,6 +16,7 @@
 package org.frc5411.robot2024.subsystems.vision;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -24,9 +25,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 
 import java.util.function.Supplier;
 
-import org.photonvision.PhotonCamera;
-import org.photonvision.simulation.PhotonCameraSim;
-import org.photonvision.simulation.SimCameraProperties;
+import org.frc5411.robot2024.Manager;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -54,7 +53,6 @@ public class Constants {
         .Hardware(NetworkTableInstance.getDefault().getTable(("LLLeft")))
         .Position(new Transform3d(new Translation3d((3.5e-1D), (3.2e-1D), (3.3e-1D)), new Rotation3d((0D), (-4.45059e-1D), (-3.351032e-1D)))):
       Descriptions.MOCK_CAMERA_DESCRIPTOR
-        .Hardware(new PhotonCameraSim(new PhotonCamera(NetworkTableInstance.getDefault(), ("CAMERA-[FRONT$LEFT]"))))
         .Position(new Transform3d())),
     FRONT$RIGHT(
       RobotBase.isReal()?
@@ -62,7 +60,6 @@ public class Constants {
         .Hardware(NetworkTableInstance.getDefault().getTable(("LLRight")))
         .Position(new Transform3d(new Translation3d((3.5e-1D), -(3.2e-1D), (3.3e-1D)), new Rotation3d((0D), (-4.45059e-1D), (2.565634e-1D)))):
       Descriptions.MOCK_CAMERA_DESCRIPTOR
-      .Hardware(new PhotonCameraSim(new PhotonCamera(NetworkTableInstance.getDefault(), ("CAMERA-[FRONT$RIGHT]")), new SimCameraProperties()))
         .Position(new Transform3d()));
     //-----------------------------------------------------------------------[Constants]-----------------------------------------------------------------------//
     org.frc5411.lib.instrument.camera.Descriptor<?> DESCRIPTOR;
@@ -115,6 +112,7 @@ class Descriptions {
   static org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<NetworkTable> REAL_CAMERA_DESCRIPTOR = 
     org.frc5411.lib.instrument.camera.Descriptor.<NetworkTable>builder();
 
-  static org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<PhotonCameraSim> MOCK_CAMERA_DESCRIPTOR =
-  org.frc5411.lib.instrument.camera.Descriptor.<PhotonCameraSim>builder();
+  static org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<Supplier<Pose2d>> MOCK_CAMERA_DESCRIPTOR =
+    org.frc5411.lib.instrument.camera.Descriptor.<Supplier<Pose2d>>builder()
+      .Hardware(() -> Manager.getInstance().getVehicleOdometry());
 }
