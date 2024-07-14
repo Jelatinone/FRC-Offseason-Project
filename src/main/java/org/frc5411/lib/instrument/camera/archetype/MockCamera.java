@@ -147,6 +147,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
           .findAny()
           .orElse(new PhotonPipelineResult())
           .getLatencyMillis() / 1e3);
+        CAMERA_RESULTS.clear();
       }
       synchronized(UPDATE_TIMESTAMPS) {
         Article.setTimestamps(UPDATE_TIMESTAMPS

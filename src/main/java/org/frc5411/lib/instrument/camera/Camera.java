@@ -88,7 +88,7 @@ public abstract class Camera<Hardware> implements Component<Transform3d> {
    * has not been called for a significant amount of time.
    * @return Latest observation as an optional
    */
-  Optional<Pose3d> getObservation() {
+  public Optional<Pose3d> getObservation() {
     final var Measurements = getObservations();
     return Measurements.isEmpty()? Optional.empty(): Optional.of(Measurements.get(Measurements.size() - (1)));
   }  
@@ -101,7 +101,7 @@ public abstract class Camera<Hardware> implements Component<Transform3d> {
    * @see Register#register(Object) Measurement queues
    * @throws NullPointerException When {@link Report#getMeasurements() observations} has not been properly initialized
    */
-  List<Pose3d> getObservations() {
+  public List<Pose3d> getObservations() {
     return List.of(getReport().getObservations().clone());
   }
 

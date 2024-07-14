@@ -211,12 +211,21 @@ public class VisionSubsystem extends Subsystem<Named,State> {
               Manager
                 .getInstance()
                 .sample(new VisionObservation(
-                  (null), 
-                  (null), 
-                  (null))
+                  Camera
+                    .getObservations(), 
+                  Camera
+                    .getMeasurements(), 
+                  Camera 
+                    .getTimestamps())
                 );
             }
           });
+        Mode = CAMERAS
+          .stream()
+          .allMatch((Camera) -> 
+            Camera.getObservation().isPresent())?
+          State.ACTIVE:
+          State.STALE;
       }
     } finally {
       update();
