@@ -69,7 +69,7 @@ deploy {
       debug = project.frc.getDebugOrDefault(false)
       artifacts {
         frcJava(getArtifactTypeClass('FRCJavaArtifact')) {
-          gcType = GarbageCollectorType.G1_Base
+          gcType = GarbageCollectorType.Parallel
           jarTask = shadowJar
           jvmArgs << '-XX:+UseG1GC'
           if (frc.project.hasProperty("profile")) {
