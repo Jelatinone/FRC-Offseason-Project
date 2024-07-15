@@ -28,11 +28,13 @@ import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 
 import java.util.Queue;
 import java.util.function.Supplier;
@@ -111,7 +113,6 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
   public synchronized void close() {
     SIMULATOR.close();
     WORLD.clearCameras();
-    
     CAMERA_RESULTS.clear(); 
   }
 
@@ -138,7 +139,9 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
               ESTIMATOR
                 .update(Measurement)
                 .map((Position) -> Position.estimatedPose)
-                .orElse(new Pose3d()))
+                .orElse(new Pose3d(
+                  new Translation3d(Double.NaN, Double.NaN, Double.NaN), 
+                  new Rotation3d(Double.NaN, Double.NaN, Double.NaN))))
             .toArray(Pose3d[]::new)
         );
         Article.setMeasurements(

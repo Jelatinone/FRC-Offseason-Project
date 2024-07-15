@@ -37,6 +37,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
 
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Optional;
@@ -45,10 +46,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+
+import static org.frc5411.robot2024.Constants.Identity.*;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
@@ -111,24 +115,32 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
         break;
     }
-    if(!Constants.Identity.MODE.equals(Constants.Mode.ANONYMOUS)) {
-      Logger.start();
-    }
+    initialize();
+    Manager
+      .getInstance();       
     CommandScheduler.getInstance()
-        .onCommandInitialize(
-            (Command Operation) -> log(Operation, (true)));
+      .onCommandInitialize(
+        (final Command Operation) -> log(Operation, (true)));
     CommandScheduler.getInstance()
-        .onCommandFinish(
-            (Command Operation) -> log(Operation, (false)));
+      .onCommandFinish(
+        (final Command Operation) -> log(Operation, (false)));
     CommandScheduler.getInstance()
-        .onCommandInterrupt(
-            (Command Operation) -> log(Operation, (false)));     
-    DataLogManager.start();
+      .onCommandInterrupt(
+        (final Command Operation) -> log(Operation, (false)));    
     Logger.registerURCL(URCL.startExternal());
-    Manager.getInstance();
-    Shuffleboard.startRecording();
     DriverStation.silenceJoystickConnectionWarning((true));
     PortForwarder.add((5800), ("photonvision.local"), (5800));
+    switch(Constants.Identity.MODE) {
+      case ANONYMOUS:
+        break;
+      default:
+        Shuffleboard.startRecording();
+        Logger
+          .start();
+        DataLogManager
+          .start();  
+        break;
+    }
   }
 
   @Override
@@ -178,7 +190,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Timestamp = Timer.getFPGATimestamp();
     Message = (false);
     if(Autonomous != null) {
-      Autonomous.onlyWhile(this::isAutonomousEnabled).schedule();
+      Autonomous.onlyWhile(Instance::isAutonomousEnabled).schedule();
     }
   }
 
@@ -247,7 +259,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * @param Callback Periodic operation to perform at an interval
    * @param Period   Time interval (discrete time interval, period, etc.) upon which the operation is scheduled to run at
    */
-  public void add(final Runnable Callback, final Double Period) {
+  public void add(final Runnable Callback, final Integer Period) {
     synchronized(Robot.class) {
       Instance.CALLBACKS.add(new Callback(Callback, 1D / Period));
     }
@@ -265,6 +277,15 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Logger.recordOutput(String.format(("Commands/Unique/[%s]-[%s]"), Name, Integer.toHexString(Operation.hashCode())), Running);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]"), Name), Count > 0);
   }
+
+  /**
+   * Performs pre-initialization on relevant variables to this manager type. This is useful for any case where the initialized values references within the constructor are
+   * cyclical in nature. In that case, this call can be made to ensure that the relevant Subsystems are initialized prior to referencing.
+   */
+  public static synchronized void initialize() {
+    MANAGED
+      .forEach(Supplier::get);
+  }
   //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
   /**
    * Mutates the current autonomous command to a different command, immediately ends any running commands if applicable.
@@ -279,7 +300,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
    * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
-   * @param <Type> Provided singleton's type
    * @return This singleton's instance, optionally
    * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
@@ -289,8 +309,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   }
 
   /**
-   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @param <Type> Provided singleton's type
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed
    * @return This singleton's instance, guaranteed
    * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */

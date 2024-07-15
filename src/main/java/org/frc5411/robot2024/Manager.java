@@ -25,7 +25,6 @@ import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
 
 import edu.wpi.first.hal.HALUtil;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
@@ -41,9 +40,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.jcabi.aspects.Async;
@@ -68,12 +65,12 @@ import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
 import static org.frc5411.robot2024.Constants.Preferences.*;
 import static org.frc5411.robot2024.Constants.Identity.*;
+import static org.frc5411.robot2024.Constants.Control.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *
@@ -88,16 +85,14 @@ public final class Manager implements Singleton<Manager> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   static long serialVersionUID = 2389697764281159320L;
-  static Integer PARALLEL_THREADS = (8);
-  static Integer QUEUE_SIZE = (20);
-  static Double BUFFER_SIZE = (2D);
-  static Double UPDATE_FREQUENCY = (100D);
+  
   static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
-  static Aggregator<Double> WHEEL_TIME_AGGREGATOR;
-  static Aggregator<Double> VISION_TIME_AGGREGATOR;
 
-  static @NonFinal Integer MODULES;
+  static Aggregator<Double> WHEEL_DISCRETE_AGGREGATOR;
+  static Aggregator<Double> VISION_DISCRETE_AGGREGATOR;
+
+  static Integer MODULES;
 
   static ReadWriteLock WHEEL_UPDATE_LOCK;
   static ReadWriteLock VISION_UPDATE_LOCK;  
@@ -124,14 +119,9 @@ public final class Manager implements Singleton<Manager> {
    * Manager Constructor.
    */
   private Manager() {
-    //<--- Fetch All Managed Subsystems --->
-    VisionSubsystem
-      .getInstance();      
-    DrivebaseSubsystem
-      .getInstance();      
     //<--- Initialize Constants --->
     CALLBACK = Executors
-      .newWorkStealingPool(PARALLEL_THREADS);
+      .newWorkStealingPool(THREAD_PARALLELISM);
     WHEEL_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
     VISION_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
     VEHICLE_ODOMETRY = TimeInterpolatableBuffer
@@ -147,7 +137,6 @@ public final class Manager implements Singleton<Manager> {
       STATE_STANDARD_DEVIATIONS,
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
-
     //<--- Sample from Subsystems --->
     KINEMATICS = DrivebaseSubsystem
       .getKinematics();
@@ -161,10 +150,9 @@ public final class Manager implements Singleton<Manager> {
       .getInstance()
       .getGyroscopePosition()
       .toRotation2d();
-
     //<--- Base Sampling --->
     VEHICLE_ODOMETRY.addSample(
-      WHEEL_TIME_AGGREGATOR.attain(), 
+      WHEEL_DISCRETE_AGGREGATOR.attain(), 
       ODOMETRY.update(
         DrivebaseSubsystem
           .getInstance()
@@ -191,15 +179,14 @@ public final class Manager implements Singleton<Manager> {
     //<--- Construct static fields --->
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
-    WHEEL_TIME_AGGREGATOR = new Aggregator<>(
+    WHEEL_DISCRETE_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
-    VISION_TIME_AGGREGATOR = new Aggregator<>(
+    VISION_DISCRETE_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
-
   @Serial
   @Override
   public synchronized Manager readResolve() {
@@ -273,14 +260,6 @@ public final class Manager implements Singleton<Manager> {
   @Async
   public synchronized void update() {
     Logger.recordOutput(
-      ("Robot/Wheel"),
-      WHEEL_UPDATE_QUEUE.size()
-    );    
-    Logger.recordOutput(
-      ("Robot/Vision"),
-      VISION_UPDATE_QUEUE.size()
-    );
-    Logger.recordOutput(
       ("Robot/Vehicle"), 
       getVehicleOdometry()
     );
@@ -333,7 +312,7 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final WheelObservation Observation) {
     try {
       WHEEL_UPDATE_LOCK.writeLock().lock();
-      WHEEL_TIME_AGGREGATOR.aggregate();
+      WHEEL_DISCRETE_AGGREGATOR.aggregate();
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
       for(int Update = (0); Update < Updates; Update++) {
@@ -341,7 +320,7 @@ public final class Manager implements Singleton<Manager> {
           VecBuilder.fill(
             (0D), 
             (0D)), 
-          WHEEL_TIME_AGGREGATOR.getAggregated());     
+          WHEEL_DISCRETE_AGGREGATOR.getAggregated());     
         final var Positions = new SwerveModulePosition[MODULES];
         final var Deltas = new SwerveModulePosition[MODULES];
         for(int Module = (0); Module < MODULES; Module++) {
@@ -388,7 +367,7 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final VisionObservation Observation) {
     try {
       VISION_UPDATE_LOCK.writeLock().lock();
-      VISION_TIME_AGGREGATOR.aggregate();
+      VISION_DISCRETE_AGGREGATOR.aggregate();
       // <--- TODO: Vision Resolution
     } finally {
       VISION_UPDATE_LOCK.writeLock().unlock();
@@ -421,7 +400,7 @@ public final class Manager implements Singleton<Manager> {
    * @throws java.util.NoSuchElementException When a sample cannot be found for the current time
    */
   public Pose2d getVehicleOdometry() {
-    return getVehicleOdometry(WHEEL_TIME_AGGREGATOR.attain());
+    return getVehicleOdometry(WHEEL_DISCRETE_AGGREGATOR.attain());
   }
 
   /**
@@ -447,7 +426,6 @@ public final class Manager implements Singleton<Manager> {
 
   /**
    * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
-   * @param <Type> Provided singleton's type
    * @return This singleton's instance, optionally
    * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
@@ -458,7 +436,6 @@ public final class Manager implements Singleton<Manager> {
 
   /**
    * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @param <Type> Provided singleton's type
    * @return This singleton's instance, guaranteed
    * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */

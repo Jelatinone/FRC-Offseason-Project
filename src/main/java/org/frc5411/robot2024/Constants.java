@@ -22,6 +22,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import java.util.function.Supplier;
 
 import org.frc5411.lib.utility.Profile;
+import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
+import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
+import org.frc5411.lib.schema.Singleton;
+
+import java.util.List;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -52,6 +57,16 @@ public final class Constants {
   //----------------------------------------------------------------------[Internal]---------------------------------------------------------------------------//
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public static final class Identity {
+    static Integer THREAD_PARALLELISM = (8);
+    static Integer UPDATE_FREQUENCY = (100);
+
+    static Integer QUEUE_SIZE = (20);
+    static Double BUFFER_SIZE = (2D);
+
+    static List<Supplier<Singleton<?>>> MANAGED = List.of(
+      () -> VisionSubsystem.getInstance(),
+      () -> DrivebaseSubsystem.getInstance());
+
     static Type DESIRED_TYPE = Type.SIMBOT;
     static Type TYPE = RobotBase.isReal()? DESIRED_TYPE: Type.SIMBOT;
     static Mode MODE = switch(TYPE) {
@@ -63,16 +78,18 @@ public final class Constants {
         -> Mode.SIMULATED;
     };
 
+    static AprilTagFields FIELD = AprilTagFields.kDefaultField;
+  }
+  @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
+  public static final class Control {
     static Integer DRIVER_CONTROL_PORT = (0);
-    static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController(DRIVER_CONTROL_PORT);
-
     static Integer OPERATOR_CONTROL_PORT = (1);
+
+    static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController(DRIVER_CONTROL_PORT);
     static CommandXboxController OPERATOR_CONTROLLER = new CommandXboxController(OPERATOR_CONTROL_PORT);
 
-    static Profile<Keybindings,Preferences> DRIVER =  (TYPE.equals(Type.COMPBOT)? Character.COMP_DRIVER: Character.DEV_DRIVER).get();
-    static Profile<Keybindings,Preferences> OPERATOR = (TYPE.equals(Type.COMPBOT)? Character.COMP_OPERATOR: Character.DEV_OPERATOR).get();
-
-    static AprilTagFields FIELD = AprilTagFields.kDefaultField;
+    static Profile<Keybindings,Preferences> DRIVER =  (Identity.TYPE.equals(Type.COMPBOT)? Character.COMP_DRIVER: Character.DEV_DRIVER).get();
+    static Profile<Keybindings,Preferences> OPERATOR = (Identity.TYPE.equals(Type.COMPBOT)? Character.COMP_OPERATOR: Character.DEV_OPERATOR).get();
   }
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**
@@ -120,11 +137,11 @@ public final class Constants {
 
     DEV_DRIVER(
       new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_DRIVER"))
-        .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> -Identity.DRIVER_CONTROLLER.getRawAxis((1)))
+        .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((1)))
         .add(Preferences.CONTROL_ZONE_X, (2e-1D))
-        .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> -Identity.DRIVER_CONTROLLER.getRawAxis((0)))
+        .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((0)))
         .add(Preferences.CONTROL_ZONE_Y, (2e-1D))
-        .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> -Identity.DRIVER_CONTROLLER.getRawAxis((4)))
+        .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((4)))
         .add(Preferences.CONTROL_ZONE_T, (2e-1D))
     ),
 
