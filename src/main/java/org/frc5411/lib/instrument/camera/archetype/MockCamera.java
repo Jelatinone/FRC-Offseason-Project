@@ -34,7 +34,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-import java.util.Optional;
 import java.util.Queue;
 import java.util.function.Supplier;
 
@@ -59,7 +58,6 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
   PhotonCameraSim SIMULATOR;
 
   Queue<PhotonPipelineResult> CAMERA_RESULTS;
-  Queue<Double> UPDATE_TIMESTAMPS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Mock Camera Constructor.
@@ -99,15 +97,12 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
 
     CAMERA_RESULTS = RESULT_REGISTER
       .register(() -> {
-          // WORLD.update(getDescriptor().Hardware.get());
-          // return SIMULATOR
-          //   .getCamera()
-          //   .getLatestResult();
-          return new PhotonPipelineResult();
+          WORLD.update(new Pose3d()); // <--- Call causing wait!
+          return SIMULATOR
+            .getCamera()
+            .getLatestResult();
         }
       );
-    UPDATE_TIMESTAMPS = RESULT_REGISTER
-      .timestamp();
   } static {
     RESULT_REGISTER = new IdentityRegister<>();
   }
@@ -115,9 +110,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
   @Override
   public synchronized void close() {
     SIMULATOR.close();
-
     CAMERA_RESULTS.clear(); 
-    UPDATE_TIMESTAMPS.clear();
   }
 
   @Override
@@ -129,37 +122,39 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
       Article.setPipeline(SIMULATOR.getCamera().getPipelineIndex());
 
       synchronized(CAMERA_RESULTS) {
+        Article.setLatency(
+          CAMERA_RESULTS
+            .stream()
+            .reduce((Current, Next) -> Next)
+            .map((Result) -> Result.getLatencyMillis() / 1E3D)
+            .orElse((-1D))
+        );
         Article.setObservations(
           CAMERA_RESULTS
             .stream()
             .map((Measurement) -> 
               ESTIMATOR
                 .update(Measurement)
-                .map((Position) -> Position.estimatedPose))
-            .filter(Optional::isPresent)
-            .toArray(Pose3d[]::new));
+                .map((Position) -> Position.estimatedPose)
+                .orElse(new Pose3d()))
+            .toArray(Pose3d[]::new)
+        );
         Article.setMeasurements(
           CAMERA_RESULTS
             .stream()
-            .filter(PhotonPipelineResult::hasTargets)
             .map((Measurement) -> 
-              Measurement.getBestTarget().getBestCameraToTarget())
+              Measurement
+                .getBestTarget()
+                .getBestCameraToTarget())
             .toArray(Transform3d[]::new)
         );
-        Article.setLatency(
+        Article.setTimestamps(
           CAMERA_RESULTS
             .stream()
-            .reduce((First, Second) -> Second)
-            .map(PhotonPipelineResult::getLatencyMillis)
-            .orElse((-1D)) / 1e3);
+            .mapToDouble(PhotonPipelineResult::getTimestampSeconds)
+            .toArray()
+        );
         CAMERA_RESULTS.clear();
-      }
-      synchronized(UPDATE_TIMESTAMPS) {
-        Article.setTimestamps(UPDATE_TIMESTAMPS
-          .stream()
-          .mapToDouble(Number::doubleValue)
-          .toArray());
-        UPDATE_TIMESTAMPS.clear();
       }
     }
   }

@@ -78,7 +78,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
     PEAK_REMOVER = new MedianFilter((3));
     LOW_PASS = LinearFilter.movingAverage((50));
     DISCRETE_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1e6, 
+      () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
@@ -168,7 +168,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
       try {
         SIGNAL_LOCK.readLock().lock();
         final var Providers = SIGNALS.iterator();
-        final var Timestamp = HALUtil.getFPGATime() / 1e6;
+        final var Timestamp = HALUtil.getFPGATime() / 1E6D;
         RESPONSES.forEach((Queue) -> 
           Queue
             .offer(Providers.next().get())

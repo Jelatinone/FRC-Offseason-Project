@@ -51,7 +51,7 @@ public class Constants {
       RobotBase.isReal()?
       Descriptions.REAL_CAMERA_DESCRIPTOR
         .Hardware(NetworkTableInstance.getDefault().getTable(("LLLeft")))
-        .Position(new Transform3d(new Translation3d((3.5e-1D), (3.2e-1D), (3.3e-1D)), new Rotation3d((0D), (-4.45059e-1D), (-3.351032e-1D)))):
+        .Position(new Transform3d(new Translation3d((3.5E-1D), (3.2E-1D), (3.3E-1D)), new Rotation3d((0D), (-4.45059E-1D), (-3.351032E-1D)))):
       Descriptions.MOCK_CAMERA_DESCRIPTOR
         .Hardware(() -> Manager.getInstance().getVehicleOdometry())
         .Position(new Transform3d())),
@@ -59,7 +59,7 @@ public class Constants {
       RobotBase.isReal()?
       Descriptions.REAL_CAMERA_DESCRIPTOR
         .Hardware(NetworkTableInstance.getDefault().getTable(("LLRight")))
-        .Position(new Transform3d(new Translation3d((3.5e-1D), -(3.2e-1D), (3.3e-1D)), new Rotation3d((0D), (-4.45059e-1D), (2.565634e-1D)))):
+        .Position(new Transform3d(new Translation3d((3.5E-1D), -(3.2E-1D), (3.3E-1D)), new Rotation3d((0D), (-4.45059E-1D), (2.565634E-1D)))):
       Descriptions.MOCK_CAMERA_DESCRIPTOR
         .Hardware(() -> Manager.getInstance().getVehicleOdometry())
         .Position(new Transform3d()));

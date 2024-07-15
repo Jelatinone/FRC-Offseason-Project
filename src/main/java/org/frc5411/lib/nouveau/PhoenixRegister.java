@@ -94,7 +94,7 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
     PEAK_REMOVER = new MedianFilter((3));
     LOW_PASS = LinearFilter.movingAverage((50));
     DISCRETE_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1e6, 
+      () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
     REQUEST_LOCK = new ReentrantReadWriteLock((true));
     QUEUE_LOCK = new ReentrantReadWriteLock((true));

@@ -118,7 +118,7 @@ public class LimelightCamera extends Camera<NetworkTable> {
       
       Article.setTimestamps(
         Stream.of(Target)
-          .mapToDouble((Measurement) -> (Measurement.timestamp / 1e6) - (Measurement.value[6] / 1e3))
+          .mapToDouble((Measurement) -> (Measurement.timestamp / 1E6D) - (Measurement.value[6] / 1E3D))
           .toArray()
       );      
       Article.setMeasurements(

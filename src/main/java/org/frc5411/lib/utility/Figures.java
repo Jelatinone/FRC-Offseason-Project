@@ -44,7 +44,7 @@ public class Figures {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   public static final Double PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679D;
   public static final Double E = 2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274D;
-  public static final Double EQUIVALENCE = 1e-9;
+  public static final Double EQUIVALENCE = 1E-9D;
   private static final UnivariateIntegrator INTEGRATOR = new TrapezoidIntegrator();
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
@@ -53,7 +53,7 @@ public class Figures {
    * @return Standard deviation as a double value
    */
   public static Number stdev(final double... Numbers){
-    double Mean = mean(Numbers), Sum = (0d);
+    double Mean = mean(Numbers), Sum = (0D);
     for(final double Number : Numbers){
       Sum += Math.pow((Number - Mean), (2));
     }

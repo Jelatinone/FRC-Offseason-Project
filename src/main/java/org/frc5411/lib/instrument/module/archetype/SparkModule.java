@@ -121,8 +121,8 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
         TRANSLATIONAL_ENCODER.setMeasurementPeriod((10));
         TRANSLATIONAL_ENCODER.setAverageDepth((2));
         
-        getDescriptor().TranslationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
-        getDescriptor().RotationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1000D / 100));
+        getDescriptor().TranslationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1E3D / 1E2D));
+        getDescriptor().RotationalController.setPeriodicFramePeriod(PeriodicFrame.kStatus2, (int) (1E3D / 1E2D));
       }
       
       getDescriptor().TranslationalController.burnFlash();

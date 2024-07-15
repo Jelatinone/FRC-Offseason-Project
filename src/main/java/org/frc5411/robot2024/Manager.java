@@ -191,10 +191,10 @@ public final class Manager implements Singleton<Manager> {
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
     WHEEL_TIME_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1e6, 
+      () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
     VISION_TIME_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1e6, 
+      () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//

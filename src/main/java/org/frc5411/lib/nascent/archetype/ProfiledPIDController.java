@@ -91,7 +91,7 @@ public class ProfiledPIDController implements Controller<N2,N1,N1> {
   @Override
   public synchronized Vector<@NonNull N1> calculate(Vector<@NonNull N2> Reference) {
     synchronized(CONTROLLER) {
-      Timestamp = HALUtil.getFPGATime() / 1e6;
+      Timestamp = HALUtil.getFPGATime() / 1E6D;
       return VecBuilder
         .fill(Effort = CONTROLLER.calculate(
             Reference.get(
@@ -214,7 +214,7 @@ public class ProfiledPIDController implements Controller<N2,N1,N1> {
     Double Velocity;
     Double Acceleration;
 
-    @Default Double Period = (2e-2D);
+    @Default Double Period = (2E-2D);
     //---------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
     @Override
     public Descriptor clone() {

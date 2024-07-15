@@ -191,7 +191,7 @@ class Descriptions {
     org.frc5411.lib.nascent.archetype.ProfiledPIDController.Descriptor.builder()
       .Proportional((9D))
       .Integral((0D))
-      .Derivative((5e-1D))
+      .Derivative((5E-1D))
       .Velocity((8D))
       .Acceleration((20D));
 
@@ -206,10 +206,10 @@ class Descriptions {
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDController.Descriptor.builder().Proportional((0.2D)).Integral((0D)).Derivative((5e-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
+      .TranslationalFeedback(PIDController.Descriptor.builder().Proportional((0.2D)).Integral((0D)).Derivative((5E-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
-      .RotationalFeedback(PIDController.Descriptor.builder().Proportional((2.81D)).Integral((0D)).Derivative((5e-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
+      .RotationalFeedback(PIDController.Descriptor.builder().Proportional((2.81D)).Integral((0D)).Derivative((5E-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .Radius(Units.inchesToMeters((4D)))
       .Limits(Limit.builder().TranslationalVelocity((4.8D)).TranslationalAcceleration((4.8D) * (5D)).RotationalVelocity((24) * Figures.PI).build());
 

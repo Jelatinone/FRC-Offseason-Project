@@ -145,7 +145,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   } static {
     SUBSYSTEM_LOCK = new ReentrantReadWriteLock((true));
     DISCRETE_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1e6, 
+      () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//

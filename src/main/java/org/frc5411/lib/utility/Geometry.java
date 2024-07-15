@@ -56,8 +56,8 @@ public class Geometry {
       final double Half = Theta / 2D;
       final double Cosine = Transform.getRotation().getCos() - 1D;
       final double Tangent = (Math.abs(Cosine) < EQUIVALENCE)?  1D - 1D / 12D * Theta * Theta:  -(Half * Transform.getRotation().getSin()) / Cosine;
-      final Translation2d translation_part = Transform.getTranslation()
+      final Translation2d Translation = Transform.getTranslation()
               .rotateBy(new Rotation2d(Tangent, -Half));
-      return new Twist2d(translation_part.getX(), translation_part.getY(), Theta);
+      return new Twist2d(Translation.getX(), Translation.getY(), Theta);
   }
 }

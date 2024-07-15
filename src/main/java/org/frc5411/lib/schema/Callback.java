@@ -47,7 +47,7 @@ public class Callback {
     PROCEDURE = Objects.requireNonNull(Procedure);
     PERIOD = Period;
     DISCRETE_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1e6, 
+      () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//

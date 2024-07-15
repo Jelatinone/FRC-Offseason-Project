@@ -81,7 +81,7 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
       .timestamp();
 
     DISCRETE_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1e6, 
+      () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
     configure();
   }

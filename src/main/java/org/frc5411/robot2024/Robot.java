@@ -146,7 +146,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
           System.out.printf(
             ("*** Auto %s in %.2f secs ***%n"),
             DriverStation.isAutonomousEnabled()? "finished": "cancelled",
-            Logger.getRealTimestamp() / (1e6) - Timestamp);
+            Logger.getRealTimestamp() / (1E6D) - Timestamp);
           Message = (true);
         }
       }
@@ -248,7 +248,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    */
   public void add(final Runnable Callback, final Double Period) {
     synchronized(Robot.class) {
-      Instance.CALLBACKS.add(new Callback(Callback, 1 / Period));
+      Instance.CALLBACKS.add(new Callback(Callback, 1D / Period));
     }
   }
 
