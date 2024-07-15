@@ -52,6 +52,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Optional;
 import java.io.Serial;
 import java.util.List;
 import java.util.Objects;
@@ -349,21 +350,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
 
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
-  @Override
-  public List<Named> getCommands() {
-    return List.of(Named.values());
-  }
-
-  @Override
-  public State getState() {
-    try {
-      SUBSYSTEM_LOCK.readLock().lock();
-      return Mode;
-    } finally {
-      SUBSYSTEM_LOCK.readLock().unlock();
-    } 
-  }
-
   /**
    * Provides the current controller state (reference) of all child {@link Module modules} of this drivebase as a {@link SwerveModuleState} object
    * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Module#getState() reference} values
@@ -491,9 +477,38 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     return LIMITS;
   }
 
+  @Override
+  public List<Named> getCommands() {
+    return List
+      .of(Named.values());
+  }
+
+  @Override
+  public State getState() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return Mode;
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+  /**
+   * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, optionally
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  public static synchronized Optional<DrivebaseSubsystem> tryInstance() {
+    return Optional
+      .ofNullable(Instance);
+  }
+
   /**
    * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @return This singleton's instance
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, guaranteed
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized DrivebaseSubsystem getInstance() {
     DrivebaseSubsystem Result = Instance;

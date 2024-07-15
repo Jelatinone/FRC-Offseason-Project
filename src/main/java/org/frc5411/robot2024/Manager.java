@@ -56,6 +56,7 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Optional;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
@@ -395,23 +396,6 @@ public final class Manager implements Singleton<Manager> {
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
-   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @return This singleton's instance
-   */
-  public static synchronized Manager getInstance() {
-    Manager Result = Instance;
-    if(Instance == (null)) {
-      synchronized(Manager.class) {
-        Result = Instance;
-        if(Instance == (null)) {
-          Instance = Result = new Manager();
-        }
-      }
-    }
-    return Result;
-  }
-
-  /**
    * Provides the vehicle odometry at the given time provided, which is an estimate based upon the {@link #sample(WheelObservation) addition} of 
    * {@link WheelObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of vehicle odometry
@@ -460,6 +444,36 @@ public final class Manager implements Singleton<Manager> {
   public Twist2d getPredictedVelocity() {
     return Predicted;
   } 
+
+  /**
+   * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, optionally
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  public static synchronized Optional<Manager> tryInstance() {
+    return Optional
+      .ofNullable(Instance);
+  }
+
+  /**
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, guaranteed
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  public static synchronized Manager getInstance() {
+    Manager Result = Instance;
+    if(Instance == (null)) {
+      synchronized(Manager.class) {
+        Result = Instance;
+        if(Instance == (null)) {
+          Instance = Result = new Manager();
+        }
+      }
+    }
+    return Result;
+  }  
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**
    *

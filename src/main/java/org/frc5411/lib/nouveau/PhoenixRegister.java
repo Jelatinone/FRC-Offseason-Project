@@ -293,23 +293,6 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
     }
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
-  /**
-   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @return This singleton's instance
-   */
-  public static synchronized PhoenixRegister getInstance() {
-    PhoenixRegister Result = Instance;
-    if(Instance == (null)) {
-      synchronized(PhoenixRegister.class) {
-        Result = Instance;
-        if(Instance == (null)) {
-          Instance = Result = new PhoenixRegister();
-        }
-      }
-    }
-    return Result;
-  }
-
   @Override
   public ReadWriteLock getQueueLock() {
     return QUEUE_LOCK;
@@ -334,4 +317,34 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
       SIGNAL_LOCK.readLock().unlock();
     }
   }
+
+  /**
+   * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, optionally
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  public static synchronized Optional<PhoenixRegister> tryInstance() {
+    return Optional
+      .ofNullable(Instance);
+  }
+
+  /**
+   * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, guaranteed
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  public static synchronized PhoenixRegister getInstance() {
+    PhoenixRegister Result = Instance;
+    if(Instance == (null)) {
+      synchronized(PhoenixRegister.class) {
+        Result = Instance;
+        if(Instance == (null)) {
+          Instance = Result = new PhoenixRegister();
+        }
+      }
+    }
+    return Result;
+  }  
 }

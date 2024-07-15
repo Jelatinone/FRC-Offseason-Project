@@ -42,6 +42,7 @@ import org.photonvision.estimation.OpenCVHelp;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Optional;
 import java.io.Serial;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -240,7 +241,8 @@ public class VisionSubsystem extends Subsystem<Named,State> {
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
   public List<Named> getCommands() {
-    return List.of(Named.values());
+    return List
+      .of(Named.values());
   }
 
   @Override
@@ -254,8 +256,21 @@ public class VisionSubsystem extends Subsystem<Named,State> {
   }
 
   /**
+   * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, optionally
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  public static synchronized Optional<VisionSubsystem> tryInstance() {
+    return Optional
+      .ofNullable(Instance);
+  }
+
+  /**
    * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @return This singleton's instance
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, guaranteed
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized VisionSubsystem getInstance() {
     VisionSubsystem Result = Instance;

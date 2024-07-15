@@ -15,6 +15,8 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.schema;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import java.util.Optional;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -76,8 +78,27 @@ public interface Singleton<@NonNull Type> extends Serializable, Closeable, Clone
   }
 
   /**
+   * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, optionally
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  static <Type> Optional<Type> tryInstance() {
+    throw new UnsupportedOperationException(
+      String.format(
+          ("%s must override method 'tryInstance()!'"), 
+          Thread
+            .currentThread()
+            .getStackTrace()[0]
+            .getClassName()
+        )
+      );
+  }
+
+  /**
    * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @return This singleton's instance
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, guaranteed
    * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   static <Type> Type getInstance() {

@@ -39,6 +39,7 @@ import org.littletonrobotics.urcl.URCL;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Optional;
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -277,8 +278,21 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
+   * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, optionally
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
+   */
+  public static synchronized Optional<Robot> tryInstance() {
+    return Optional
+      .ofNullable(Instance);
+  }
+
+  /**
    * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed.
-   * @return This singleton's instance
+   * @param <Type> Provided singleton's type
+   * @return This singleton's instance, guaranteed
+   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized Robot getInstance() {
     Robot Result = Instance;

@@ -97,7 +97,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
 
     CAMERA_RESULTS = RESULT_REGISTER
       .register(() -> {
-          WORLD.update(new Pose3d()); // <--- Call causing wait!
+          WORLD.update(getDescriptor().Hardware.get());
           return SIMULATOR
             .getCamera()
             .getLatestResult();
@@ -110,6 +110,8 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
   @Override
   public synchronized void close() {
     SIMULATOR.close();
+    WORLD.clearCameras();
+    
     CAMERA_RESULTS.clear(); 
   }
 
