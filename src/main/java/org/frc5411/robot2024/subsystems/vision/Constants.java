@@ -18,6 +18,7 @@ package org.frc5411.robot2024.subsystems.vision;
 import org.frc5411.robot2024.Manager;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -53,7 +54,7 @@ public class Constants {
         .Hardware(NetworkTableInstance.getDefault().getTable(("LLLeft")))
         .Position(new Transform3d(new Translation3d((3.5E-1D), (3.2E-1D), (3.3E-1D)), new Rotation3d((0D), (-4.45059E-1D), (-3.351032E-1D)))):
       Descriptions.MOCK_CAMERA_DESCRIPTOR
-        .Hardware(() -> Manager.tryInstance().map(Manager::getVehicleOdometry).orElse(new Pose2d()))
+        .Hardware(() -> Manager.tryInstance().map((Instance) -> Instance.getVehicleRelative().getValue()).orElse(new Pose2d(Double.NaN, Double.NaN, Rotation2d.fromRadians(Double.NaN))))
         .Position(new Transform3d())),
     FRONT$RIGHT(
       RobotBase.isReal()?
@@ -61,7 +62,7 @@ public class Constants {
         .Hardware(NetworkTableInstance.getDefault().getTable(("LLRight")))
         .Position(new Transform3d(new Translation3d((3.5E-1D), -(3.2E-1D), (3.3E-1D)), new Rotation3d((0D), (-4.45059E-1D), (2.565634E-1D)))):
       Descriptions.MOCK_CAMERA_DESCRIPTOR
-        .Hardware(() -> Manager.tryInstance().map(Manager::getVehicleOdometry).orElse(new Pose2d()))
+        .Hardware(() -> Manager.tryInstance().map((Instance) -> Instance.getVehicleRelative().getValue()).orElse(new Pose2d(Double.NaN, Double.NaN, Rotation2d.fromRadians(Double.NaN))))
         .Position(new Transform3d()));
     //-----------------------------------------------------------------------[Constants]-----------------------------------------------------------------------//
     org.frc5411.lib.instrument.camera.Descriptor<?> DESCRIPTOR;

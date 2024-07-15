@@ -547,7 +547,8 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       Twist.dtheta, 
       Manager
         .getInstance()
-        .getVehicleOdometry()
+        .getVehicleRelative()
+        .getValue()
         .getRotation())
   ),
 
@@ -562,7 +563,8 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       Twist.dtheta, 
       Manager
         .getInstance()
-        .getVehicleOdometry()
+        .getVehicleRelative()
+        .getValue()
         .getRotation())
   );
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//

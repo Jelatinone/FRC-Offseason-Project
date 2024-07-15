@@ -49,6 +49,7 @@ import org.littletonrobotics.urcl.URCL;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Map.Entry;
 import java.io.Serial;
 import java.util.ArrayDeque;
 import java.util.List;
@@ -66,6 +67,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 import static edu.wpi.first.math.MathUtil.*;
+import static org.frc5411.lib.utility.Figures.EQUIVALENCE;
 import static org.frc5411.lib.utility.Geometry.*;
 import static org.frc5411.robot2024.Constants.Control.*;
 import static org.frc5411.robot2024.Constants.Identity.*;
@@ -88,8 +90,7 @@ public final class Manager implements Singleton<Manager> {
   static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
 
-  static Aggregator<Double> WHEEL_DISCRETE_AGGREGATOR;
-  static Aggregator<Double> VISION_DISCRETE_AGGREGATOR;
+  static Aggregator<Double> DISCRETE_AGGREGATOR;
 
   static Integer MODULES;
 
@@ -151,7 +152,7 @@ public final class Manager implements Singleton<Manager> {
       .toRotation2d();
     //<--- Base Sampling --->
     VEHICLE_ODOMETRY.addSample(
-      WHEEL_DISCRETE_AGGREGATOR.attain(), 
+      DISCRETE_AGGREGATOR.attain(), 
       ODOMETRY.update(
         DrivebaseSubsystem
           .getInstance()
@@ -178,10 +179,7 @@ public final class Manager implements Singleton<Manager> {
     //<--- Construct static fields --->
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
-    WHEEL_DISCRETE_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1E6D, 
-      (Previous, Current) -> Current - Previous);
-    VISION_DISCRETE_AGGREGATOR = new Aggregator<>(
+    DISCRETE_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
   }
@@ -260,7 +258,8 @@ public final class Manager implements Singleton<Manager> {
   public synchronized void update() {
     Logger.recordOutput(
       ("Robot/Vehicle"), 
-      getVehicleOdometry()
+      getVehicleRelative()
+        .getValue()
     );
   }
 
@@ -279,13 +278,17 @@ public final class Manager implements Singleton<Manager> {
    * @param Demand Desired speeds of the drivebase's inputs, which have been properly configured
    */
   public synchronized void sample(final ChassisSpeeds Demand) {
-    Predicted = log(
-      exp(new Twist2d(
-        Demand.vxMetersPerSecond, 
-        Demand.vyMetersPerSecond, 
-        Demand.omegaRadiansPerSecond))
-      .rotateBy(
-        getVehicleOdometry().getRotation()));
+    try {
+      WHEEL_UPDATE_LOCK.writeLock().lock();
+      Predicted = log(
+        exp(new Twist2d(
+          Demand.vxMetersPerSecond, 
+          Demand.vyMetersPerSecond, 
+          Demand.omegaRadiansPerSecond))
+        .rotateBy(Rotation));      
+    } finally {
+      WHEEL_UPDATE_LOCK.writeLock().unlock();
+    }
   }
 
 
@@ -311,7 +314,7 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final WheelObservation Observation) {
     try {
       WHEEL_UPDATE_LOCK.writeLock().lock();
-      WHEEL_DISCRETE_AGGREGATOR.aggregate();
+      DISCRETE_AGGREGATOR.aggregate();
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
       for(int Update = (0); Update < Updates; Update++) {
@@ -319,7 +322,7 @@ public final class Manager implements Singleton<Manager> {
           VecBuilder.fill(
             (0D), 
             (0D)), 
-          WHEEL_DISCRETE_AGGREGATOR.getAggregated());     
+          DISCRETE_AGGREGATOR.getAggregated());     
         final var Positions = new SwerveModulePosition[MODULES];
         final var Deltas = new SwerveModulePosition[MODULES];
         for(int Module = (0); Module < MODULES; Module++) {
@@ -366,7 +369,7 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final VisionObservation Observation) {
     try {
       VISION_UPDATE_LOCK.writeLock().lock();
-      VISION_DISCRETE_AGGREGATOR.aggregate();
+      DISCRETE_AGGREGATOR.aggregate();
       // <--- TODO: Vision Resolution
     } finally {
       VISION_UPDATE_LOCK.writeLock().unlock();
@@ -377,36 +380,69 @@ public final class Manager implements Singleton<Manager> {
    * Provides the vehicle odometry at the given time provided, which is an estimate based upon the {@link #sample(WheelObservation) addition} of 
    * {@link WheelObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of vehicle odometry
-   * @return Robot (vehicle)'s odometry position at the given time
-   * @throws java.util.NoSuchElementException When a sample does not exist for the provided time
+   * @return Robot (vehicle-relative) odometry position at the given time
    */
-  public Pose2d getVehicleOdometry(final Double Timestamp) {
+  public Entry<Double,Pose2d> getVehicleRelative(final Double Timestamp) {
     try {
       WHEEL_UPDATE_LOCK.readLock().lock();
-      return VEHICLE_ODOMETRY
-        .getSample(Timestamp)
-        .orElseThrow();
-      // <--- TODO: Look-ahead Sampling
+      return (null); // <--- TODO: Prediction Logic
     } finally {
       WHEEL_UPDATE_LOCK.readLock().unlock();
     }
   }
 
   /**
-   * Provides the vehicle odometry at the current time provided by the discretization clock's {@link Aggregator#attain()}, which is an estimate
-   * based upon the {@link #sample(WheelObservation) addition} of {@link WheelObservation wheel observations}
-   * @return Robot (vehicle)'s odometry position
-   * @throws java.util.NoSuchElementException When a sample cannot be found for the current time
+   * Provides the vehicle odometry at the current time provided, which is an estimate based upon the {@link #sample(WheelObservation) addition} of
+   * {@link WheelObservation wheel observations}
+   * @return Robot (vehicle-relative) odometry position
    */
-  public Pose2d getVehicleOdometry() {
-    return getVehicleOdometry(WHEEL_DISCRETE_AGGREGATOR.attain());
+  public Entry<Double,Pose2d> getVehicleRelative() {
+    try {
+      WHEEL_UPDATE_LOCK.readLock().lock();
+      return VEHICLE_ODOMETRY
+        .getInternalBuffer()
+        .lastEntry();
+    } finally {
+      WHEEL_UPDATE_LOCK.readLock().unlock();
+    }
+  }
+
+  /**
+   * Provides the field odometry at the given time provided, which is an estimate based upon the {@link #sample(VisionObservation) addition} of 
+   * {@link WheelObservation wheel observations}
+   * @param Timestamp Time at which to obtain a sample of field odometry
+   * @return Robot (field-relative) odometry position at the given time
+   */
+  public Entry<Double,Translation2d> getFieldRelative(final Double Timestamp) {
+    try {
+      WHEEL_UPDATE_LOCK.readLock().lock();
+      return (null); // <--- TODO: Prediction Logic
+    } finally {
+      WHEEL_UPDATE_LOCK.readLock().unlock();
+    }
+  }
+
+  /**
+   * Provides the field odometry at the current time provided, which is an estimate based upon the {@link #sample(VisionObservation) addition} of
+   * {@link WheelObservation wheel observations}
+   * @return Robot (field-relative) odometry position
+   */
+  public Entry<Double,Translation2d> getFieldRelative() {
+    try {
+      WHEEL_UPDATE_LOCK.readLock().lock();
+      return FIELD_ODOMETRY
+        .getInternalBuffer()
+        .lastEntry();
+    } finally {
+      WHEEL_UPDATE_LOCK.readLock().unlock();
+    }
   }
 
   /**
    * Provides the measured velocity determined via the {@link #sample(WheelObservation) addition} of {@link WheelObservation observations}
    * @return Measured velocity, calculated by the delta between the most recent positions
    */
-  public Twist2d getMeasuredVelocity() {
+  public Twist2d getMeasured() {
     try {
       WHEEL_UPDATE_LOCK.readLock().lock();
       return Measured;
@@ -419,8 +455,13 @@ public final class Manager implements Singleton<Manager> {
    * Provides the predicted velocity determined via the {@link #sample(ChassisSpeeds) addition} of {@link ChassisSpeeds speeds}
    * @return Predicted velocity, calculated by the most recently provided speeds
    */
-  public Twist2d getPredictedVelocity() {
-    return Predicted;
+  public Twist2d getPredicted() {
+    try {
+      WHEEL_UPDATE_LOCK.readLock().lock();
+      return Predicted;
+    } finally {
+      WHEEL_UPDATE_LOCK.readLock().unlock();
+    }
   } 
 
   /**
