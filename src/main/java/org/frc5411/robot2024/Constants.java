@@ -15,18 +15,18 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.utility.Profile;
+
+import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
+import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
+
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
-import java.util.function.Supplier;
-
-import org.frc5411.lib.utility.Profile;
-import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
-import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
-import org.frc5411.lib.schema.Singleton;
-
 import java.util.List;
+import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;

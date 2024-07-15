@@ -41,8 +41,8 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 
 import java.util.Optional;
-import java.util.stream.Stream;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;

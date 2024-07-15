@@ -22,7 +22,6 @@ import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Figures;
 
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
-import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Nat;
@@ -53,8 +52,8 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.ArrayDeque;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,9 +67,9 @@ import lombok.experimental.FieldDefaults;
 
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
-import static org.frc5411.robot2024.Constants.Preferences.*;
-import static org.frc5411.robot2024.Constants.Identity.*;
 import static org.frc5411.robot2024.Constants.Control.*;
+import static org.frc5411.robot2024.Constants.Identity.*;
+import static org.frc5411.robot2024.Constants.Preferences.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
 /**
  *

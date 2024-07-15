@@ -42,9 +42,9 @@ import org.photonvision.estimation.OpenCVHelp;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.Optional;
 import java.io.Serial;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
