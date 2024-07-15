@@ -26,6 +26,7 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -37,6 +38,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 
 import java.util.Queue;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import lombok.AccessLevel;
@@ -148,9 +150,12 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
           CAMERA_RESULTS
             .stream()
             .map((Measurement) -> 
-              Measurement
-                .getBestTarget()
-                .getBestCameraToTarget())
+              Optional
+                .ofNullable(Measurement.getBestTarget())
+                .map(PhotonTrackedTarget::getBestCameraToTarget)
+                .orElse(new Transform3d(
+                  new Translation3d(Double.NaN, Double.NaN, Double.NaN), 
+                  new Rotation3d(Double.NaN, Double.NaN, Double.NaN))))
             .toArray(Transform3d[]::new)
         );
         Article.setTimestamps(

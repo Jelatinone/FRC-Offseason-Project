@@ -347,8 +347,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
   }
-  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
-
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   /**
    * Provides the current controller state (reference) of all child {@link Module modules} of this drivebase as a {@link SwerveModuleState} object
