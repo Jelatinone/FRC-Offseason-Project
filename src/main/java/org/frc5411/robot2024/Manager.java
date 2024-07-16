@@ -96,8 +96,9 @@ public final class Manager implements Singleton<Manager> {
 
   static ReadWriteLock WHEEL_UPDATE_LOCK;
   static ReadWriteLock VISION_UPDATE_LOCK;  
-
   ExecutorService CALLBACK;
+
+  Pose2d INITIAL;
 
   Queue<WheelObservation> WHEEL_UPDATE_QUEUE;
   Queue<VisionObservation> VISION_UPDATE_QUEUE;
@@ -153,7 +154,7 @@ public final class Manager implements Singleton<Manager> {
     //<--- Base Sampling --->
     VEHICLE_ODOMETRY.addSample(
       DISCRETE_AGGREGATOR.attain(), 
-      ODOMETRY.update(
+      INITIAL = ODOMETRY.update(
         DrivebaseSubsystem
           .getInstance()
           .getGyroscopePosition()
@@ -433,6 +434,32 @@ public final class Manager implements Singleton<Manager> {
       return FIELD_ODOMETRY
         .getInternalBuffer()
         .lastEntry();
+    } finally {
+      WHEEL_UPDATE_LOCK.readLock().unlock();
+    }
+  }
+
+  /**
+   * Provide the rotation, along the z-axis (yaw) of the drivebase as a {@link Rotation2d rotation} object.
+   * @return Rotation along the z-axis (yaw) observed by the robot
+   */
+  public Rotation2d getVehicleRotation() {
+    try {
+      WHEEL_UPDATE_LOCK.readLock().lock();
+      return Rotation;
+    } finally {
+      WHEEL_UPDATE_LOCK.readLock().unlock();
+    }
+  }
+
+  /**
+   * Provides the relative position of the chassis' wheel's positions (where the relatively depends upon underlying implementation)
+   * @return Position of wheels jn two-dimensional space observed by the robot
+   */
+  public SwerveModulePosition[] getVehiclePosition() {
+    try {
+      WHEEL_UPDATE_LOCK.readLock().lock();
+      return Position;
     } finally {
       WHEEL_UPDATE_LOCK.readLock().unlock();
     }

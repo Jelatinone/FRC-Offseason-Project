@@ -114,9 +114,10 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public synchronized void close() {
-    SIMULATOR.close();
-    WORLD.clearCameras();
     CAMERA_RESULTS.clear(); 
+    SIMULATOR
+      .close();
+    WORLD.clearCameras();
   }
 
   @Override

@@ -294,24 +294,28 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
             }
           });
         Manager
-          .getInstance()
-          .sample(Effort.Speeds());
+          .tryInstance()
+          .ifPresent((Instance) -> 
+            Instance
+              .sample(Effort.Speeds())
+          );
       }
     } finally {
       Manager
-      .getInstance()
-      .sample(new WheelObservation(
-        MODULES
-          .stream()
-          .map(Module::getMeasurements)
-          .toList(), 
-        IDENTITY
-          .getTimestamps(), 
-        GYROSCOPE
-          .getMeasurements()
-          .stream()
-          .map(Rotation3d::toRotation2d)
-          .toList()));
+        .tryInstance()
+        .ifPresent((Instance) -> 
+          Instance.sample(new WheelObservation(
+            MODULES
+              .stream()
+              .map(Module::getMeasurements)
+              .toList(), 
+            IDENTITY
+              .getTimestamps(), 
+            GYROSCOPE
+              .getMeasurements()
+              .stream()
+              .map(Rotation3d::toRotation2d)
+              .toList())));
       update();
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
@@ -546,10 +550,10 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       Twist.dy, 
       Twist.dtheta, 
       Manager
-        .getInstance()
-        .getVehicleRelative()
-        .getValue()
-        .getRotation())
+        .tryInstance()
+        .map(Manager::getVehicleRotation)
+        .orElse(Rotation2d
+          .fromRotations(Double.NaN)))
   ),
 
   /**
@@ -562,10 +566,10 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       Twist.dy, 
       Twist.dtheta, 
       Manager
-        .getInstance()
-        .getVehicleRelative()
-        .getValue()
-        .getRotation())
+        .tryInstance()
+        .map(Manager::getVehicleRotation)
+        .orElse(Rotation2d
+          .fromRotations(Double.NaN)))
   );
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   private final Function<Twist2d, ChassisSpeeds> FUNCTION;
