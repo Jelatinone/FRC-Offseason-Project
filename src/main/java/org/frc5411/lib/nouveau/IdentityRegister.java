@@ -18,6 +18,7 @@ package org.frc5411.lib.nouveau;
 import org.frc5411.lib.utility.Aggregator;
 
 import edu.wpi.first.hal.HALUtil;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.wpilibj.Notifier;
@@ -191,11 +192,16 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
   }
   //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
   /**
-   * Mutates the frequency (hz) at which the internal notifier object of this instance operates at.
+   * Mutates the frequency (hz) at which the internal notifier object of this instance operates at. 
+   * @implNote The frequency supplied is clamped according to the implementation of {@link MathUtil#clamp(int,int,int)}, where the minimum (low) value is 1 Hertz, 
+   * and the maximum is {@link Register#MAXIMUM_FREQUENCY_HERTZ}
    * @param Frequency Value in hertz, at which this Register should run
    */
   public synchronized void setFrequency(final Integer Frequency) {
-    this.Frequency = Frequency;
+    this.Frequency = MathUtil.clamp(
+      Frequency, 
+      (1), 
+      MAXIMUM_FREQUENCY_HERTZ);
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override

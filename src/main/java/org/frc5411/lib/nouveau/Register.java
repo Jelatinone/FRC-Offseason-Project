@@ -36,7 +36,9 @@ import lombok.NonNull;
  */
 public sealed interface Register<@NonNull Source, @NonNull Provides> extends Runnable, Closeable permits PhoenixRegister, StandardRegister, IdentityRegister {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  Double STANDARD_FREQUENCY_HERTZ = (250D);
+  Integer STANDARD_FREQUENCY_HERTZ = (250);
+  Integer MAXIMUM_FREQUENCY_HERTZ = (667);
+
   Integer STANDARD_QUEUE_ELEMENTS = (20);
   Integer STARTING_THREAD_PRIORITY = (1);
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//

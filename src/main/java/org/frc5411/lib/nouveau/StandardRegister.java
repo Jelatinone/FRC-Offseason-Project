@@ -52,7 +52,7 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   @Serial 
   static long serialVersionUID = 84309938899889961L;
   static Integer QUEUE_SIZE = (20);
-  static Integer UPDATE_FREQUENCY = (1000);
+  static Integer UPDATE_FREQUENCY = (100);
 
   List<Queue<Double>> TIMESTAMPS;  
   List<Queue<Optional<Number>>> RESPONSES;
