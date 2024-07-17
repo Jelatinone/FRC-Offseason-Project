@@ -49,10 +49,10 @@ import org.littletonrobotics.urcl.URCL;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.Map.Entry;
 import java.io.Serial;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
@@ -62,12 +62,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 import static edu.wpi.first.math.MathUtil.*;
-import static org.frc5411.lib.utility.Figures.EQUIVALENCE;
 import static org.frc5411.lib.utility.Geometry.*;
 import static org.frc5411.robot2024.Constants.Control.*;
 import static org.frc5411.robot2024.Constants.Identity.*;
@@ -142,7 +142,12 @@ public final class Manager implements Singleton<Manager> {
     Position = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getModulePositions)
-      .orElse(new SwerveModulePosition[] {});
+      .orElse(
+        IntStream
+          .range((0), DrivebaseSubsystem.getCapacity())
+          .mapToObj((Value) -> 
+            new SwerveModulePosition(Double.NaN, Rotation2d.fromRotations(Double.NaN)))
+          .toArray(SwerveModulePosition[]::new));
     Rotation = DrivebaseSubsystem
       .tryInstance()
       .map((Instance) -> 
@@ -218,39 +223,40 @@ public final class Manager implements Singleton<Manager> {
    */
   private synchronized void configure() { 
     DrivebaseSubsystem
-      .getInstance()
-      .setDefaultCommand(new InstantCommand(() -> 
-        DrivebaseSubsystem
-          .getInstance()
-          .apply(new Twist2d(
-            applyDeadband(
-              DRIVER
-                .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
-                .orElse((() -> 0D))
-                .get(), 
-              DRIVER
-                .<Double>getPreference(CONTROL_ZONE_X)
-                .orElse((0D))),
-            applyDeadband(
-              DRIVER
-                .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
-                .orElse((() -> 0D))
-                .get(), 
-              DRIVER
-                .<Double>getPreference(CONTROL_ZONE_Y)
-                .orElse((0D))),
-            applyDeadband(
-              DRIVER
-                .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
-                .orElse((() -> 0D))
-                .get(), 
-              DRIVER
-                .<Double>getPreference(CONTROL_ZONE_T)
-                .orElse((0D)))
-            )
-          ), 
-        DrivebaseSubsystem.getInstance()
-    ));
+      .tryInstance()
+      .ifPresent((Instance) -> {
+        Instance
+          .setDefaultCommand(
+            new InstantCommand(() -> Instance.apply(new Twist2d(
+              applyDeadband(
+                DRIVER
+                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
+                  .orElse((() -> 0D))
+                  .get(), 
+                DRIVER
+                  .<Double>getPreference(CONTROL_ZONE_X)
+                  .orElse((0D))),
+              applyDeadband(
+                DRIVER
+                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
+                  .orElse((() -> 0D))
+                  .get(), 
+                DRIVER
+                  .<Double>getPreference(CONTROL_ZONE_Y)
+                  .orElse((0D))),
+              applyDeadband(
+                DRIVER
+                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
+                  .orElse((() -> 0D))
+                  .get(), 
+                DRIVER
+                  .<Double>getPreference(CONTROL_ZONE_T)
+                  .orElse((0D)))
+                )
+              ),
+          Instance
+        ));
+      });
   }
 
   /**

@@ -460,6 +460,14 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public SwerveDriveOdometry getOdometry() {
     return ODOMETRY;
   }
+  /**
+   * Provides a numeric value describing the number of child modules associated with this drivebase; derived from the length of {@link Modules#values()}.
+   * @return Numeric value representation of the drivebase' module count
+   * @implNote The returned object of this method is always constants regardless of {@link #getInstance() instance}
+   */
+  public static Integer getCapacity() {
+    return Modules.values().length;
+  }
 
   /**
    * Provides the {@link SwerveDriveKinematics kinematics} object of this drivebase chassis, with the module locations derived from the locations of the {@link Module descriptors}
@@ -600,7 +608,7 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
  */
 enum Named implements Registrable {
   //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
-  RESET$GYROSCOPE(new InstantCommand(() -> DrivebaseSubsystem.getInstance().reset()));
+  RESET$GYROSCOPE(new InstantCommand(() -> DrivebaseSubsystem.tryInstance().ifPresent(DrivebaseSubsystem::reset)));
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   private final Command NAMED_COMMAND;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
@@ -610,10 +618,14 @@ enum Named implements Registrable {
    */
   Named(final Command Command) {
     NAMED_COMMAND = Command;
-    final var Instance = DrivebaseSubsystem.getInstance();
-    if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
-      NAMED_COMMAND.addRequirements(Instance);
-    }
+    DrivebaseSubsystem
+      .tryInstance()
+      .ifPresent((Instance) -> {
+        if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
+          NAMED_COMMAND
+            .addRequirements(Instance);
+        }
+      });
     register();
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
