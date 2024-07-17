@@ -96,13 +96,14 @@ public final class Manager implements Singleton<Manager> {
 
   static ReadWriteLock WHEEL_UPDATE_LOCK;
   static ReadWriteLock VISION_UPDATE_LOCK;  
-  ExecutorService CALLBACK;
 
-  Pose2d INITIAL;
+  ExecutorService CALLBACK;
 
   Queue<WheelObservation> WHEEL_UPDATE_QUEUE;
   Queue<VisionObservation> VISION_UPDATE_QUEUE;
 
+  Pose2d INITIAL;
+  
   TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
   TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
 
@@ -270,6 +271,14 @@ public final class Manager implements Singleton<Manager> {
       ("Robot/Vehicle"), 
       getVehicleRelative()
         .getValue()
+    );
+    Logger.recordOutput(
+      ("Robot/Measured"), 
+      Measured
+    );
+    Logger.recordOutput(
+      ("Robot/Predicted"), 
+      Predicted
     );
   }
 

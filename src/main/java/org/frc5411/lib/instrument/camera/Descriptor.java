@@ -17,8 +17,9 @@ package org.frc5411.lib.instrument.camera;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Transform3d;
-
+import edu.wpi.first.math.numbers.N3;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.experimental.FieldDefaults;
@@ -37,12 +38,16 @@ public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Com
   Transform3d Position;
   Enum<?> Identity;
   Hardware Hardware;
+  Vector<N3> Multiple;
+  Vector<N3> Single;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
   public Descriptor<Hardware> clone() {
     return new Descriptor<>(
       Position,
       Identity,
-      Hardware);
+      Hardware,
+      Multiple,
+      Single);
   }
 }

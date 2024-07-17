@@ -429,7 +429,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .map((Module) -> 
           Module
             .getMeasurement()
-            .orElse(new SwerveModulePosition(Double.NaN, Rotation2d.fromRadians(Double.NaN))))
+            .orElse(new SwerveModulePosition(Double.NaN, Rotation2d.fromRotations(Double.NaN))))
         .toArray(SwerveModulePosition[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
@@ -460,6 +460,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
   public SwerveDriveOdometry getOdometry() {
     return ODOMETRY;
   }
+
   /**
    * Provides a numeric value describing the number of child modules associated with this drivebase; derived from the length of {@link Modules#values()}.
    * @return Numeric value representation of the drivebase' module count

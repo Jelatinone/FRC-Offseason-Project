@@ -177,7 +177,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
 
       Article.setRotationalVoltage(getDescriptor().RotationalController.getBusVoltage() * getDescriptor().RotationalController.getAppliedOutput());
       Article.setRotationalAmperage(getDescriptor().RotationalController.getOutputCurrent());
-      Article.setRotationalVelocity(getDescriptor().RotationalEncoder.getVelocity().refresh().getValue() / getDescriptor().RotationalReduction);
+      Article.setRotationalVelocity(getDescriptor().RotationalEncoder.getVelocity().refresh().getValue());
       Article.setRotationalConnected(getDescriptor().RotationalController.getLastError().equals(REVLibError.kOk)); 
 
       Article.setConnected(Article.isTranslationalConnected() && Article.isRotationalConnected());

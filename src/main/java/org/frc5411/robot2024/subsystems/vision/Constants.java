@@ -17,6 +17,7 @@ package org.frc5411.robot2024.subsystems.vision;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.robot2024.Manager;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -111,8 +112,12 @@ public class Constants {
 class Descriptions {
 
   static org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<NetworkTable> REAL_CAMERA_DESCRIPTOR = 
-    org.frc5411.lib.instrument.camera.Descriptor.<NetworkTable>builder();
+    org.frc5411.lib.instrument.camera.Descriptor.<NetworkTable>builder()        
+      .Single(VecBuilder.fill((0D), (0D), Double.MAX_VALUE))
+      .Multiple(VecBuilder.fill((1E-1D), (1E-1D), Double.MAX_VALUE));
 
   static org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<Supplier<Pose2d>> MOCK_CAMERA_DESCRIPTOR =
-    org.frc5411.lib.instrument.camera.Descriptor.<Supplier<Pose2d>>builder();
-}
+    org.frc5411.lib.instrument.camera.Descriptor.<Supplier<Pose2d>>builder()
+      .Single(VecBuilder.fill((0D), (0D), Double.MAX_VALUE))
+      .Multiple(VecBuilder.fill((0D), (0D), Double.MAX_VALUE));
+  }

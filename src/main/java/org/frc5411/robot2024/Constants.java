@@ -46,10 +46,9 @@ public final class Constants {
    * Performs a pre-deployment check for Deployment of the robot, ensuring that the robot is running
    * on real-hardware, with the correct mode selected
    * @param Options Additional options applied via the command line
-   * 
    */
   public static synchronized void main(final String... Options) {
-    if(Identity.TYPE.equals(Type.SIMBOT)) {
+    if(Identity.DESIRED_TYPE.equals(Type.SIMBOT)) {
       System.exit((1));
     }
   }
@@ -90,12 +89,12 @@ public final class Constants {
 
     static Profile<Keybindings,Preferences> DRIVER =  
       (Identity.TYPE.equals(Type.COMPBOT)? 
-        Character.COMP_DRIVER: 
-        Character.DEV_DRIVER).get();
+        Profiles.COMP_DRIVER: 
+        Profiles.DEV_DRIVER).get();
     static Profile<Keybindings,Preferences> OPERATOR = 
       (Identity.TYPE.equals(Type.COMPBOT)? 
-        Character.COMP_OPERATOR: 
-        Character.DEV_OPERATOR).get();
+        Profiles.COMP_OPERATOR: 
+        Profiles.DEV_OPERATOR).get();
   }
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**
@@ -133,13 +132,13 @@ public final class Constants {
   }
 
   /**
-   * <h1>Character</h1>
+   * <h1>Profiles</h1>
    * 
    * <p>Represents a different pre-set profile for different drivers operating the robot, i. e, drivers with different preferences for keybindings
    * and robot operation.
    */
   @SuppressWarnings("resource")
-  public enum Character implements Supplier<Profile<Keybindings,Preferences>> {
+  public enum Profiles implements Supplier<Profile<Keybindings,Preferences>> {
 
     DEV_DRIVER(
       new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_DRIVER"))
@@ -169,7 +168,7 @@ public final class Constants {
      * Profile Constructor
      * @param Profile Individual's profile with selected preferences and keybindings which act as settings for different robot functionality
      */
-    Character(final Profile<Keybindings,Preferences> Profile) {
+    Profiles(final Profile<Keybindings,Preferences> Profile) {
       PROFILE = Profile;
     }
 
