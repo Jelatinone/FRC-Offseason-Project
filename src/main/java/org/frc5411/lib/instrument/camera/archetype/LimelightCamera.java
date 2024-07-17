@@ -107,18 +107,21 @@ public class LimelightCamera extends Camera<NetworkTable> {
   @Override
   public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull Transform3d> Record) {
     final var Article = (Report) Record;
+
     final var Robot = ROBOT_POSE_SOURCE
       .readQueue();      
     final var Target = TARGET_POSE_SOURCE
       .readQueue();
+
     synchronized(Article) {
-      Article.setPipeline((int) access(Accessible.PIPELINE_INDEX).orElseThrow().getInteger());
-      Article.setLatency(access(Accessible.CURRENT_PIPELINE_LATENCY).orElseThrow().getDouble());
-      Article.setConnected(Heartbeat < (Heartbeat = access(Accessible.HEART_BEAT_VALUE).orElseThrow().getDouble()));
+      Article.setPipeline(access(Accessible.PIPELINE_INDEX).filter(NetworkTableValue::isValid).map(NetworkTableValue::getInteger).orElse((0L)).intValue());
+      Article.setLatency(access(Accessible.CURRENT_PIPELINE_LATENCY).filter(NetworkTableValue::isValid).map(NetworkTableValue::getDouble).orElse((-1D)));
+      Article.setConnected(Heartbeat < (Heartbeat = access(Accessible.HEART_BEAT_VALUE).filter(NetworkTableValue::isValid).map(NetworkTableValue::getDouble).orElse((0D))));
       
       Article.setTimestamps(
         Stream.of(Target)
-          .mapToDouble((Measurement) -> (Measurement.timestamp / 1E6D) - (Measurement.value[6] / 1E3D))
+          .mapToDouble((Measurement) -> 
+            (Measurement.timestamp / 1E6D) - (Measurement.value[6] / 1E3D))
           .toArray()
       );      
       Article.setMeasurements(
