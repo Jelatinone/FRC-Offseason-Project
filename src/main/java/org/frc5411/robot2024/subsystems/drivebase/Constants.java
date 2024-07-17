@@ -209,7 +209,7 @@ class Descriptions {
       .TranslationalFeedback(PIDController.Descriptor.builder().Proportional((0.2D)).Integral((0D)).Derivative((5E-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
-      .RotationalFeedback(PIDController.Descriptor.builder().Proportional((2.81D)).Integral((0D)).Derivative((5E-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
+      .RotationalFeedback(PIDController.Descriptor.builder().Proportional((.0281D)).Integral((0D)).Derivative((5E-1D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .Radius(Units.inchesToMeters((4D)))
       .Limits(Limit.builder().TranslationalVelocity((4.8D)).TranslationalAcceleration((4.8D) * (5D)).RotationalVelocity((24) * Figures.PI).build());
 

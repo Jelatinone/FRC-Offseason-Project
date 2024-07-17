@@ -190,7 +190,6 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
             .refresh()
             .getValue())
           .minus(getDescriptor().RotationalOffset)
-          .div(getDescriptor().RotationalReduction)
       ));
 
       final double[] Translations, Rotations;
@@ -223,8 +222,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
           (Translations[Index] - getDescriptor().TranslationalOffset) / getDescriptor().TranslationalReduction * getDescriptor().Radius, 
           Rotation2d
             .fromRotations(Rotations[Index])
-            .minus(getDescriptor().RotationalOffset)
-            .div(getDescriptor().RotationalReduction))
+            .minus(getDescriptor().RotationalOffset))
       ).toArray(SwerveModulePosition[]::new));
     }
   }

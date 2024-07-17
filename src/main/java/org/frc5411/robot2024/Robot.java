@@ -282,8 +282,10 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    * cyclical in nature. In that case, this call can be made to ensure that the relevant Subsystems are initialized prior to referencing.
    */
   public static synchronized void initialize() {
-    MANAGED
-      .forEach(Supplier::get);
+    synchronized(Robot.class) {
+      MANAGEABLE
+        .forEach(Supplier::get);      
+    }
   }
   //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
   /**

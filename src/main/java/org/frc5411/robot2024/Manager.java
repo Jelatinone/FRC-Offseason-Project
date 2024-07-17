@@ -139,50 +139,53 @@ public final class Manager implements Singleton<Manager> {
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
     //<--- Sample from Subsystems --->
+    Position = DrivebaseSubsystem
+      .tryInstance()
+      .map(DrivebaseSubsystem::getModulePositions)
+      .orElse(new SwerveModulePosition[] {});
+    Rotation = DrivebaseSubsystem
+      .tryInstance()
+      .map((Instance) -> 
+        Instance.getGyroscopePosition().toRotation2d())
+      .orElse(Rotation2d.fromRotations(Double.NaN));
     KINEMATICS = DrivebaseSubsystem
       .getKinematics();
     ODOMETRY = DrivebaseSubsystem
-      .getInstance()
-      .getOdometry();
-    Position = DrivebaseSubsystem
-      .getInstance()
-      .getModulePositions();
-    Rotation = DrivebaseSubsystem
-      .getInstance()
-      .getGyroscopePosition()
-      .toRotation2d();
+      .tryInstance()
+      .map(DrivebaseSubsystem::getOdometry)
+      .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Position));
     //<--- Base Sampling --->
+    MODULES = Position.length;  
     VEHICLE_ODOMETRY.addSample(
       DISCRETE_AGGREGATOR.attain(), 
       INITIAL = ODOMETRY.update(
-        DrivebaseSubsystem
-          .getInstance()
-          .getGyroscopePosition()
-          .toRotation2d(), 
-        DrivebaseSubsystem
-          .getInstance()
-          .getModulePositions()
+        Rotation,
+        Position
       ));
-
     //<--- Apply Configurations --->
     configure();
     Robot
-      .getInstance()
-      .add(
-        () -> {
-          if(Instance != (null)) {
-            Instance.update();
-          }
-        },
-        UPDATE_FREQUENCY);
-    MODULES = Position.length;    
+      .tryInstance()
+      .ifPresent((Instance) -> 
+        Instance.add(
+          () -> {
+            if(Manager.Instance != (null)) {
+              Manager.Instance.update();
+            }
+          },
+          UPDATE_FREQUENCY
+        )
+      );
   } static {
-    //<--- Construct static fields --->
+    //<--- Initialize Static Constants --->
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
     DISCRETE_AGGREGATOR = new Aggregator<>(
       () -> HALUtil.getFPGATime() / 1E6D, 
       (Previous, Current) -> Current - Previous);
+    //<--- Initialize Static Fields --->
+    Measured = new Twist2d();
+    Predicted = new Twist2d();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial

@@ -15,7 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
-import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.utility.Profile;
 
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
@@ -23,6 +22,7 @@ import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
 
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import java.util.List;
@@ -50,7 +50,7 @@ public final class Constants {
    * 
    */
   public static synchronized void main(final String... Options) {
-    if(Identity.TYPE == Type.SIMBOT) {
+    if(Identity.TYPE.equals(Type.SIMBOT)) {
       System.exit((1));
     }
   }
@@ -63,14 +63,15 @@ public final class Constants {
     static Integer QUEUE_SIZE = (20);
     static Double BUFFER_SIZE = (2D);
 
-    static List<Supplier<Singleton<?>>> MANAGED = List.of(
-      () -> VisionSubsystem.getInstance(),
-      () -> DrivebaseSubsystem.getInstance());
+    static List<Supplier<Subsystem>> MANAGEABLE = List.of(
+      VisionSubsystem::getInstance,
+      DrivebaseSubsystem::getInstance
+    ); 
 
-    static Type DESIRED_TYPE = Type.SIMBOT;
+    static Type DESIRED_TYPE = Type.DEVBOT; 
     static Type TYPE = RobotBase.isReal()? DESIRED_TYPE: Type.SIMBOT;
     static Mode MODE = switch(TYPE) {
-      case DEVBOT, COMPBOT 
+      case DEVBOT, COMPBOT
         -> RobotBase.isReal()? Mode.ACTUAL: Mode.REPLAY;
       case ANONBOT
         -> Mode.ANONYMOUS;
@@ -88,8 +89,14 @@ public final class Constants {
     static CommandXboxController DRIVER_CONTROLLER = new CommandXboxController(DRIVER_CONTROL_PORT);
     static CommandXboxController OPERATOR_CONTROLLER = new CommandXboxController(OPERATOR_CONTROL_PORT);
 
-    static Profile<Keybindings,Preferences> DRIVER =  (Identity.TYPE.equals(Type.COMPBOT)? Character.COMP_DRIVER: Character.DEV_DRIVER).get();
-    static Profile<Keybindings,Preferences> OPERATOR = (Identity.TYPE.equals(Type.COMPBOT)? Character.COMP_OPERATOR: Character.DEV_OPERATOR).get();
+    static Profile<Keybindings,Preferences> DRIVER =  
+      (Identity.TYPE.equals(Type.COMPBOT)? 
+        Character.COMP_DRIVER: 
+        Character.DEV_DRIVER).get();
+    static Profile<Keybindings,Preferences> OPERATOR = 
+      (Identity.TYPE.equals(Type.COMPBOT)? 
+        Character.COMP_OPERATOR: 
+        Character.DEV_OPERATOR).get();
   }
   //-----------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**

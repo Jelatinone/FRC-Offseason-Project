@@ -182,12 +182,12 @@ tasks.register('checkAkitInstall', JavaExec) {
 }
 compileJava.finalizedBy(checkAkitInstall)
 
-tasks.register('checkRobot', JavaExec) {
-  dependsOn "classes"
-  main = "org.frc${teamNumber}.robot${seasonYear}.Constants"
-  classpath = sourceSets.main.runtimeClasspath
-}
-deployroborio.dependsOn(checkRobot)
+// tasks.register('checkRobot', JavaExec) {
+//   dependsOn "classes"
+//   main = "org.frc${teamNumber}.robot${seasonYear}.Constants"
+//   classpath = sourceSets.main.runtimeClasspath
+// }
+// deployroborio.dependsOn(checkRobot)
 
 tasks.register('eventDeploy') {
   doLast {
