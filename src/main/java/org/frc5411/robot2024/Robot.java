@@ -236,7 +236,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void close() {
     super.close();
-    Manager.getInstance().close();
+    Manager.tryInstance().ifPresent(Manager::close);
     synchronized(Robot.class) {
       CALLBACKS.clear();
       COMMANDS.clear();

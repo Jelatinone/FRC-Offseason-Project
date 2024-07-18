@@ -210,17 +210,19 @@ public class VisionSubsystem extends Subsystem<Named,State> {
               .periodic();
             if(Camera.getConnection()) {
               Manager
-                .getInstance()
-                .sample(new VisionObservation(
-                  List.of(
+                .tryInstance()
+                .ifPresent((Instance) -> 
+                  Instance.sample(new VisionObservation(
+                    List.of(
+                      Camera
+                        .getReport()
+                        .getObservations()
+                        .clone()), 
                     Camera
-                      .getReport()
-                      .getObservations()
-                      .clone()), 
-                  Camera
-                    .getMeasurements(), 
-                  Camera 
-                    .getTimestamps())
+                      .getMeasurements(), 
+                    Camera 
+                      .getTimestamps()
+                  ))
                 );
             }
           });

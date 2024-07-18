@@ -173,7 +173,16 @@ public class Constants {
 
     static Limit LIMITS = new Limit(Identity.LINEAR_VELOCITY, Identity.LINEAR_ACCELERATION, Identity.ANGULAR_VELOCITY);
 
-    static HeadingCoordinator HEADING_COORDINATOR = new HeadingCoordinator(new ProfiledPIDController(HEADING_COORDINATOR_DESCRIPTOR), () -> Manager.getInstance().getVehicleRelative().getValue().getRotation());
+    static HeadingCoordinator HEADING_COORDINATOR = new HeadingCoordinator(
+      new ProfiledPIDController(HEADING_COORDINATOR_DESCRIPTOR), 
+      () -> Manager
+        .tryInstance()
+        .map((Instance) -> 
+          Instance
+            .getVehicleRelative()
+            .getValue()
+            .getRotation())
+        .orElse(Rotation2d.fromRotations(Double.NaN)));
     static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);    
   }
 }

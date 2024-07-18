@@ -301,6 +301,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           );
       }
     } finally {
+      SUBSYSTEM_LOCK.writeLock().unlock();
       Manager
         .tryInstance()
         .ifPresent((Instance) -> 
@@ -317,7 +318,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
               .map(Rotation3d::toRotation2d)
               .toList())));
       update();
-      SUBSYSTEM_LOCK.writeLock().unlock();
     }
   }
 
