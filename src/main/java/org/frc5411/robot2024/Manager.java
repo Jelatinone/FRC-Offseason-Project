@@ -25,6 +25,7 @@ import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.StateSpaceUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
@@ -34,12 +35,14 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.jcabi.aspects.Async;
@@ -351,15 +354,19 @@ public final class Manager implements Singleton<Manager> {
             Positions[Module].angle);
           Position[Module] = Positions[Module];
         }   
-        Measured = KINEMATICS.toTwist2d(Deltas);
+        Measured = KINEMATICS
+          .toTwist2d(Deltas);
         Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
           Observation
             .Rotations().get(Update):
           Rotation
             .plus(new Rotation2d(Measured.dtheta));
         VEHICLE_ODOMETRY.addSample(
-          Observation.Timestamps().get(Update), 
-          ODOMETRY.update(Rotation, Positions)
+          Observation
+            .Timestamps()
+            .get(Update), 
+          ODOMETRY
+            .update(Rotation, Positions)
         );                
       }
     } finally {
@@ -389,10 +396,45 @@ public final class Manager implements Singleton<Manager> {
     try {
       VISION_UPDATE_LOCK.writeLock().lock();
       DISCRETE_AGGREGATOR.aggregate();
-      // <--- TODO: Vision Resolution
+      final var Updates = Figures
+        .minimum(Observation.Positions().size(), Observation.Timestamps().size());
+      for(int Update = (0); Update < Updates; Update++) {
+        final var Proximate = VEHICLE_ODOMETRY
+          .getSample(Observation.Timestamps().get(Update)).orElseThrow();
+        final var Vision = new Translation2d(); // <--- Derive via Observation
+        if(valid(Observation.Timestamps().get(Update), new Pose2d(Vision, Rotation2d.fromRotations((0D))), getVehicleRelative().getValue(), Measured)) {
+          final var Odometry = Vision
+            .plus(Proximate.getTranslation().unaryMinus());
+          try {
+            Vector<N2> Deviations = VecBuilder.fill(Math.pow((0E-1D), (1)), Math.pow((0E-1D), (1)));
+            FILTER.correct(
+                VecBuilder.fill((0D), (0D)),
+                VecBuilder.fill(
+                    Odometry.getX(),
+                    Odometry.getY()),
+                StateSpaceUtil
+                  .makeCovarianceMatrix(Nat.N2(), Deviations));
+            FIELD_ODOMETRY.addSample(
+                Observation.Timestamps().get(Update),
+                new Translation2d(FILTER.getXhat((0)), FILTER.getXhat((1))));
+          } catch(final Exception Ignored) {}
+        }
+      }
     } finally {
       VISION_UPDATE_LOCK.writeLock().unlock();
     }
+  }
+
+  /**
+   * Checks the validity of a vision observation's measurements.
+   * @param Timestamp Time, {@code t}, at which the following observation was recorded
+   * @param Vehicle   Current (observation) {@link Pose2d position} of the robot vehicle
+   * @param Previous  Previous (current) {@link Pose2d position} of the robot vehicle
+   * @param Velocity  Measured velocity of the robot vehicle 
+   * @return Boolean value representing validity of data for {@link #sample(VisionObservation) vision sampling} and pose estimation.
+   */
+  private Boolean valid(final Double Timestamp, final Pose2d Vehicle, final Pose2d Previous, final Twist2d Velocity) {
+    return (false);
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
