@@ -79,6 +79,16 @@ public final class Constants {
 
     static AprilTagFields FIELD = AprilTagFields.kDefaultField;
   }
+
+  @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
+  public static final class Field {
+    static Double LENGTH = (16.54106D);
+    static Double WIDTH = (8.211236D);
+
+    static Double MARGIN = (5E-1D);
+    static Double ELEVATION = (7.5E-1D);
+  }
+
   @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
   public static final class Control {
     static Integer DRIVER_CONTROL_PORT = (0);

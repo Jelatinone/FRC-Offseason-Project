@@ -15,6 +15,7 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 
+import org.frc5411.lib.instrument.module.Limit;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
@@ -73,6 +74,7 @@ import lombok.experimental.FieldDefaults;
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
 import static org.frc5411.robot2024.Constants.Control.*;
+import static org.frc5411.robot2024.Constants.Field.*;
 import static org.frc5411.robot2024.Constants.Identity.*;
 import static org.frc5411.robot2024.Constants.Preferences.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
@@ -93,8 +95,6 @@ public final class Manager implements Singleton<Manager> {
   static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
 
-  static Aggregator<Double> DISCRETE_AGGREGATOR;
-
   static Integer MODULES;
 
   static ReadWriteLock WHEEL_UPDATE_LOCK;
@@ -102,19 +102,18 @@ public final class Manager implements Singleton<Manager> {
 
   ExecutorService CALLBACK;
 
-  Queue<WheelObservation> WHEEL_UPDATE_QUEUE;
-  Queue<VisionObservation> VISION_UPDATE_QUEUE;
-
   Pose2d INITIAL;
-  
   TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
   TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
 
+  Limit LIMITS;
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
+
   ExtendedKalmanFilter<N2,N2,N2> FILTER;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
+  static volatile Double Timestamp;
   static volatile Twist2d Measured;
   static volatile Twist2d Predicted;
   static volatile Rotation2d Rotation;
@@ -124,11 +123,8 @@ public final class Manager implements Singleton<Manager> {
    * Manager Constructor.
    */
   private Manager() {
-    //<--- Initialize Constants --->
     CALLBACK = Executors
       .newWorkStealingPool(THREAD_PARALLELISM);
-    WHEEL_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
-    VISION_UPDATE_QUEUE = new ArrayDeque<>(QUEUE_SIZE);
     VEHICLE_ODOMETRY = TimeInterpolatableBuffer
       .createBuffer(BUFFER_SIZE);
     FIELD_ODOMETRY = TimeInterpolatableBuffer
@@ -142,7 +138,6 @@ public final class Manager implements Singleton<Manager> {
       STATE_STANDARD_DEVIATIONS,
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
-    //<--- Sample from Subsystems --->
     Position = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getModulePositions)
@@ -157,21 +152,22 @@ public final class Manager implements Singleton<Manager> {
       .map((Instance) -> 
         Instance.getGyroscopePosition().toRotation2d())
       .orElse(Rotation2d.fromRotations(Double.NaN));
+    LIMITS = DrivebaseSubsystem
+      .getLimits();
     KINEMATICS = DrivebaseSubsystem
       .getKinematics();
     ODOMETRY = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getOdometry)
       .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Position));
-    //<--- Base Sampling --->
     MODULES = Position.length;  
     VEHICLE_ODOMETRY.addSample(
-      DISCRETE_AGGREGATOR.attain(), 
+      Timestamp = HALUtil
+        .getFPGATime() / 1E6D, 
       INITIAL = ODOMETRY.update(
         Rotation,
         Position
       ));
-    //<--- Apply Configurations --->
     configure();
     Robot
       .tryInstance()
@@ -186,13 +182,8 @@ public final class Manager implements Singleton<Manager> {
         )
       );
   } static {
-    //<--- Initialize Static Constants --->
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
-    DISCRETE_AGGREGATOR = new Aggregator<>(
-      () -> HALUtil.getFPGATime() / 1E6D, 
-      (Previous, Current) -> Current - Previous);
-    //<--- Initialize Static Fields --->
     Measured = new Twist2d();
     Predicted = new Twist2d();
   }
@@ -324,8 +315,9 @@ public final class Manager implements Singleton<Manager> {
    * @return Future representing the pending completion of the observation
    */
   public synchronized Future<?> sample(final WheelObservation Observation) {
+    Objects.requireNonNull(Observation);
     return CALLBACK
-      .submit(() -> resolve(Objects.requireNonNull(Observation)));
+      .submit(() -> resolve(Observation));
   }  
 
   /**
@@ -336,38 +328,53 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final WheelObservation Observation) {
     try {
       WHEEL_UPDATE_LOCK.writeLock().lock();
-      DISCRETE_AGGREGATOR.aggregate();
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
       for(int Update = (0); Update < Updates; Update++) {
+        final var Delta = Observation.Timestamps().get(Update) - Timestamp;
         FILTER.predict( 
           VecBuilder.fill(
             (0D), 
             (0D)), 
-          DISCRETE_AGGREGATOR.getAggregated());     
+          Delta);    
         final var Positions = new SwerveModulePosition[MODULES];
         final var Deltas = new SwerveModulePosition[MODULES];
-        for(int Module = (0); Module < MODULES; Module++) {
+        var Perchance = (true);  
+        for(int Module = (0); Module < MODULES & Perchance; Module++) {
           Positions[Module] = Observation.Positions().get(Module).get(Update);
           Deltas[Module] = new SwerveModulePosition(
             Positions[Module].distanceMeters - Position[Module].distanceMeters,
-            Positions[Module].angle);
-          Position[Module] = Positions[Module];
+            Positions[Module].angle.minus(Position[Module].angle));
+          final var Velocity = 
+            (Positions[Module].distanceMeters - Position[Module].distanceMeters) / Delta;
+          final var Omega = 
+            Positions[Module].angle
+              .minus(Position[Module].angle)
+              .div(Delta)
+              .getRadians();
+          Perchance = // <--- Investigate the origin of constant values below?
+            !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) || Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D)); 
         }   
-        Measured = KINEMATICS
-          .toTwist2d(Deltas);
-        Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
-          Observation
-            .Rotations().get(Update):
-          Rotation
-            .plus(new Rotation2d(Measured.dtheta));
-        VEHICLE_ODOMETRY.addSample(
-          Observation
-            .Timestamps()
-            .get(Update), 
-          ODOMETRY
-            .update(Rotation, Positions)
-        );                
+        if(Perchance) {
+          Measured = KINEMATICS
+            .toTwist2d(Deltas);
+          Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
+            Observation
+              .Rotations().get(Update):
+            Rotation
+              .plus(new Rotation2d(Measured.dtheta));
+          VEHICLE_ODOMETRY.addSample(
+            Observation
+              .Timestamps()
+              .get(Update), 
+            ODOMETRY
+              .update(Rotation, Positions)
+          );           
+        }    
+        Position = Positions;
+        Timestamp = Observation
+          .Timestamps()
+          .get(Update);
       }
     } finally {
       WHEEL_UPDATE_LOCK.writeLock().unlock();
@@ -383,8 +390,9 @@ public final class Manager implements Singleton<Manager> {
    * @see #sample(WheelObservation)
    */
   public synchronized Future<?> sample(final VisionObservation Observation) {
+    Objects.requireNonNull(Observation);
     return CALLBACK
-      .submit(() -> resolve(Objects.requireNonNull(Observation)));
+      .submit(() -> resolve(Observation));
   }
 
   /**
@@ -395,46 +403,10 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final VisionObservation Observation) {
     try {
       VISION_UPDATE_LOCK.writeLock().lock();
-      DISCRETE_AGGREGATOR.aggregate();
-      final var Updates = Figures
-        .minimum(Observation.Positions().size(), Observation.Timestamps().size());
-      for(int Update = (0); Update < Updates; Update++) {
-        final var Proximate = VEHICLE_ODOMETRY
-          .getSample(Observation.Timestamps().get(Update)).orElseThrow();
-        final var Vision = new Translation2d(); // <--- Derive via Observation
-        if(valid(Observation.Timestamps().get(Update), new Pose2d(Vision, Rotation2d.fromRotations((0D))), getVehicleRelative().getValue(), Measured)) {
-          final var Odometry = Vision
-            .plus(Proximate.getTranslation().unaryMinus());
-          try {
-            Vector<N2> Deviations = VecBuilder.fill(Math.pow((0E-1D), (1)), Math.pow((0E-1D), (1)));
-            FILTER.correct(
-                VecBuilder.fill((0D), (0D)),
-                VecBuilder.fill(
-                    Odometry.getX(),
-                    Odometry.getY()),
-                StateSpaceUtil
-                  .makeCovarianceMatrix(Nat.N2(), Deviations));
-            FIELD_ODOMETRY.addSample(
-                Observation.Timestamps().get(Update),
-                new Translation2d(FILTER.getXhat((0)), FILTER.getXhat((1))));
-          } catch(final Exception Ignored) {}
-        }
-      }
+      // <--- TODO: Vision Logic
     } finally {
       VISION_UPDATE_LOCK.writeLock().unlock();
     }
-  }
-
-  /**
-   * Checks the validity of a vision observation's measurements.
-   * @param Timestamp Time, {@code t}, at which the following observation was recorded
-   * @param Vehicle   Current (observation) {@link Pose2d position} of the robot vehicle
-   * @param Previous  Previous (current) {@link Pose2d position} of the robot vehicle
-   * @param Velocity  Measured velocity of the robot vehicle 
-   * @return Boolean value representing validity of data for {@link #sample(VisionObservation) vision sampling} and pose estimation.
-   */
-  private Boolean valid(final Double Timestamp, final Pose2d Vehicle, final Pose2d Previous, final Twist2d Velocity) {
-    return (false);
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
