@@ -302,7 +302,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   /**
    * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
    * @return This singleton's instance, optionally
-   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized Optional<Robot> tryInstance() {
     return Optional
@@ -312,7 +311,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   /**
    * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed
    * @return This singleton's instance, guaranteed
-   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized Robot getInstance() {
     Robot Result = Instance;

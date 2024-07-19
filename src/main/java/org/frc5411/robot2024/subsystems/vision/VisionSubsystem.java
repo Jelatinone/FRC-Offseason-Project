@@ -260,7 +260,6 @@ public class VisionSubsystem extends Subsystem<Named,State> {
   /**
    * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
    * @return This singleton's instance, optionally
-   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized Optional<VisionSubsystem> tryInstance() {
     return Optional
@@ -270,7 +269,6 @@ public class VisionSubsystem extends Subsystem<Named,State> {
   /**
    * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed
    * @return This singleton's instance, guaranteed
-   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized VisionSubsystem getInstance() {
     VisionSubsystem Result = Instance;
@@ -299,7 +297,6 @@ enum State {
    * measurements are considered 'stale' or out-of-date.
    */
   STALE,
-
   /**
    * Represents an active (or running) state of this instance, where {@link VisionSubsystem#periodic()} is running; therefore the subsystem's 
    * measurements are considered to be up-to-date (but still possibly in the process of updating).
@@ -324,10 +321,14 @@ enum Named implements Registrable {
    */
   Named(final Command Command) {
     NAMED_COMMAND = Command;
-    final var Instance = VisionSubsystem.getInstance();
-    if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
-      NAMED_COMMAND.addRequirements(Instance);
-    }
+    VisionSubsystem
+      .tryInstance()
+      .ifPresent((Instance) -> {
+        if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
+          NAMED_COMMAND
+            .addRequirements(Instance);
+        }
+      });
     register();
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//

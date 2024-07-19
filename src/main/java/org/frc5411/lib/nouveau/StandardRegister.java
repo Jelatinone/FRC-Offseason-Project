@@ -233,7 +233,6 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   /**
    * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
    * @return This singleton's instance, optionally
-   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized Optional<StandardRegister> tryInstance() {
     return Optional
@@ -243,7 +242,6 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   /**
    * Retrieves an instance of this {@link Singleton}, or (thread-safely) creates a new instance of this type if an instance has not yet been constructed
    * @return This singleton's instance, guaranteed
-   * @throws UnsupportedOperationException By default, when this method has not been overridden.
    */
   public static synchronized StandardRegister getInstance() {
     StandardRegister Result = Instance;
