@@ -52,14 +52,23 @@ public abstract class Report<@NonNull Measurement extends StructSerializable> im
    * -- GETTER --
    * Provides a value which represents if the hardware related to a {@link Component component} is connected reported during the most recent 
    * {@link Component#update(Report) update} cycle
+   * @implNote False by default, which represents no connection to hardware
    * @return Hardware connection
    */
   volatile boolean Connected = (false);
   /**
    * -- GETTER --
+   * Provides a numerical value representative of the confidence in the internal state readings provided by it's state observers reported during
+   * the more recent {@link Component#update(Report) update} cycle
+   * @implNote Positive infinite by default, which represents zero confidence in the readings
+   * @return Hardware confidence (figure of merit)
+   */
+  volatile double Merit = Double.POSITIVE_INFINITY;
+  /**
+   * -- GETTER --
    * Provides a collection (array) of double timestamps at which the related {@link #getMeasurements() measurements} that have been 
    * recorded in the interval between {@link Component#update(Report) update} cycles
-   * @implNote Not necessarily equivalent in collection size to {@link #getMeasurements() measurements}
+   * @implNote Not necessarily equivalent in collection size to {@link #getMeasurements() measurements}, and by default is an empty array
    * @return Measurement timestamps
    */
   volatile double[] Timestamps = {};
@@ -67,11 +76,11 @@ public abstract class Report<@NonNull Measurement extends StructSerializable> im
    * -- GETTER --
    * Provides a collection (array) of measurements that have been recorded in the interval between {@link Component#update(Report) update} cycles
    * @implNote Not necessarily equivalent in collection size to {@link #getTimestamps() timestamps}, additionally because of the nature of 
-   * generic array types, this must be set with an initial value (often an empty array of the needed type) to ensure {@link Component#getMeasurements()}
-   * or {@link Component#getMeasurement()} do not throw {@link NullPointerException}.
+   * generic array types, this must be set with an initial value (often an empty array of the needed type suffices) to ensure {@link Component#getMeasurements()}
+   * or {@link Component#getMeasurement()} do not throw {@link NullPointerException} or {@link ClassCastException}.
    * @return Hardware measurements
    */
-  volatile Measurement @NonNull[] Measurements; // <---- This property must be set at downstream implementations of Component or ClassCastException is thrown!
+  volatile Measurement @NonNull[] Measurements;
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   /**
    * Shorthand for providing an empty instance of a report, with no relevant data stored inside.

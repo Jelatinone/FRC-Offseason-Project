@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.jcabi.aspects.Async;
 
+import org.frc5411.lib.pattern.Component;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.urcl.URCL;
 
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.Collection;
 
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
@@ -81,12 +83,22 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
    * @return State of this instance
    */
   public abstract State getState();
+
+  /**
+   * Provides all of the child {@link Component component} hardware devices utilized by this subsystem, which should be registered 
+   * with {@link Subsystem#addChild(String, edu.wpi.first.util.sendable.Sendable)}.
+   * @implNote Empty list collection by default.
+   * @return Collection of all child components in this subsystem.
+   */
+  public Collection<Component<?>> getComponents() {
+    return List.of();
+  }
   
   /**
    * Provides the lock member-variable of this subsystem used during it's {@link #periodic() periodic} operations.
    * @return Synchronization lock of this subsystem
    */
-  public final ReadWriteLock getLock() {
+  public ReadWriteLock getLock() {
     return OPERATION_LOCK;
   }
 
