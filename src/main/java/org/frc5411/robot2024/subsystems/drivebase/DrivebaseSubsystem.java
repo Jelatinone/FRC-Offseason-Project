@@ -31,7 +31,7 @@ import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
 
 import org.frc5411.robot2024.Manager;
-import org.frc5411.robot2024.Manager.WheelObservation;
+import org.frc5411.robot2024.Manager.VehicleObservation;
 import org.frc5411.robot2024.subsystems.drivebase.Constants.Modules;
 
 import edu.wpi.first.hal.HALUtil;
@@ -305,7 +305,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       Manager
         .tryInstance()
         .ifPresent((Instance) -> 
-          Instance.sample(new WheelObservation(
+          Instance.sample(new VehicleObservation(
             MODULES
               .stream()
               .map(Module::getMeasurements)

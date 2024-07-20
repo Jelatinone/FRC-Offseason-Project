@@ -33,8 +33,10 @@ import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
@@ -70,6 +72,7 @@ import java.util.stream.IntStream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
@@ -95,14 +98,14 @@ public final class Manager implements Singleton<Manager> {
   static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
 
-  static Integer MODULES;
+  static Double VISION_CORRECTION = (2D);
 
-  static ReadWriteLock WHEEL_UPDATE_LOCK;
-  static ReadWriteLock VISION_UPDATE_LOCK;  
+  static Integer CHASSIS_CAPACITY;
+
+  static ReadWriteLock UPDATE_LOCK;
 
   ExecutorService CALLBACK;
 
-  Pose2d INITIAL;
   TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
   TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
 
@@ -113,11 +116,16 @@ public final class Manager implements Singleton<Manager> {
   ExtendedKalmanFilter<N2,N2,N2> FILTER;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
+
   static volatile Double Timestamp;
   static volatile Twist2d Measured;
   static volatile Twist2d Predicted;
-  static volatile Rotation2d Rotation;
+
   static volatile SwerveModulePosition[] Position;
+  static volatile Rotation2d Rotation;
+
+  static volatile Optional<VehicleObservation> Vehicle;
+  static volatile Optional<VisionObservation> Vision;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
@@ -152,6 +160,10 @@ public final class Manager implements Singleton<Manager> {
       .map((Instance) -> 
         Instance.getGyroscopePosition().toRotation2d())
       .orElse(Rotation2d.fromRotations(Double.NaN));
+    Vehicle = Optional
+      .empty();
+    Vision = Optional
+      .empty();
     LIMITS = DrivebaseSubsystem
       .getLimits();
     KINEMATICS = DrivebaseSubsystem
@@ -160,14 +172,7 @@ public final class Manager implements Singleton<Manager> {
       .tryInstance()
       .map(DrivebaseSubsystem::getOdometry)
       .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Position));
-    MODULES = Position.length;  
-    VEHICLE_ODOMETRY.addSample(
-      Timestamp = HALUtil
-        .getFPGATime() / 1E6D, 
-      INITIAL = ODOMETRY.update(
-        Rotation,
-        Position
-      ));
+    CHASSIS_CAPACITY = Position.length;  
     configure();
     Robot
       .tryInstance()
@@ -182,8 +187,7 @@ public final class Manager implements Singleton<Manager> {
         )
       );
   } static {
-    WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
-    VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
+    UPDATE_LOCK = new ReentrantReadWriteLock((true));
     Measured = new Twist2d();
     Predicted = new Twist2d();
   }
@@ -292,7 +296,7 @@ public final class Manager implements Singleton<Manager> {
    */
   public synchronized void sample(final ChassisSpeeds Demand) {
     try {
-      WHEEL_UPDATE_LOCK.writeLock().lock();
+      UPDATE_LOCK.writeLock().lock();
       Predicted = log(
         exp(new Twist2d(
           Demand.vxMetersPerSecond, 
@@ -300,21 +304,21 @@ public final class Manager implements Singleton<Manager> {
           Demand.omegaRadiansPerSecond))
         .rotateBy(Rotation));      
     } finally {
-      WHEEL_UPDATE_LOCK.writeLock().unlock();
+      UPDATE_LOCK.writeLock().unlock();
     }
   }
 
 
   /**
-   * <p>Adds a new {@link WheelObservation observation} instance, containing the necessary information to calculate accurate wheel odometry values, to the callback's work-stealing 
+   * <p>Adds a new {@link VehicleObservation observation} instance, containing the necessary information to calculate accurate wheel odometry values, to the callback's work-stealing 
    * execution thread-pool.
    * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
    * impacts on the robot-main thread.
-   * @param Observation Wheel observation to add to the processing pool
+   * @param Observation Vehicle observation to add to the processing pool
    * @see #sample(VisionObservation)
    * @return Future representing the pending completion of the observation
    */
-  public synchronized Future<?> sample(final WheelObservation Observation) {
+  public synchronized Future<?> sample(final VehicleObservation Observation) {
     Objects.requireNonNull(Observation);
     return CALLBACK
       .submit(() -> resolve(Observation));
@@ -325,22 +329,17 @@ public final class Manager implements Singleton<Manager> {
    * @param Observation Pooled value, which has not yet been processed, and represents a set of measurements that occurred over an interval of time
    */
   @Async
-  private synchronized void resolve(final WheelObservation Observation) {
+  private synchronized void resolve(final VehicleObservation Observation) {
     try {
-      WHEEL_UPDATE_LOCK.writeLock().lock();
+      UPDATE_LOCK.writeLock().lock();
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
       for(var Update = (0); Update < Updates; Update++) {
         var Include = (true);
         final var Delta = Observation.Timestamps().get(Update) - Timestamp;
-        FILTER.predict( 
-          VecBuilder.fill(
-            (0D), 
-            (0D)), 
-          Delta);    
-        final var Positions = new SwerveModulePosition[MODULES];
-        final var Deltas = new SwerveModulePosition[MODULES];
-        for(var Module = (0); Module < MODULES; Module++) {
+        final var Positions = new SwerveModulePosition[CHASSIS_CAPACITY];
+        final var Deltas = new SwerveModulePosition[CHASSIS_CAPACITY];
+        for(var Module = (0); Module < CHASSIS_CAPACITY ^ !Include; Module++) {
           Positions[Module] = Observation.Positions().get(Module).get(Update);
           Deltas[Module] = new SwerveModulePosition(
             Positions[Module].distanceMeters - Position[Module].distanceMeters,
@@ -348,11 +347,16 @@ public final class Manager implements Singleton<Manager> {
           final var Velocity = 
             (Deltas[Module].distanceMeters) / Delta;
           final var Omega = 
-            (Deltas[Module].angle.div(Delta)).getRadians();
+            Deltas[Module].angle
+              .minus(Positions[Module].angle)
+              .div(Delta)
+              .getRadians();
           Include =           
             !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) | Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D)); 
         }
-        if(Include) {
+        if(Include || Vehicle.isEmpty()) {
+          Vehicle = Optional
+            .of(Observation);          
           Measured = KINEMATICS
             .toTwist2d(Deltas);
           Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
@@ -367,6 +371,11 @@ public final class Manager implements Singleton<Manager> {
             ODOMETRY
               .update(Rotation, Positions)
           );       
+          FILTER.predict(
+            VecBuilder
+              .fill((0D), (0D)),
+            Delta
+          );    
           Position = Positions;
           Timestamp = Observation
             .Timestamps()
@@ -374,7 +383,7 @@ public final class Manager implements Singleton<Manager> {
         }    
       }
     } finally {
-      WHEEL_UPDATE_LOCK.writeLock().unlock();
+      UPDATE_LOCK.writeLock().unlock();
     }
   }
 
@@ -384,7 +393,7 @@ public final class Manager implements Singleton<Manager> {
    * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
    * impacts on the robot-main thread.
    * @param Observation Vision observation to add to the processing pool
-   * @see #sample(WheelObservation)
+   * @see #sample(VehicleObservation)
    */
   public synchronized Future<?> sample(final VisionObservation Observation) {
     Objects.requireNonNull(Observation);
@@ -399,72 +408,156 @@ public final class Manager implements Singleton<Manager> {
   @Async
   private synchronized void resolve(final VisionObservation Observation) {
     try {
-      VISION_UPDATE_LOCK.writeLock().lock();
-      // <--- TODO: Vision Logic
+      UPDATE_LOCK.writeLock().lock();
+      final var Updates = Figures
+        .minimum(Observation.Positions().size(), Observation.Timestamps().size());
+      final var Approximate = getVehicleRelative()
+        .getValue()
+        .getTranslation();
+      for(var Update = (0); Update < Updates; Update++) {
+        final var Position = Observation
+          .Positions()
+          .get(Update);
+        final Translation2d Camera = Position
+          .toPose2d()
+          .getTranslation()
+          .plus(
+            Observation
+              .Camera()
+              .getTranslation()
+              .rotateBy(getVehicleRotation()));
+        final var Vehicle = getVehicleRelative()
+          .getValue()
+          .getTranslation();
+        final var Field = Camera
+          .plus(Approximate.unaryMinus());
+        if(Vision.isEmpty()) {
+          FIELD_ODOMETRY.addSample(
+            Observation
+              .Timestamps()
+              .get(Update),
+            Field);
+          FILTER.setXhat(VecBuilder
+            .fill(
+              Field.getX(),
+              Field.getY()
+          ));          
+        } else {
+          if(
+            Math
+              .hypot(Measured.dx, Measured.dy) > LIMITS.TranslationalVelocity() 
+              &&
+            Field.getX() > -MARGIN && Field.getX() < LENGTH + MARGIN && Field.getY() > -MARGIN && Field.getY() < WIDTH + MARGIN
+              &&
+            Field
+              .minus(getFieldRelative().getValue()).getNorm() > VISION_CORRECTION
+          ) {
+            try {
+              final var Targets = Observation
+                .Targets()
+                .get(Update);
+              var Minimum = Double.POSITIVE_INFINITY;
+              var Total = (0D);
+              for(final var Target: Targets) {
+                final var Distance = Target
+                  .getTranslation()
+                  .getNorm();
+                Total += Distance;
+                Minimum = Math
+                  .min(Distance, Minimum);                
+              }
+              final var Deviation = 
+                (1/10D) * (((1/100D) * Math.pow(Minimum, (2D))) + ((1/200D) * Math.pow(Total / Targets.size(), (2D)))) / Targets.size();
+              final var Deviations = VecBuilder.fill(
+                Math.pow((Deviation), (1D)), 
+                Math.pow((Deviation), (1D)));
+              FILTER.correct(
+                VecBuilder.fill(
+                    (0D), 
+                    (0D)),
+                VecBuilder.fill(
+                    Field.getX(),
+                    Field.getY()),
+                StateSpaceUtil.makeCovarianceMatrix(
+                  Nat.N2(), 
+                  Deviations)
+              );
+              FIELD_ODOMETRY.addSample(
+                Observation
+                  .Timestamps()
+                  .get(Update), 
+                new Translation2d(
+                  new Vector<N2>(FILTER.getXhat())));
+            } catch(final Exception Ignored) {}
+          }
+        }
+      }
+      Vision = Optional
+        .of(Observation);
     } finally {
-      VISION_UPDATE_LOCK.writeLock().unlock();
+      UPDATE_LOCK.writeLock().unlock();
     }
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
-   * Provides the vehicle odometry at the given time provided, which is an estimate based upon the {@link #sample(WheelObservation) addition} of 
-   * {@link WheelObservation wheel observations}
+   * Provides the vehicle odometry at the given time provided, which is an estimate based upon the {@link #sample(VehicleObservation) addition} of 
+   * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of vehicle odometry
    * @return Robot (vehicle-relative) odometry position at the given time
    */
   public Entry<Double,Pose2d> getVehicleRelative(final Double Timestamp) {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return (null); // <--- TODO: Prediction Logic
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
   /**
-   * Provides the vehicle odometry at the current time provided, which is an estimate based upon the {@link #sample(WheelObservation) addition} of
-   * {@link WheelObservation wheel observations}
+   * Provides the vehicle odometry at the current time provided, which is an estimate based upon the {@link #sample(VehicleObservation) addition} of
+   * {@link VehicleObservation wheel observations}
    * @return Robot (vehicle-relative) odometry position
    */
   public Entry<Double,Pose2d> getVehicleRelative() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return VEHICLE_ODOMETRY
         .getInternalBuffer()
         .lastEntry();
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
   /**
    * Provides the field odometry at the given time provided, which is an estimate based upon the {@link #sample(VisionObservation) addition} of 
-   * {@link WheelObservation wheel observations}
+   * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of field odometry
    * @return Robot (field-relative) odometry position at the given time
    */
   public Entry<Double,Translation2d> getFieldRelative(final Double Timestamp) {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return (null); // <--- TODO: Prediction Logic
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
   /**
    * Provides the field odometry at the current time provided, which is an estimate based upon the {@link #sample(VisionObservation) addition} of
-   * {@link WheelObservation wheel observations}
+   * {@link VehicleObservation wheel observations}
    * @return Robot (field-relative) odometry position
    */
   public Entry<Double,Translation2d> getFieldRelative() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return FIELD_ODOMETRY
         .getInternalBuffer()
         .lastEntry();
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -474,10 +567,10 @@ public final class Manager implements Singleton<Manager> {
    */
   public Rotation2d getVehicleRotation() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return Rotation;
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -487,23 +580,23 @@ public final class Manager implements Singleton<Manager> {
    */
   public SwerveModulePosition[] getVehiclePosition() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return Position;
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
   /**
-   * Provides the measured velocity determined via the {@link #sample(WheelObservation) addition} of {@link WheelObservation observations}
+   * Provides the measured velocity determined via the {@link #sample(VehicleObservation) addition} of {@link VehicleObservation observations}
    * @return Measured velocity, calculated by the delta between the most recent positions
    */
   public Twist2d getMeasured() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return Measured;
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -513,12 +606,28 @@ public final class Manager implements Singleton<Manager> {
    */
   public Twist2d getPredicted() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return Predicted;
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   } 
+
+  /**
+   * Provides the latest vehicle observation {@link #sample(VehicleObservation) sampled}.
+   * @return Latest vehicle observation
+   */
+  public Optional<VehicleObservation> getVehicleObservation() {
+    return Vehicle;
+  }
+
+  /**
+   * Provides the latest vision observation {@link #sample(VisionObservation) sampled}.
+   * @return Latest vision observation
+   */
+  public Optional<VisionObservation> getVisionObservation() {
+    return Vision;
+  }
 
   /**
    * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
@@ -549,10 +658,10 @@ public final class Manager implements Singleton<Manager> {
   /**
    *
    *
-   * <h1>WheelObservation</h1>
+   * <h1>VehicleObservation</h1>
    *
    */
-  public record WheelObservation(List<List<SwerveModulePosition>> Positions, List<Double> Timestamps, List<Rotation2d> Rotations) {}
+  public record VehicleObservation(List<List<SwerveModulePosition>> Positions, List<Double> Timestamps, List<Rotation2d> Rotations) {}
 
   /**
    *
@@ -560,5 +669,5 @@ public final class Manager implements Singleton<Manager> {
    * <h1>VisionObservation</h1>
    *
    */
-  public record VisionObservation(List<Pose3d> Positions, List<Transform3d> Targets, List<Double> Timestamps) {}
+  public record VisionObservation(List<List<Transform3d>> Targets, List<Pose3d> Positions, List<Double> Timestamps, Transform2d Camera) {}
 }
