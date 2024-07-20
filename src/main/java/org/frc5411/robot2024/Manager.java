@@ -34,6 +34,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -61,6 +62,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
+import java.util.NoSuchElementException;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -110,7 +112,7 @@ public final class Manager implements Singleton<Manager> {
   static volatile Twist2d Measured;
   static volatile Twist2d Predicted;
 
-  static volatile SwerveModulePosition[] Position;
+  static volatile SwerveModulePosition[] Positions;
   static volatile Rotation2d Rotation;
 
   static volatile Optional<VehicleObservation> Vehicle;
@@ -135,7 +137,7 @@ public final class Manager implements Singleton<Manager> {
       STATE_STANDARD_DEVIATIONS,
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
-    Position = DrivebaseSubsystem
+    Positions = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getModulePositions)
       .orElse(
@@ -158,8 +160,8 @@ public final class Manager implements Singleton<Manager> {
     ODOMETRY = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getOdometry)
-      .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Position));
-    CHASSIS_CAPACITY = Position.length;  
+      .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Positions));
+    CHASSIS_CAPACITY = Positions.length;  
     configure();
     Robot
       .tryInstance()
@@ -334,18 +336,18 @@ public final class Manager implements Singleton<Manager> {
       for(var Update = (0); Update < Updates; Update++) {
         var Include = (true);
         final var Delta = Observation.Timestamps().get(Update) - Timestamp;
-        final var Positions = new SwerveModulePosition[CHASSIS_CAPACITY];
+        final var Position = new SwerveModulePosition[CHASSIS_CAPACITY];
         final var Deltas = new SwerveModulePosition[CHASSIS_CAPACITY];
         for(var Module = (0); Module < CHASSIS_CAPACITY ^ !Include; Module++) {
-          Positions[Module] = Observation.Positions().get(Module).get(Update);
+          Position[Module] = Observation.Positions().get(Module).get(Update);
           Deltas[Module] = new SwerveModulePosition(
-            Positions[Module].distanceMeters - Position[Module].distanceMeters,
-            Positions[Module].angle);
+            Position[Module].distanceMeters - Positions[Module].distanceMeters,
+            Position[Module].angle);
           final var Velocity = 
             (Deltas[Module].distanceMeters) / Delta;
           final var Omega = 
             Deltas[Module].angle
-              .minus(Positions[Module].angle)
+              .minus(Position[Module].angle)
               .div(Delta)
               .getRadians();
           Include =           
@@ -366,7 +368,7 @@ public final class Manager implements Singleton<Manager> {
               .Timestamps()
               .get(Update),
             ODOMETRY
-              .update(Rotation, Position = Positions)
+              .update(Rotation, Positions = Position)
           );       
           FILTER.predict(
             VecBuilder
@@ -465,19 +467,17 @@ public final class Manager implements Singleton<Manager> {
                 (1/10D) * (((1/100D) * Math.pow(Minimum, (2D))) + ((1/200D) * Math.pow(Total / Distances.size(), (2D)))) / Distances.size();
               FILTER.correct(
                 VecBuilder.fill(
-                    (0D), 
-                    (0D)),
+                  (0D), 
+                  (0D)),
                 VecBuilder.fill(
-                    Field.getX(),
-                    Field.getY()),
+                  Field.getX(),
+                  Field.getY()),
                 StateSpaceUtil.makeCovarianceMatrix(
                   Nat.N2(), 
                   VecBuilder.fill(
                     Math.pow((Deviation), (1D)), 
-                    Math.pow((Deviation), (1D))
-                  )
-                )
-                  
+                    Math.pow((Deviation), (1D)))
+                )  
               );
               FIELD_ODOMETRY.addSample(
                 Timestamp = Observation
@@ -501,11 +501,36 @@ public final class Manager implements Singleton<Manager> {
    * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of vehicle odometry
    * @return Robot (vehicle-relative) odometry position at the given time
+   * @throws NoSuchElementException When the provided timestamp is out of bounds for the vehicle-relative buffer
    */
-  public Entry<Double,Pose2d> getVehicleRelative(final Double Timestamp) {
+  public Pose2d getVehicleRelative(final Double Timestamp) {
     try {
       UPDATE_LOCK.readLock().lock();
-      return (null); // <--- TODO: Prediction Logic
+      final var Sample = VEHICLE_ODOMETRY
+        .getSample(Timestamp);
+      if(Sample.isPresent()) {
+        return Sample.get();
+      } else {
+        final var Initial = VEHICLE_ODOMETRY
+          .getInternalBuffer()
+          .firstEntry();
+        if(Timestamp < Initial.getKey()) {
+          final var Latest = VEHICLE_ODOMETRY
+            .getInternalBuffer()
+            .lastEntry();
+          final var Delta = Timestamp - Latest.getKey();
+          return Latest
+            .getValue()
+            .exp(
+              new Twist2d(
+                Predicted.dx * Delta, 
+                Predicted.dy * Delta, 
+                Predicted.dtheta * Delta)
+            );  
+        } else {
+          throw new NoSuchElementException(("Provided Timestamp Is Out Of Vehicle Odometry Buffer Range"));
+        }
+      }
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -532,11 +557,35 @@ public final class Manager implements Singleton<Manager> {
    * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of field odometry
    * @return Robot (field-relative) odometry position at the given time
+   * @throws NoSuchElementException When the provided timestamp is out of bounds for the field-relative buffer
    */
-  public Entry<Double,Translation2d> getFieldRelative(final Double Timestamp) {
+  public Translation2d getFieldRelative(final Double Timestamp) {
     try {
       UPDATE_LOCK.readLock().lock();
-      return (null); // <--- TODO: Prediction Logic
+      final var Sample = FIELD_ODOMETRY
+        .getSample(Timestamp);
+      if(Sample.isPresent()) {
+        return Sample.get();
+      } else {        
+        final var Initial = FIELD_ODOMETRY
+          .getInternalBuffer()
+          .firstEntry();
+        if(Timestamp < Initial.getKey()) {
+          final var Latest = FIELD_ODOMETRY
+            .getInternalBuffer()
+            .lastEntry();
+          final var Delta = Timestamp - Latest.getKey();
+          return Latest
+            .getValue()
+            .plus(
+              new Translation2d(
+                Predicted.dx * Delta, 
+                Predicted.dy * Delta)
+            );
+        } else {
+          throw new NoSuchElementException(("Provided Timestamp Is Out Of Field Odometry Buffer Range"));
+        }
+      }
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -573,12 +622,12 @@ public final class Manager implements Singleton<Manager> {
 
   /**
    * Provides the relative position of the chassis' wheel's positions (where the relatively depends upon underlying implementation)
-   * @return Position of wheels jn two-dimensional space observed by the robot
+   * @return Position of wheels in two-dimensional space observed by the robot
    */
-  public SwerveModulePosition[] getVehiclePosition() {
+  public SwerveModulePosition[] getVehiclePositions() {
     try {
       UPDATE_LOCK.readLock().lock();
-      return Position;
+      return Positions;
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
