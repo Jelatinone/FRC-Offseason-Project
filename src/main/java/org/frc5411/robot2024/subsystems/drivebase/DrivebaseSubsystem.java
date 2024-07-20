@@ -135,7 +135,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       .kinematics(KINEMATICS)
       .moduleLocations(LOCATIONS)
       .build();
-    Mode = State.RELATIVE;
+    Mode = State.ABSOLUTE;
     Effort = new Setpoint(
       new ChassisSpeeds(), 
       getModuleStates());

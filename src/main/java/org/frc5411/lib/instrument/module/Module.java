@@ -77,8 +77,12 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
 
   @Override
   public synchronized SwerveModuleState set(@NonNull SwerveModuleState Demand) {
+    Objects.requireNonNull(Demand);
     // <--- TODO: Implement Orbit-style module acceleration limits (forward, skid, tilt, etc)
-    STATUS.setState(Demand = SwerveModuleState.optimize(Demand, getOutput().orElseThrow().angle));
+    synchronized(STATUS) {
+      STATUS
+        .setState(Demand = SwerveModuleState.optimize(Demand, getOutput().orElseThrow().angle));
+    }
     return Demand;
   }
 
@@ -97,10 +101,10 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
                 Output.speedMetersPerSecond, 
                 State.speedMetersPerSecond 
                             * 
-                Math.cos(unwrap(DESCRIPTION.RotationalFeedback.getError())))
-              )
+                Math
+                  .cos(unwrap(DESCRIPTION.RotationalFeedback.getError())))
             )
-          )
+          ))
         );
         if(State.angle != (null)) {
           setRotationalVoltage(
@@ -112,12 +116,16 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
                     State.angle
                       .getRadians())
                 )
-              ))
-            ).getRotations()
+            ))).getRotations()
           );
         }
+        //https://youtu.be/N6ogT5DjGOk?feature=shared&t=1674
+        STATUS
+          .setMerit((1D)); // <--- TODO: Calculate Merit
       } else {
         cease();
+        STATUS
+          .setMerit(Double.POSITIVE_INFINITY);              
       }
       STATUS.setInput(Input);
     }

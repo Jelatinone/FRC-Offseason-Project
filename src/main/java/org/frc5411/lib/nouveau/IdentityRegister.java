@@ -84,6 +84,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
     QUEUE_LOCK = new ReentrantReadWriteLock((true));
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
     CALLBACK = new Notifier(this);
+    CALLBACK.setName(getClass().getSimpleName());
     Frequency = UPDATE_FREQUENCY;
     start();
   }

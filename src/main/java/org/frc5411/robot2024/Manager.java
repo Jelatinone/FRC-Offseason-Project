@@ -330,7 +330,8 @@ public final class Manager implements Singleton<Manager> {
       WHEEL_UPDATE_LOCK.writeLock().lock();
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
-      for(int Update = (0); Update < Updates; Update++) {
+      for(var Update = (0); Update < Updates; Update++) {
+        var Include = (true);
         final var Delta = Observation.Timestamps().get(Update) - Timestamp;
         FILTER.predict( 
           VecBuilder.fill(
@@ -339,23 +340,19 @@ public final class Manager implements Singleton<Manager> {
           Delta);    
         final var Positions = new SwerveModulePosition[MODULES];
         final var Deltas = new SwerveModulePosition[MODULES];
-        var Perchance = (true);  
-        for(int Module = (0); Module < MODULES & Perchance; Module++) {
+        for(var Module = (0); Module < MODULES; Module++) {
           Positions[Module] = Observation.Positions().get(Module).get(Update);
           Deltas[Module] = new SwerveModulePosition(
             Positions[Module].distanceMeters - Position[Module].distanceMeters,
-            Positions[Module].angle.minus(Position[Module].angle));
+            Positions[Module].angle);
           final var Velocity = 
-            (Positions[Module].distanceMeters - Position[Module].distanceMeters) / Delta;
+            (Deltas[Module].distanceMeters) / Delta;
           final var Omega = 
-            Positions[Module].angle
-              .minus(Position[Module].angle)
-              .div(Delta)
-              .getRadians();
-          Perchance = // <--- Investigate the origin of constant values below?
-            !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) || Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D)); 
-        }   
-        if(Perchance) {
+            (Deltas[Module].angle.div(Delta)).getRadians();
+          Include =           
+            !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) | Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D)); 
+        }
+        if(Include) {
           Measured = KINEMATICS
             .toTwist2d(Deltas);
           Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
@@ -369,12 +366,12 @@ public final class Manager implements Singleton<Manager> {
               .get(Update), 
             ODOMETRY
               .update(Rotation, Positions)
-          );           
+          );       
+          Position = Positions;
+          Timestamp = Observation
+            .Timestamps()
+            .get(Update);              
         }    
-        Position = Positions;
-        Timestamp = Observation
-          .Timestamps()
-          .get(Update);
       }
     } finally {
       WHEEL_UPDATE_LOCK.writeLock().unlock();

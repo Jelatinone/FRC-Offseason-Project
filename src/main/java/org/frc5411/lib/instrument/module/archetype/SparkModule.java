@@ -158,11 +158,11 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
     getDescriptor().TranslationalController.close();
     getDescriptor().RotationalController.close();
 
-    getDescriptor().RotationalEncoder.close();
+    getDescriptor().RotationalEncoder.close();   
 
+    UPDATE_TIMESTAMPS.clear();
     TRANSLATIONAL_POSITIONS.clear();
     ROTATIONAL_POSITIONS.clear();
-    UPDATE_TIMESTAMPS.clear();
   }
 
   @Override
@@ -216,7 +216,6 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
           .toArray());
         UPDATE_TIMESTAMPS.clear();
       }        
-
       Article.setMeasurements(IntStream.range((0), Figures.minimum(Translations.length, Rotations.length)).mapToObj((Index) -> 
         new SwerveModulePosition(
           (Translations[Index] - getDescriptor().TranslationalOffset) / getDescriptor().TranslationalReduction * getDescriptor().Radius, 

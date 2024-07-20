@@ -90,6 +90,10 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
     final var Article = getReport();
     synchronized(Article) {
       update(Article);
+      if(!getConnection()) {
+        Article
+          .setMerit(Double.POSITIVE_INFINITY);
+      }
     }
   }
 
