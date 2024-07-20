@@ -364,21 +364,17 @@ public final class Manager implements Singleton<Manager> {
             Rotation
               .plus(new Rotation2d(Measured.dtheta));
           VEHICLE_ODOMETRY.addSample(
-            Observation
+            Timestamp = Observation
               .Timestamps()
-              .get(Update), 
+              .get(Update),
             ODOMETRY
-              .update(Rotation, Positions)
+              .update(Rotation, Position = Positions)
           );       
           FILTER.predict(
             VecBuilder
               .fill((0D), (0D)),
             Delta
-          );    
-          Position = Positions;
-          Timestamp = Observation
-            .Timestamps()
-            .get(Update);              
+          );             
         }    
       }
     } finally {
@@ -482,7 +478,7 @@ public final class Manager implements Singleton<Manager> {
                   Deviations)
               );
               FIELD_ODOMETRY.addSample(
-                Observation
+                Timestamp = Observation
                   .Timestamps()
                   .get(Update), 
                 new Translation2d(
