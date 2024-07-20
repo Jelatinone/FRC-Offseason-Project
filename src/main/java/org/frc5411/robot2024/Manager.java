@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.List;
+import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
@@ -448,24 +449,23 @@ public final class Manager implements Singleton<Manager> {
               .minus(getFieldRelative().getValue()).getNorm() > VISION_CORRECTION
           ) {
             try {
-              final var Targets = Observation
+              final var Distances = Observation
                 .Targets()
-                .get(Update);
-              var Minimum = Double.POSITIVE_INFINITY;
-              var Total = (0D);
-              for(final var Target: Targets) {
-                final var Distance = Target
-                  .getTranslation()
-                  .getNorm();
-                Total += Distance;
-                Minimum = Math
-                  .min(Distance, Minimum);                
-              }
+                .get(Update)
+                .stream()
+                .map((Target) -> 
+                  Target.getTranslation().getNorm())
+                .toList();
+              final var Minimum = Distances
+                .stream()
+                .min(Double::compareTo)
+                .orElse((0D));
+              final var Total = Distances
+                .stream()
+                .mapToDouble(Double::doubleValue)
+                .sum();
               final var Deviation = 
-                (1/10D) * (((1/100D) * Math.pow(Minimum, (2D))) + ((1/200D) * Math.pow(Total / Targets.size(), (2D)))) / Targets.size();
-              final var Deviations = VecBuilder.fill(
-                Math.pow((Deviation), (1D)), 
-                Math.pow((Deviation), (1D)));
+                (1/10D) * (((1/100D) * Math.pow(Minimum, (2D))) + ((1/200D) * Math.pow(Total / Distances.size(), (2D)))) / Distances.size();
               FILTER.correct(
                 VecBuilder.fill(
                     (0D), 
@@ -475,7 +475,12 @@ public final class Manager implements Singleton<Manager> {
                     Field.getY()),
                 StateSpaceUtil.makeCovarianceMatrix(
                   Nat.N2(), 
-                  Deviations)
+                  VecBuilder.fill(
+                    Math.pow((Deviation), (1D)), 
+                    Math.pow((Deviation), (1D))
+                  )
+                )
+                  
               );
               FIELD_ODOMETRY.addSample(
                 Timestamp = Observation
