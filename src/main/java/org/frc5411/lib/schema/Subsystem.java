@@ -15,19 +15,20 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.schema;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
+import org.frc5411.lib.pattern.Component;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.jcabi.aspects.Async;
 
-import org.frc5411.lib.pattern.Component;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.urcl.URCL;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.Collection;
 
 import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//

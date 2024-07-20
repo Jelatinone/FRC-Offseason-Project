@@ -18,8 +18,6 @@ package org.frc5411.lib.instrument.camera;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
-import org.littletonrobotics.junction.AutoLog;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,12 +33,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
 @Setter
-@AutoLog
 public class Report extends org.frc5411.lib.pattern.Report<Pose3d> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile double Latency = (-1D);
 
   volatile int Pipeline = (-1);
 
-  volatile Transform3d[] Observations[] = new Transform3d[][] {};
+  volatile Transform3d[][] Observations = new Transform3d[][] {};
 }

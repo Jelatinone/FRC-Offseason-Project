@@ -14,12 +14,9 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.camera;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
 import edu.wpi.first.math.geometry.Pose3d;
-
-import org.littletonrobotics.junction.Logger;
 
 import java.util.Objects;
 
@@ -37,7 +34,7 @@ import lombok.experimental.FieldDefaults;
 public abstract class Camera<Hardware> implements Component<Pose3d> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Descriptor<Hardware> DESCRIPTION;
-  ReportAutoLogged STATUS;
+  Report STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Camera Constructor.
@@ -46,7 +43,7 @@ public abstract class Camera<Hardware> implements Component<Pose3d> {
   protected Camera(final Descriptor<Hardware> Description) {
     DESCRIPTION = Objects
       .requireNonNull(Description);
-    STATUS = new ReportAutoLogged();
+    STATUS = new Report();
     STATUS.setMeasurements(new Pose3d[] {});
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
@@ -64,8 +61,9 @@ public abstract class Camera<Hardware> implements Component<Pose3d> {
     synchronized(STATUS) {
       update(STATUS);
     }
-    Logger.processInputs(
-      getIdentity(), STATUS);   
+    // !https://github.com/Mechanical-Advantage/AdvantageKit/issues/97
+    // Logger.processInputs(
+    //   getIdentity(), STATUS);   
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override

@@ -16,15 +16,12 @@
 package org.frc5411.robot2024;
 
 import org.frc5411.lib.instrument.module.Limit;
-//---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
-import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Figures;
 
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
-import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.StateSpaceUtil;
 import edu.wpi.first.math.VecBuilder;
@@ -36,16 +33,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.jcabi.aspects.Async;
@@ -56,12 +50,10 @@ import org.littletonrobotics.urcl.URCL;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -72,7 +64,6 @@ import java.util.stream.IntStream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
@@ -164,10 +155,8 @@ public final class Manager implements Singleton<Manager> {
       .empty();
     Vision = Optional
       .empty();
-    LIMITS = DrivebaseSubsystem
-      .getLimits();
-    KINEMATICS = DrivebaseSubsystem
-      .getKinematics();
+    LIMITS = DrivebaseSubsystem.getLimits();
+    KINEMATICS = DrivebaseSubsystem.getKinematics();
     ODOMETRY = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getOdometry)
@@ -265,11 +254,21 @@ public final class Manager implements Singleton<Manager> {
    */
   @Async
   public synchronized void update() {
-    Logger.recordOutput(
-      ("Robot/Vehicle"), 
-      getVehicleRelative()
-        .getValue()
-    );
+    if(Vehicle.isPresent()) {
+      Logger.recordOutput(
+        ("Robot/Odometry/Vehicle"), 
+        getVehicleRelative()
+          .getValue()
+      );      
+    }
+    if(Vision.isPresent()) {
+      Logger.recordOutput(
+        ("Robot/Odometry/Field"), 
+        getFieldRelative()
+          .getValue()
+      );      
+    }
+
     Logger.recordOutput(
       ("Robot/Measured"), 
       Measured
