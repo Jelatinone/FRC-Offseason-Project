@@ -36,9 +36,7 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
 
-import java.util.Optional;
 import java.util.Queue;
 import java.util.function.Supplier;
 
@@ -121,7 +119,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
   }
 
   @Override
-  public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull Transform3d> Record) {
+  public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull Pose3d> Record) {
     final var Article = (Report) Record;
 
     synchronized(Article) {
@@ -136,7 +134,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
             .map((Result) -> Result.getLatencyMillis() / 1E3D)
             .orElse((-1D))
         );
-        Article.setObservations(
+        Article.setMeasurements(
           CAMERA_RESULTS
             .stream()
             .map((Measurement) -> 
@@ -148,17 +146,14 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
                   new Rotation3d(Double.NaN, Double.NaN, Double.NaN))))
             .toArray(Pose3d[]::new)
         );
-        Article.setMeasurements(
+        Article.setObservations(
           CAMERA_RESULTS
             .stream()
             .map((Measurement) -> 
-              Optional
-                .ofNullable(Measurement.getBestTarget())
-                .map(PhotonTrackedTarget::getBestCameraToTarget)
-                .orElse(new Transform3d(
-                  new Translation3d(Double.NaN, Double.NaN, Double.NaN), 
-                  new Rotation3d(Double.NaN, Double.NaN, Double.NaN))))
-            .toArray(Transform3d[]::new)
+              Measurement
+                .getTargets()
+                .toArray(Transform3d[]::new))
+            .toArray(Transform3d[][]::new)
         );
         Article.setTimestamps(
           CAMERA_RESULTS

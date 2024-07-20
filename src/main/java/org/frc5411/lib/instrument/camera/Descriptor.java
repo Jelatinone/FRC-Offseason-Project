@@ -18,6 +18,7 @@ package org.frc5411.lib.instrument.camera;
 import org.frc5411.lib.pattern.Component;
 
 import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N3;
 import lombok.AccessLevel;
@@ -33,7 +34,7 @@ import lombok.experimental.FieldDefaults;
  */
 @Builder(toBuilder = (true))
 @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
-public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Component<Transform3d>> {
+public class Descriptor<Hardware> extends org.frc5411.lib.pattern.Descriptor<Component<Pose3d>> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Transform3d Position;
   Enum<?> Identity;

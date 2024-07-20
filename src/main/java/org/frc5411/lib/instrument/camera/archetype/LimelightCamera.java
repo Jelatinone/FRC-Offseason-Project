@@ -105,7 +105,7 @@ public class LimelightCamera extends Camera<NetworkTable> {
   }
 
   @Override
-  public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull Transform3d> Record) {
+  public synchronized void update(final org.frc5411.lib.pattern.Report<@NonNull Pose3d> Record) {
     final var Article = (Report) Record;
 
     final var Robot = ROBOT_POSE_SOURCE
@@ -125,14 +125,6 @@ public class LimelightCamera extends Camera<NetworkTable> {
           .toArray()
       );      
       Article.setMeasurements(
-        Stream.of(Target)
-          .map((Measurement) -> 
-            new Transform3d(
-              new Translation3d(Measurement.value[0], Measurement.value[1], Measurement.value[2]),
-              new Rotation3d(Measurement.value[3], Measurement.value[4], Measurement.value[5])))
-          .toArray(Transform3d[]::new)
-      );      
-      Article.setObservations(
         Stream.of(Robot)
           .map((Measurement) -> 
             new Pose3d(
@@ -140,6 +132,16 @@ public class LimelightCamera extends Camera<NetworkTable> {
               new Rotation3d(Measurement.value[3], Measurement.value[4], Measurement.value[5])))
           .toArray(Pose3d[]::new)
       );
+      Article.setObservations(
+        Stream.of(Target)
+          .map((Measurement) -> 
+            new Transform3d[] {
+              new Transform3d(
+                new Translation3d(Measurement.value[0], Measurement.value[1], Measurement.value[2]),
+                new Rotation3d(Measurement.value[3], Measurement.value[4], Measurement.value[5]))
+            })
+          .toArray(Transform3d[][]::new)
+      );         
     }
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//

@@ -36,11 +36,11 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @Setter
 @AutoLog
-public class Report extends org.frc5411.lib.pattern.Report<Transform3d> {
+public class Report extends org.frc5411.lib.pattern.Report<Pose3d> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile double Latency = (-1D);
 
   volatile int Pipeline = (-1);
 
-  volatile Pose3d Observations[] = new Pose3d[] {};
+  volatile Transform3d[] Observations[] = new Transform3d[][] {};
 }

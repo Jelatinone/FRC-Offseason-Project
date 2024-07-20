@@ -17,7 +17,7 @@ package org.frc5411.lib.instrument.camera;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
-import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Pose3d;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -34,7 +34,7 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public abstract class Camera<Hardware> implements Component<Transform3d> {
+public abstract class Camera<Hardware> implements Component<Pose3d> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Descriptor<Hardware> DESCRIPTION;
   ReportAutoLogged STATUS;
@@ -47,7 +47,7 @@ public abstract class Camera<Hardware> implements Component<Transform3d> {
     DESCRIPTION = Objects
       .requireNonNull(Description);
     STATUS = new ReportAutoLogged();
-    STATUS.setMeasurements(new Transform3d[] {});
+    STATUS.setMeasurements(new Pose3d[] {});
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override

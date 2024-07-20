@@ -26,8 +26,10 @@ import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
 
 import org.frc5411.robot2024.Manager;
+import org.frc5411.robot2024.Manager.VisionObservation;
 
 import edu.wpi.first.hal.HALUtil;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -210,9 +212,29 @@ public class VisionSubsystem extends Subsystem<Named,State> {
             if(Camera.getConnection()) {
               Manager
                 .tryInstance()
-                .ifPresent((Instance) -> {
-
-                });
+                .ifPresent((Instance) -> 
+                  Instance.sample(new VisionObservation(
+                    Stream.of(
+                        Camera
+                          .getReport()
+                          .getObservations())
+                    .map(List::of)
+                    .toList(), 
+                    Camera
+                      .getMeasurements(), 
+                    Camera
+                      .getTimestamps(), 
+                    new Transform2d(
+                      Camera
+                        .getDescriptor().Position
+                          .getTranslation()
+                          .toTranslation2d(), 
+                      Camera
+                        .getDescriptor().Position
+                          .getRotation()
+                          .toRotation2d())
+                  ))
+                );
             }
           });
         Mode = CAMERAS
