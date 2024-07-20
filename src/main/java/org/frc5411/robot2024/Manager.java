@@ -268,7 +268,6 @@ public final class Manager implements Singleton<Manager> {
           .getValue()
       );      
     }
-
     Logger.recordOutput(
       ("Robot/Measured"), 
       Measured
@@ -334,11 +333,16 @@ public final class Manager implements Singleton<Manager> {
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
       for(var Update = (0); Update < Updates; Update++) {
+        try {
+          if(VEHICLE_ODOMETRY.getInternalBuffer().lastKey() - BUFFER_SIZE > Observation.Timestamps().get(Update)) {
+            continue;
+          }
+        } catch(final NoSuchElementException Ignored) {}
         var Include = (true);
         final var Delta = Observation.Timestamps().get(Update) - Timestamp;
         final var Position = new SwerveModulePosition[CHASSIS_CAPACITY];
         final var Deltas = new SwerveModulePosition[CHASSIS_CAPACITY];
-        for(var Module = (0); Module < CHASSIS_CAPACITY ^ !Include; Module++) {
+        for(var Module = (0); Module < CHASSIS_CAPACITY; Module++) {
           Position[Module] = Observation.Positions().get(Module).get(Update);
           Deltas[Module] = new SwerveModulePosition(
             Position[Module].distanceMeters - Positions[Module].distanceMeters,
@@ -354,8 +358,6 @@ public final class Manager implements Singleton<Manager> {
             !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) | Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D)); 
         }
         if(Include || Vehicle.isEmpty()) {
-          Vehicle = Optional
-            .of(Observation);          
           Measured = KINEMATICS
             .toTwist2d(Deltas);
           Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
@@ -374,7 +376,9 @@ public final class Manager implements Singleton<Manager> {
             VecBuilder
               .fill((0D), (0D)),
             Delta
-          );             
+          );  
+          Vehicle = Optional
+            .of(Observation);                       
         }    
       }
     } finally {
@@ -410,6 +414,11 @@ public final class Manager implements Singleton<Manager> {
         .getValue()
         .getTranslation();
       for(var Update = (0); Update < Updates; Update++) {
+        try {
+          if(FIELD_ODOMETRY.getInternalBuffer().lastKey() - BUFFER_SIZE > Observation.Timestamps().get(Update)) {
+            continue;
+          }
+        } catch(final NoSuchElementException Ignored) {}
         final var Position = Observation
           .Positions()
           .get(Update);
@@ -436,13 +445,17 @@ public final class Manager implements Singleton<Manager> {
             .fill(
               Field.getX(),
               Field.getY()
-          ));          
+          ));      
+          Vision = Optional
+            .of(Observation);    
         } else {
           if(
             Math
               .hypot(Measured.dx, Measured.dy) > LIMITS.TranslationalVelocity() 
               &&
-            Field.getX() > -MARGIN && Field.getX() < LENGTH + MARGIN && Field.getY() > -MARGIN && Field.getY() < WIDTH + MARGIN
+            Field.getX() > -MARGIN && Field.getX() < LENGTH + MARGIN 
+              && 
+            Field.getY() > -MARGIN && Field.getY() < WIDTH + MARGIN
               &&
             Field
               .minus(getFieldRelative().getValue()).getNorm() > MAXIMUM_CORRECTION
@@ -487,10 +500,10 @@ public final class Manager implements Singleton<Manager> {
                   new Vector<N2>(FILTER.getXhat())));
             } catch(final Exception Ignored) {}
           }
+          Vision = Optional
+            .of(Observation);
         }
       }
-      Vision = Optional
-        .of(Observation);
     } finally {
       UPDATE_LOCK.writeLock().unlock();
     }
