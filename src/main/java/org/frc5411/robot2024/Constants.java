@@ -59,8 +59,9 @@ public final class Constants {
     static Integer THREAD_PARALLELISM = (8);
     static Integer UPDATE_FREQUENCY = (100);
 
-    static Integer QUEUE_SIZE = (20);
+    static Integer QUEUE_SIZE = (50);
     static Double BUFFER_SIZE = (2D);
+    static Double MAXIMUM_CORRECTION = (2D);
 
     static List<Supplier<Subsystem>> MANAGEABLE = List.of(
       VisionSubsystem::getInstance,

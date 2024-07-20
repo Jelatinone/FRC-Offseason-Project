@@ -86,12 +86,8 @@ public final class Manager implements Singleton<Manager> {
   @Serial
   static long serialVersionUID = 2389697764281159320L;
   
-  static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
-  static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
-
-  static Double VISION_CORRECTION = (2D);
-
-  static Integer CHASSIS_CAPACITY;
+  static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill(Math.pow((5E-2D), (1)), Math.pow((5E-2D), (1)));
+  static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(Math.pow((2E-2D), (1)), Math.pow((2E-2D), (1)));
 
   static ReadWriteLock UPDATE_LOCK;
 
@@ -99,6 +95,8 @@ public final class Manager implements Singleton<Manager> {
 
   TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
   TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
+
+  Integer CHASSIS_CAPACITY;
 
   Limit LIMITS;
   SwerveDriveKinematics KINEMATICS;
@@ -445,7 +443,7 @@ public final class Manager implements Singleton<Manager> {
             Field.getX() > -MARGIN && Field.getX() < LENGTH + MARGIN && Field.getY() > -MARGIN && Field.getY() < WIDTH + MARGIN
               &&
             Field
-              .minus(getFieldRelative().getValue()).getNorm() > VISION_CORRECTION
+              .minus(getFieldRelative().getValue()).getNorm() > MAXIMUM_CORRECTION
           ) {
             try {
               final var Distances = Observation
