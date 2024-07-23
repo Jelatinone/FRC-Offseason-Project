@@ -155,12 +155,12 @@ public final class Constants {
 
     DEV_DRIVER(
       new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_DRIVER"))
-        // .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((1)))
-        // .add(Preferences.CONTROL_ZONE_X, (2e-1D))
-        // .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((0)))
-        // .add(Preferences.CONTROL_ZONE_Y, (2e-1D))
-        // .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((4)))
-        // .add(Preferences.CONTROL_ZONE_T, (2e-1D))
+        .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((1)))
+        .add(Preferences.CONTROL_ZONE_X, (2e-1D))
+        .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((0)))
+        .add(Preferences.CONTROL_ZONE_Y, (2e-1D))
+        .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((4)))
+        .add(Preferences.CONTROL_ZONE_T, (2e-1D))
     ),
 
     DEV_OPERATOR(

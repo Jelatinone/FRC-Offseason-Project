@@ -243,7 +243,7 @@ public final class Manager implements Singleton<Manager> {
                 applyDeadband(
                   DRIVER
                     .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
-                    .orElse((() -> 1D))
+                    .orElse((() -> 0D))
                     .get(), 
                   DRIVER
                     .<Double>getPreference(CONTROL_ZONE_X)
@@ -259,7 +259,7 @@ public final class Manager implements Singleton<Manager> {
                 applyDeadband(
                   DRIVER
                     .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
-                    .orElse((() -> 1D))
+                    .orElse((() -> 0D))
                     .get(), 
                   DRIVER
                     .<Double>getPreference(CONTROL_ZONE_T)
@@ -287,10 +287,6 @@ public final class Manager implements Singleton<Manager> {
       getFieldRelative()
         .getValue()
     );               
-    Logger.recordOutput(
-      ("Robot/Positions"), 
-      DrivebaseSubsystem.getInstance().getModulePositions()
-    );
     Logger.recordOutput(
       ("Robot/Measured"), 
       Measured

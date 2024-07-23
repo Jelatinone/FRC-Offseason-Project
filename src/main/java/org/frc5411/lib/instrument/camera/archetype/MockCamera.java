@@ -99,6 +99,14 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
     WORLD.addAprilTags(Layout);
     WORLD.addCamera(SIMULATOR, getDescriptor().Position);
 
+    if(RESULT_REGISTER == (null)) {
+      synchronized(MockCamera.class) {
+        if(RESULT_REGISTER == (null)) {
+          RESULT_REGISTER = new IdentityRegister<>();
+          RESULT_REGISTER.start();
+        }
+      }
+    }
     CAMERA_RESULTS = RESULT_REGISTER
       .register(() -> {
           WORLD.update(getDescriptor().Hardware.get());
@@ -107,9 +115,6 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
             .getLatestResult();
         }
       );
-    RESULT_REGISTER.start();
-  } static {
-    RESULT_REGISTER = new IdentityRegister<>();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override

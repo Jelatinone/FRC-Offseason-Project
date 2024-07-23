@@ -66,7 +66,6 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   @NonFinal volatile ReportAutoLogged State;
-  @NonFinal volatile Boolean Active;
   @NonFinal volatile Integer Frequency;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -87,7 +86,6 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
     CALLBACK = new Notifier(this);
     CALLBACK.setName(getClass().getSimpleName());
     Frequency = UPDATE_FREQUENCY;
-    Active = (false);
   }
 
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
@@ -154,16 +152,12 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
       Thread.sleep(Timeout);
     } catch (final InterruptedException Ignored) {}
     CALLBACK.close();
-    Active = (false);
   }
 
   @Override
   public synchronized void start() {
-    if(!Active) {
-      Active = (true);
-      CALLBACK
-        .startPeriodic(1D / UPDATE_FREQUENCY);      
-    }
+    CALLBACK
+      .startPeriodic(1D / UPDATE_FREQUENCY);     
   }
 
   @Override

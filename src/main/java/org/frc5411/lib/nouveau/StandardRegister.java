@@ -68,7 +68,6 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile StandardRegister Instance;
-  static volatile Boolean Active;
   static volatile ReportAutoLogged State;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -88,7 +87,7 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
     CALLBACK = new Notifier(this);
     CALLBACK.setName(getClass().getSimpleName());
-    Active = (false);
+    start();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial
@@ -140,7 +139,6 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
       Thread.sleep(Timeout);
     } catch (final InterruptedException Ignored) {}
     CALLBACK.close();
-    Active = (false);
   }
 
   @Override
@@ -173,11 +171,8 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
 
   @Override
   public synchronized void start() {
-    if(!Active) {
-      Active = (true);
-      CALLBACK
-        .startPeriodic(1D / UPDATE_FREQUENCY);      
-    }
+    CALLBACK
+      .startPeriodic(1D / UPDATE_FREQUENCY); 
   }
 
   @Override
