@@ -14,9 +14,6 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
-import org.frc5411.lib.nouveau.PhoenixRegister;
-import org.frc5411.lib.nouveau.Register;
-import org.frc5411.lib.nouveau.StandardRegister;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Callback;
 import org.frc5411.lib.schema.Singleton;
@@ -107,13 +104,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     MANAGED
       .forEach(Supplier::get);   
     Manager
-      .getInstance();     
-    StandardRegister
-      .tryInstance()
-      .ifPresent(Register::start);
-    PhoenixRegister
-      .tryInstance()
-      .ifPresent(Register::start);              
+      .getInstance();                 
     CommandScheduler
       .getInstance()
       .onCommandInitialize(
