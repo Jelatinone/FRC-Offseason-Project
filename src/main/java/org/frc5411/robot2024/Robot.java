@@ -14,6 +14,9 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
+import org.frc5411.lib.nouveau.PhoenixRegister;
+import org.frc5411.lib.nouveau.Register;
+import org.frc5411.lib.nouveau.StandardRegister;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Callback;
 import org.frc5411.lib.schema.Singleton;
@@ -114,9 +117,16 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
         break;
     }
-    initialize();
+    MANAGED
+      .forEach(Supplier::get);   
+    StandardRegister
+      .tryInstance()
+      .ifPresent(Register::start);
+    PhoenixRegister
+      .tryInstance()
+      .ifPresent(Register::start);      
     Manager
-      .getInstance();       
+      .getInstance();            
     CommandScheduler.getInstance()
       .onCommandInitialize(
         (final Command Operation) -> log(Operation, (true)));
@@ -236,6 +246,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void close() {
     super.close();
+    Logger.end();
     Manager.tryInstance().ifPresent(Manager::close);
     synchronized(Robot.class) {
       CALLBACKS.clear();
@@ -275,17 +286,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Instance.COMMANDS.put(Name, Count);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]-[%s]"), Name, Integer.toHexString(Operation.hashCode())), Running);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]"), Name), Count > 0);
-  }
-
-  /**
-   * Performs pre-initialization on relevant variables to this manager type. This is useful for any case where the initialized values references within the constructor are
-   * cyclical in nature. In that case, this call can be made to ensure that the relevant Subsystems are initialized prior to referencing.
-   */
-  public static synchronized void initialize() {
-    synchronized(Robot.class) {
-      MANAGEABLE
-        .forEach(Supplier::get);      
-    }
   }
   //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
   /**

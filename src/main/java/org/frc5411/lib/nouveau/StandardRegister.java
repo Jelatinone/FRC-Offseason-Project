@@ -67,7 +67,8 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   Notifier CALLBACK;
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  static volatile StandardRegister Instance = (null);
+  static volatile StandardRegister Instance;
+  static volatile Boolean Active;
   static volatile ReportAutoLogged State;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -87,7 +88,7 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
     CALLBACK = new Notifier(this);
     CALLBACK.setName(getClass().getSimpleName());
-    start();
+    Active = (false);
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial
@@ -107,7 +108,6 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
   public synchronized void close() {
     halt();
     try {
-      SIGNAL_LOCK.writeLock().lock();
       QUEUE_LOCK.writeLock().lock();     
       synchronized(PhoenixRegister.class) {
         TIMESTAMPS
@@ -121,7 +121,6 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
         Instance = (null);
       }        
     } finally {
-      SIGNAL_LOCK.writeLock().unlock();
       QUEUE_LOCK.writeLock().unlock();      
     }
   }
@@ -141,6 +140,7 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
       Thread.sleep(Timeout);
     } catch (final InterruptedException Ignored) {}
     CALLBACK.close();
+    Active = (false);
   }
 
   @Override
@@ -173,8 +173,11 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
 
   @Override
   public synchronized void start() {
-    CALLBACK
-      .startPeriodic(1D/UPDATE_FREQUENCY);
+    if(!Active) {
+      Active = (true);
+      CALLBACK
+        .startPeriodic(1D / UPDATE_FREQUENCY);      
+    }
   }
 
   @Override

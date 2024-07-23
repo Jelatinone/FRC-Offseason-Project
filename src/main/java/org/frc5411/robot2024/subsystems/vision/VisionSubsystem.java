@@ -29,7 +29,6 @@ import org.frc5411.robot2024.Manager;
 import org.frc5411.robot2024.Manager.VisionObservation;
 
 import edu.wpi.first.hal.HALUtil;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -218,21 +217,16 @@ public class VisionSubsystem extends Subsystem<Named,State> {
                         Camera
                           .getReport()
                           .getObservations())
-                    .map(List::of)
-                    .toList(), 
+                      .map(List::of)
+                      .toList(), 
                     Camera
                       .getMeasurements(), 
                     Camera
                       .getTimestamps(), 
-                    new Transform2d(
-                      Camera
-                        .getDescriptor().Position
-                          .getTranslation()
-                          .toTranslation2d(), 
-                      Camera
-                        .getDescriptor().Position
-                          .getRotation()
-                          .toRotation2d())
+                    Camera
+                      .getDescriptor().Position
+                        .getTranslation()
+                        .toTranslation2d()
                   ))
                 );
             }
@@ -240,7 +234,7 @@ public class VisionSubsystem extends Subsystem<Named,State> {
         Mode = CAMERAS
           .stream()
           .allMatch((Camera) -> 
-            Camera.getReport().getObservations().length > (0))?
+            Camera.getReport().getMeasurements().length > (0) && Camera.getConnection())?
           State.ACTIVE:
           State.STALE;
       }

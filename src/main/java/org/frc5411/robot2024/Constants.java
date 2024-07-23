@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -63,7 +64,7 @@ public final class Constants {
     static Double BUFFER_SIZE = (2D);
     static Double MAXIMUM_CORRECTION = (2D);
 
-    static List<Supplier<Subsystem>> MANAGEABLE = List.of(
+    static Collection<Supplier<Subsystem>> MANAGED = List.of(
       VisionSubsystem::getInstance,
       DrivebaseSubsystem::getInstance
     ); 
@@ -154,12 +155,12 @@ public final class Constants {
 
     DEV_DRIVER(
       new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_DRIVER"))
-        .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((1)))
-        .add(Preferences.CONTROL_ZONE_X, (2e-1D))
-        .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((0)))
-        .add(Preferences.CONTROL_ZONE_Y, (2e-1D))
-        .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((4)))
-        .add(Preferences.CONTROL_ZONE_T, (2e-1D))
+        // .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((1)))
+        // .add(Preferences.CONTROL_ZONE_X, (2e-1D))
+        // .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((0)))
+        // .add(Preferences.CONTROL_ZONE_Y, (2e-1D))
+        // .add(Preferences.CONTROL_EFFORT_T, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((4)))
+        // .add(Preferences.CONTROL_ZONE_T, (2e-1D))
     ),
 
     DEV_OPERATOR(

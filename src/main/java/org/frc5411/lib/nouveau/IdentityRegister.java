@@ -66,6 +66,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   @NonFinal volatile ReportAutoLogged State;
+  @NonFinal volatile Boolean Active;
   @NonFinal volatile Integer Frequency;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -86,7 +87,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
     CALLBACK = new Notifier(this);
     CALLBACK.setName(getClass().getSimpleName());
     Frequency = UPDATE_FREQUENCY;
-    start();
+    Active = (false);
   }
 
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
@@ -122,7 +123,6 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
   public synchronized void close() {
     halt();
     try {
-      SIGNAL_LOCK.writeLock().lock();
       QUEUE_LOCK.writeLock().lock();     
       synchronized(PhoenixRegister.class) {
         TIMESTAMPS
@@ -135,7 +135,6 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
         State = (null);
       }        
     } finally {
-      SIGNAL_LOCK.writeLock().unlock();
       QUEUE_LOCK.writeLock().unlock();      
     }
   }
@@ -155,12 +154,16 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
       Thread.sleep(Timeout);
     } catch (final InterruptedException Ignored) {}
     CALLBACK.close();
+    Active = (false);
   }
 
   @Override
   public synchronized void start() {
-    CALLBACK
-      .startPeriodic(1D/ Frequency);
+    if(!Active) {
+      Active = (true);
+      CALLBACK
+        .startPeriodic(1D / UPDATE_FREQUENCY);      
+    }
   }
 
   @Override

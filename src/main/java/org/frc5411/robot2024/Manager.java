@@ -22,6 +22,7 @@ import org.frc5411.lib.utility.Figures;
 
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
+import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.StateSpaceUtil;
 import edu.wpi.first.math.VecBuilder;
@@ -55,6 +56,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -98,12 +100,11 @@ public final class Manager implements Singleton<Manager> {
   TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
   TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
 
-  Integer CHASSIS_CAPACITY;
-
   Limit LIMITS;
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
 
+  Collection<Integer> INDICES;
   ExtendedKalmanFilter<N2,N2,N2> FILTER;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
@@ -137,6 +138,15 @@ public final class Manager implements Singleton<Manager> {
       STATE_STANDARD_DEVIATIONS,
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
+    Timestamp = HALUtil.getFPGATime() / 1E6D;
+    Measured = new Twist2d(
+      Double.NaN, 
+      Double.NaN, 
+      Double.NaN);
+    Predicted = new Twist2d(
+      Double.NaN, 
+      Double.NaN, 
+      Double.NaN);
     Positions = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getModulePositions)
@@ -161,7 +171,9 @@ public final class Manager implements Singleton<Manager> {
       .tryInstance()
       .map(DrivebaseSubsystem::getOdometry)
       .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Positions));
-    CHASSIS_CAPACITY = Positions.length;  
+    INDICES = IntStream.range((0), Positions.length)
+      .boxed()
+      .toList();  
     configure();
     Robot
       .tryInstance()
@@ -177,8 +189,6 @@ public final class Manager implements Singleton<Manager> {
       );
   } static {
     UPDATE_LOCK = new ReentrantReadWriteLock((true));
-    Measured = new Twist2d();
-    Predicted = new Twist2d();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial
@@ -210,39 +220,52 @@ public final class Manager implements Singleton<Manager> {
    * Performs all configurations, for all subsystems, on all valid operators of this subsystem.
    */
   private synchronized void configure() { 
+    try {
+      UPDATE_LOCK.writeLock().lock();
+      VEHICLE_ODOMETRY
+        .addSample(
+          (0D), 
+          new Pose2d(new Translation2d(Double.NaN, Double.NaN), new Rotation2d(Double.NaN)));
+      FIELD_ODOMETRY
+        .addSample(
+          (0D), 
+          new Translation2d(Double.NaN, Double.NaN));
+    } finally {
+      UPDATE_LOCK.writeLock().unlock();
+    }
     DrivebaseSubsystem
       .tryInstance()
       .ifPresent((Instance) -> {
         Instance
           .setDefaultCommand(
-            new InstantCommand(() -> Instance.apply(new Twist2d(
-              applyDeadband(
-                DRIVER
-                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
-                  .orElse((() -> 0D))
-                  .get(), 
-                DRIVER
-                  .<Double>getPreference(CONTROL_ZONE_X)
-                  .orElse((0D))),
-              applyDeadband(
-                DRIVER
-                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
-                  .orElse((() -> 0D))
-                  .get(), 
-                DRIVER
-                  .<Double>getPreference(CONTROL_ZONE_Y)
-                  .orElse((0D))),
-              applyDeadband(
-                DRIVER
-                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
-                  .orElse((() -> 0D))
-                  .get(), 
-                DRIVER
-                  .<Double>getPreference(CONTROL_ZONE_T)
-                  .orElse((0D)))
-                )
-              ),
-          Instance
+            new InstantCommand(() -> 
+              Instance.apply(new Twist2d(
+                applyDeadband(
+                  DRIVER
+                    .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
+                    .orElse((() -> 1D))
+                    .get(), 
+                  DRIVER
+                    .<Double>getPreference(CONTROL_ZONE_X)
+                    .orElse((0D))),
+                applyDeadband(
+                  DRIVER
+                    .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
+                    .orElse((() -> 0D))
+                    .get(), 
+                  DRIVER
+                    .<Double>getPreference(CONTROL_ZONE_Y)
+                    .orElse((0D))),
+                applyDeadband(
+                  DRIVER
+                    .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
+                    .orElse((() -> 1D))
+                    .get(), 
+                  DRIVER
+                    .<Double>getPreference(CONTROL_ZONE_T)
+                    .orElse((0D)))
+                )),
+              Instance
         ));
       });
   }
@@ -254,20 +277,20 @@ public final class Manager implements Singleton<Manager> {
    */
   @Async
   public synchronized void update() {
-    if(Vehicle.isPresent()) {
-      Logger.recordOutput(
-        ("Robot/Odometry/Vehicle"), 
-        getVehicleRelative()
-          .getValue()
-      );      
-    }
-    if(Vision.isPresent()) {
-      Logger.recordOutput(
-        ("Robot/Odometry/Field"), 
-        getFieldRelative()
-          .getValue()
-      );      
-    }
+    Logger.recordOutput(
+      ("Robot/Odometry/Vehicle"), 
+      getVehicleRelative()
+        .getValue()
+    );  
+    Logger.recordOutput(
+      ("Robot/Odometry/Vision"), 
+      getFieldRelative()
+        .getValue()
+    );               
+    Logger.recordOutput(
+      ("Robot/Positions"), 
+      DrivebaseSubsystem.getInstance().getModulePositions()
+    );
     Logger.recordOutput(
       ("Robot/Measured"), 
       Measured
@@ -330,57 +353,60 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final VehicleObservation Observation) {
     try {
       UPDATE_LOCK.writeLock().lock();
-      final var Updates = Figures
-        .minimum(Observation.Positions().size(), Observation.Timestamps().size());
-      for(var Update = (0); Update < Updates; Update++) {
-        try {
-          if(VEHICLE_ODOMETRY.getInternalBuffer().lastKey() - BUFFER_SIZE > Observation.Timestamps().get(Update)) {
-            continue;
+      IntStream
+        .range((0), Figures.minimum(Observation.Positions().size(), Observation.Timestamps().size()))
+        .filter((Update) -> {
+          try {
+            return !(VEHICLE_ODOMETRY.getInternalBuffer().lastKey() - BUFFER_SIZE > Observation.Timestamps().get(Update));
+          } catch(final NoSuchElementException Ignored) {
+            return Vehicle.isEmpty();
           }
-        } catch(final NoSuchElementException Ignored) {}
-        var Include = (true);
-        final var Delta = Observation.Timestamps().get(Update) - Timestamp;
-        final var Position = new SwerveModulePosition[CHASSIS_CAPACITY];
-        final var Deltas = new SwerveModulePosition[CHASSIS_CAPACITY];
-        for(var Module = (0); Module < CHASSIS_CAPACITY; Module++) {
-          Position[Module] = Observation.Positions().get(Module).get(Update);
-          Deltas[Module] = new SwerveModulePosition(
-            Position[Module].distanceMeters - Positions[Module].distanceMeters,
-            Position[Module].angle);
-          final var Velocity = 
-            (Deltas[Module].distanceMeters) / Delta;
-          final var Omega = 
-            Deltas[Module].angle
-              .minus(Position[Module].angle)
-              .div(Delta)
-              .getRadians();
-          Include =           
-            !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) | Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D)); 
-        }
-        if(Include || Vehicle.isEmpty()) {
-          Measured = KINEMATICS
-            .toTwist2d(Deltas);
-          Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
-            Observation
-              .Rotations().get(Update):
-            Rotation
-              .plus(new Rotation2d(Measured.dtheta));
-          VEHICLE_ODOMETRY.addSample(
-            Timestamp = Observation
-              .Timestamps()
-              .get(Update),
-            ODOMETRY
-              .update(Rotation, Positions = Position)
-          );       
-          FILTER.predict(
-            VecBuilder
-              .fill((0D), (0D)),
-            Delta
-          );  
-          Vehicle = Optional
-            .of(Observation);                       
-        }    
-      }
+        })
+        .forEach((Update) -> {
+          final var Interval = Observation.Timestamps().get(Update) - Timestamp;
+          final var Position = new SwerveModulePosition[INDICES.size()];
+          final var Discrete = new SwerveModulePosition[INDICES.size()];
+          final var Included = INDICES
+            .stream()
+            .allMatch((Module) -> {
+              Position[Module] = Observation.Positions().get(Module).get(Update);
+              Discrete[Module] = new SwerveModulePosition(
+                Position[Module].distanceMeters - Positions[Module].distanceMeters,
+                Position[Module].angle);
+              final var Velocity = 
+                (Discrete[Module].distanceMeters) / Interval;
+              final var Omega = 
+                Discrete[Module].angle
+                  .minus(Position[Module].angle)
+                  .div(Interval)
+                  .getRadians();
+              return 
+                !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) || Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D));     
+            });
+          if(Included || Vehicle.isEmpty()) {
+            Measured = KINEMATICS
+              .toTwist2d(Discrete);
+            Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
+              Observation
+                .Rotations().get(Update):
+              Rotation
+                .plus(new Rotation2d(Measured.dtheta));
+            VEHICLE_ODOMETRY.addSample(
+              Timestamp = Observation
+                .Timestamps()
+                .get(Update),
+              ODOMETRY
+                .update(Rotation, Positions = Position)
+            );      
+            FILTER.predict(
+              VecBuilder
+                .fill((0D), (0D)),
+              Interval
+            );   
+            Vehicle = Optional
+              .of(Observation);   
+          }
+        });
     } finally {
       UPDATE_LOCK.writeLock().unlock();
     }
@@ -408,58 +434,55 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final VisionObservation Observation) {
     try {
       UPDATE_LOCK.writeLock().lock();
-      final var Updates = Figures
-        .minimum(Observation.Positions().size(), Observation.Timestamps().size());
-      final var Approximate = getVehicleRelative()
-        .getValue()
-        .getTranslation();
-      for(var Update = (0); Update < Updates; Update++) {
-        try {
-          if(FIELD_ODOMETRY.getInternalBuffer().lastKey() - BUFFER_SIZE > Observation.Timestamps().get(Update)) {
-            continue;
-          }
-        } catch(final NoSuchElementException Ignored) {}
-        final var Position = Observation
-          .Positions()
-          .get(Update);
-        final Translation2d Camera = Position
-          .toPose2d()
-          .getTranslation()
-          .plus(
-            Observation
-              .Camera()
-              .getTranslation()
-              .rotateBy(getVehicleRotation()));
-        final var Vehicle = getVehicleRelative()
+      final var Approximate = Vision.isPresent()? 
+        getVehicleRelative()
           .getValue()
-          .getTranslation();
-        final var Field = Camera
-          .plus(Approximate.unaryMinus());
-        if(Vision.isEmpty()) {
-          FIELD_ODOMETRY.addSample(
-            Observation
-              .Timestamps()
-              .get(Update),
-            Field);
-          FILTER.setXhat(VecBuilder
-            .fill(
-              Field.getX(),
-              Field.getY()
-          ));      
-          Vision = Optional
-            .of(Observation);    
-        } else {
-          if(
-            Math
-              .hypot(Measured.dx, Measured.dy) > LIMITS.TranslationalVelocity() 
-              &&
-            Field.getX() > -MARGIN && Field.getX() < LENGTH + MARGIN 
-              && 
-            Field.getY() > -MARGIN && Field.getY() < WIDTH + MARGIN
-              &&
-            Field
-              .minus(getFieldRelative().getValue()).getNorm() > MAXIMUM_CORRECTION
-          ) {
+          .getTranslation(): 
+        new Translation2d();
+      IntStream
+        .range((0), Figures.minimum(Observation.Positions().size(), Observation.Timestamps().size()))
+        .filter((Update) -> {
+          try {
+            return !(FIELD_ODOMETRY.getInternalBuffer().lastKey() - BUFFER_SIZE > Observation.Timestamps().get(Update));
+          } catch(final NoSuchElementException Ignored) {
+            return Vehicle.isEmpty();
+          }
+        })
+        .forEach((Update) -> {
+          final var Position = Observation
+            .Positions()
+            .get(Update);
+          final Translation2d Camera = Position
+            .toPose2d()
+            .getTranslation()
+            .plus(
+              Observation
+                .Relative()
+                .rotateBy(getVehicleRotation()));
+          final var Vehicle = getVehicleRelative()
+            .getValue()
+            .getTranslation();
+          final var Field = Camera
+            .plus(Approximate.unaryMinus());
+          if(Vision.isEmpty()) {
+            FIELD_ODOMETRY.addSample(
+              Observation
+                .Timestamps().get(Update),
+              Field);
+            FILTER.setXhat(
+              VecBuilder.fill(
+                Field.getX(),
+                Field.getY()
+            ));      
+            Vision = Optional
+              .of(Observation);    
+          } else if(
+              Field.getX() > -MARGIN && Field.getX() < LENGTH + MARGIN && Field.getY() > -MARGIN && Field.getY() < WIDTH + MARGIN
+                && 
+              Math.hypot(Measured.dx, Measured.dy) < LIMITS.TranslationalVelocity() 
+                && 
+              Field.minus(getFieldRelative().getValue()).getNorm() < MAXIMUM_CORRECTION
+            ) {
             try {
               final var Distances = Observation
                 .Targets()
@@ -483,27 +506,28 @@ public final class Manager implements Singleton<Manager> {
                   (0D), 
                   (0D)),
                 VecBuilder.fill(
-                  Field.getX(),
+                  Field.getX(), 
                   Field.getY()),
                 StateSpaceUtil.makeCovarianceMatrix(
                   Nat.N2(), 
                   VecBuilder.fill(
                     Math.pow((Deviation), (1D)), 
                     Math.pow((Deviation), (1D)))
-                )  
-              );
+              ));
               FIELD_ODOMETRY.addSample(
                 Timestamp = Observation
                   .Timestamps()
                   .get(Update), 
                 new Translation2d(
-                  new Vector<N2>(FILTER.getXhat())));
-            } catch(final Exception Ignored) {}
+                  FILTER.getXhat((0)), 
+                  FILTER.getXhat((1))
+              ));
+            } catch(final Exception Ignored) {} finally {
+              Vision = Optional
+                .of(Observation);                
+            }
           }
-          Vision = Optional
-            .of(Observation);
-        }
-      }
+        });
     } finally {
       UPDATE_LOCK.writeLock().unlock();
     }
@@ -531,19 +555,19 @@ public final class Manager implements Singleton<Manager> {
           final var Latest = VEHICLE_ODOMETRY
             .getInternalBuffer()
             .lastEntry();
-          final var Delta = Timestamp - Latest.getKey();
+          final var Interval = Timestamp - Latest.getKey();
           return Latest
             .getValue()
             .exp(
               new Twist2d(
-                Predicted.dx * Delta, 
-                Predicted.dy * Delta, 
-                Predicted.dtheta * Delta)
+                Predicted.dx * Interval, 
+                Predicted.dy * Interval, 
+                Predicted.dtheta * Interval)
             );  
         } else {
-          throw new NoSuchElementException(("Provided Timestamp Is Out Of Vehicle Odometry Buffer Range"));
+          throw new NoSuchElementException();
         }
-      }
+      }      
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -559,7 +583,7 @@ public final class Manager implements Singleton<Manager> {
       UPDATE_LOCK.readLock().lock();
       return VEHICLE_ODOMETRY
         .getInternalBuffer()
-        .lastEntry();
+        .lastEntry();      
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -587,18 +611,18 @@ public final class Manager implements Singleton<Manager> {
           final var Latest = FIELD_ODOMETRY
             .getInternalBuffer()
             .lastEntry();
-          final var Delta = Timestamp - Latest.getKey();
+          final var Interval = Timestamp - Latest.getKey();
           return Latest
             .getValue()
             .plus(
               new Translation2d(
-                Predicted.dx * Delta, 
-                Predicted.dy * Delta)
+                Predicted.dx * Interval, 
+                Predicted.dy * Interval)
             );
         } else {
-          throw new NoSuchElementException(("Provided Timestamp Is Out Of Field Odometry Buffer Range"));
+          throw new NoSuchElementException();
         }
-      }
+      }      
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -614,7 +638,7 @@ public final class Manager implements Singleton<Manager> {
       UPDATE_LOCK.readLock().lock();
       return FIELD_ODOMETRY
         .getInternalBuffer()
-        .lastEntry();
+        .lastEntry();      
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -627,23 +651,13 @@ public final class Manager implements Singleton<Manager> {
   public Rotation2d getVehicleRotation() {
     try {
       UPDATE_LOCK.readLock().lock();
-      return Rotation;
+      return getVehicleRelative()
+          .getValue()
+          .getRotation();      
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
-  }
 
-  /**
-   * Provides the relative position of the chassis' wheel's positions (where the relatively depends upon underlying implementation)
-   * @return Position of wheels in two-dimensional space observed by the robot
-   */
-  public SwerveModulePosition[] getVehiclePositions() {
-    try {
-      UPDATE_LOCK.readLock().lock();
-      return Positions;
-    } finally {
-      UPDATE_LOCK.readLock().unlock();
-    }
   }
 
   /**
@@ -656,7 +670,7 @@ public final class Manager implements Singleton<Manager> {
       return Measured;
     } finally {
       UPDATE_LOCK.readLock().unlock();
-    }
+    } 
   }
 
   /**
@@ -670,6 +684,7 @@ public final class Manager implements Singleton<Manager> {
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
+    
   } 
 
   /**
@@ -677,7 +692,12 @@ public final class Manager implements Singleton<Manager> {
    * @return Latest vehicle observation
    */
   public Optional<VehicleObservation> getVehicleObservation() {
-    return Vehicle;
+    try {
+      UPDATE_LOCK.readLock().lock();
+      return Vehicle;
+    } finally {
+      UPDATE_LOCK.readLock().unlock();
+    }
   }
 
   /**
@@ -685,7 +705,12 @@ public final class Manager implements Singleton<Manager> {
    * @return Latest vision observation
    */
   public Optional<VisionObservation> getVisionObservation() {
-    return Vision;
+    try {
+      UPDATE_LOCK.readLock().lock();
+      return Vision;
+    } finally {
+      UPDATE_LOCK.readLock().unlock();
+    }
   }
 
   /**
@@ -728,5 +753,5 @@ public final class Manager implements Singleton<Manager> {
    * <h1>VisionObservation</h1>
    *
    */
-  public record VisionObservation(List<List<Transform3d>> Targets, List<Pose3d> Positions, List<Double> Timestamps, Transform2d Camera) {}
+  public record VisionObservation(List<List<Transform3d>> Targets, List<Pose3d> Positions, List<Double> Timestamps, Translation2d Relative) {}
 }
