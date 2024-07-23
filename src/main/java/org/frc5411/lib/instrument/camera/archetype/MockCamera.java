@@ -36,6 +36,7 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import java.util.Queue;
 import java.util.function.Supplier;
@@ -98,6 +99,14 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
     WORLD.addAprilTags(Layout);
     WORLD.addCamera(SIMULATOR, getDescriptor().Position);
 
+    synchronized(MockCamera.class) {
+      if(RESULT_REGISTER == (null)) {
+        RESULT_REGISTER = new IdentityRegister<>();
+        RESULT_REGISTER
+          .start();
+      }      
+    }
+
     CAMERA_RESULTS = RESULT_REGISTER
       .register(() -> {
           WORLD.update(getDescriptor().Hardware.get());
@@ -106,8 +115,6 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
             .getLatestResult();
         }
       );
-  } static {
-    RESULT_REGISTER = new IdentityRegister<>();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
@@ -152,6 +159,8 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
             .map((Measurement) -> 
               Measurement
                 .getTargets()
+                .stream()
+                .map(PhotonTrackedTarget::getBestCameraToTarget)
                 .toArray(Transform3d[]::new))
             .toArray(Transform3d[][]::new)
         );

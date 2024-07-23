@@ -71,6 +71,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   static long serialVersionUID = 9197360083967213848L;
+
   Map<String,Integer> COMMANDS;
   Collection<Callback> CALLBACKS;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
@@ -102,17 +103,17 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   }
   //----------------------------------------------------------------------[Robot Scope]------------------------------------------------------------------------//
   @Override
-  public synchronized void robotInit() {
+  public synchronized void robotInit() {   
     MANAGED
       .forEach(Supplier::get);   
     Manager
-      .getInstance();           
+      .getInstance();     
     StandardRegister
       .tryInstance()
       .ifPresent(Register::start);
     PhoenixRegister
       .tryInstance()
-      .ifPresent(Register::start);      
+      .ifPresent(Register::start);              
     CommandScheduler
       .getInstance()
       .onCommandInitialize(
@@ -245,7 +246,10 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void close() {
     super.close();
-    Manager.tryInstance().ifPresent(Manager::close);
+    Logger.end();
+    Manager
+      .tryInstance()
+      .ifPresent(Manager::close);
     synchronized(Robot.class) {
       CALLBACKS.clear();
       COMMANDS.clear();

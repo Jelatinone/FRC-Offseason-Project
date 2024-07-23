@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -63,7 +64,7 @@ public final class Constants {
     static Double BUFFER_SIZE = (2D);
     static Double MAXIMUM_CORRECTION = (2D);
 
-    static List<Supplier<Subsystem>> MANAGED = List.of(
+    static Collection<Supplier<Subsystem>> MANAGED = List.of(
       VisionSubsystem::getInstance,
       DrivebaseSubsystem::getInstance
     ); 
