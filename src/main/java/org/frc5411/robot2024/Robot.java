@@ -14,6 +14,9 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
+import org.frc5411.lib.nouveau.PhoenixRegister;
+import org.frc5411.lib.nouveau.Register;
+import org.frc5411.lib.nouveau.StandardRegister;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Callback;
 import org.frc5411.lib.schema.Singleton;
@@ -52,6 +55,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
 import static org.frc5411.robot2024.Constants.Identity.*;
+import static org.frc5411.robot2024.Constants.Mode.*;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
@@ -99,7 +103,32 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //----------------------------------------------------------------------[Robot Scope]------------------------------------------------------------------------//
   @Override
   public synchronized void robotInit() {
-    switch(Constants.Identity.MODE) {
+    MANAGED
+      .forEach(Supplier::get);   
+    Manager
+      .getInstance();           
+    StandardRegister
+      .tryInstance()
+      .ifPresent(Register::start);
+    PhoenixRegister
+      .tryInstance()
+      .ifPresent(Register::start);      
+    CommandScheduler
+      .getInstance()
+      .onCommandInitialize(
+        (Operation) -> log(Operation, (true)));
+    CommandScheduler
+      .getInstance()
+      .onCommandFinish(
+        (Operation) -> log(Operation, (false)));
+    CommandScheduler
+      .getInstance()
+      .onCommandInterrupt(
+        (Operation) -> log(Operation, (false)));    
+    Logger.registerURCL(URCL.startExternal());
+    DriverStation.silenceJoystickConnectionWarning((true));
+    PortForwarder.add((5800), ("photonvision.local"), (5800));    
+    switch(MODE) {
       case ANONYMOUS:
         break;          
       case ACTUAL:
@@ -113,33 +142,13 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
         Logger.setReplaySource(new WPILOGReader(Path));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
         break;
-    }
-    initialize();
-    Manager
-      .getInstance();       
-    CommandScheduler.getInstance()
-      .onCommandInitialize(
-        (final Command Operation) -> log(Operation, (true)));
-    CommandScheduler.getInstance()
-      .onCommandFinish(
-        (final Command Operation) -> log(Operation, (false)));
-    CommandScheduler.getInstance()
-      .onCommandInterrupt(
-        (final Command Operation) -> log(Operation, (false)));    
-    Logger.registerURCL(URCL.startExternal());
-    DriverStation.silenceJoystickConnectionWarning((true));
-    PortForwarder.add((5800), ("photonvision.local"), (5800));
-    switch(Constants.Identity.MODE) {
-      case ANONYMOUS:
-        break;
-      default:
-        Shuffleboard.startRecording();
-        Logger
-          .start();
-        DataLogManager
-          .start();  
-        break;
-    }
+    } if(!MODE.equals(ANONYMOUS)) {
+      Shuffleboard.startRecording();
+      Logger
+        .start();
+      DataLogManager
+        .start();  
+    }    
   }
 
   @Override
@@ -283,7 +292,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    */
   public static synchronized void initialize() {
     synchronized(Robot.class) {
-      MANAGEABLE
+      MANAGED
         .forEach(Supplier::get);      
     }
   }
