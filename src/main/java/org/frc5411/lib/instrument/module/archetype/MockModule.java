@@ -66,13 +66,13 @@ public class MockModule extends Module<DCMotorSim,Optional<Object>> {
     TRANSLATIONAL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
-          Descriptor.TranslationalController.getAngularPositionRad()
+          getDescriptor().TranslationalController.getAngularPositionRad()
         )
       );
     ROTATIONAL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
-          Descriptor.RotationalController.getAngularPositionRad()
+          getDescriptor().RotationalController.getAngularPositionRad()
         )
       );
         

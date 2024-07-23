@@ -82,7 +82,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
       .getInstance()
       .register(() -> Optional.ofNullable(
           getConnection()? 
-            Descriptor.RotationalEncoder
+            getDescriptor().RotationalEncoder
               .getAbsolutePosition()
               .refresh()
               .getValue(): 

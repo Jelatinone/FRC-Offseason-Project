@@ -63,6 +63,8 @@ public abstract class Gyroscope<Hardware> implements Component<Rotation3d> {
   public synchronized void periodic() {
     synchronized(STATUS) {
       update(STATUS);
+      STATUS
+        .setMerit(Double.POSITIVE_INFINITY);   
     }
     Logger.processInputs(
       getIdentity(), STATUS);   

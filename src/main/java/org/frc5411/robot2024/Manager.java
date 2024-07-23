@@ -117,7 +117,7 @@ public final class Manager implements Singleton<Manager> {
   static volatile Rotation2d Rotation;
 
   static volatile Optional<VehicleObservation> Vehicle;
-  static volatile Optional<VisionObservation> Vision;
+  static volatile Optional<FieldObservation> Field;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
@@ -159,11 +159,13 @@ public final class Manager implements Singleton<Manager> {
     Rotation = DrivebaseSubsystem
       .tryInstance()
       .map((Instance) -> 
-        Instance.getGyroscopePosition().toRotation2d())
+        Instance
+          .getGyroscopePosition()
+          .toRotation2d())
       .orElse(Rotation2d.fromRotations(Double.NaN));
     Vehicle = Optional
       .empty();
-    Vision = Optional
+    Field = Optional
       .empty();
     LIMITS = DrivebaseSubsystem.getLimits();
     KINEMATICS = DrivebaseSubsystem.getKinematics();
@@ -174,19 +176,15 @@ public final class Manager implements Singleton<Manager> {
     INDICES = IntStream.range((0), Positions.length)
       .boxed()
       .toList();  
+    VEHICLE_ODOMETRY
+      .addSample(
+        (0D), 
+        new Pose2d(new Translation2d(Double.NaN, Double.NaN), new Rotation2d(Double.NaN)));
+    FIELD_ODOMETRY
+      .addSample(
+        (0D), 
+        new Translation2d(Double.NaN, Double.NaN));
     configure();
-    Robot
-      .tryInstance()
-      .ifPresent((Instance) -> 
-        Instance.add(
-          () -> {
-            if(Manager.Instance != (null)) {
-              Manager.Instance.update();
-            }
-          },
-          UPDATE_FREQUENCY
-        )
-      );
   } static {
     UPDATE_LOCK = new ReentrantReadWriteLock((true));
   }
@@ -220,19 +218,18 @@ public final class Manager implements Singleton<Manager> {
    * Performs all configurations, for all subsystems, on all valid operators of this subsystem.
    */
   private synchronized void configure() { 
-    try {
-      UPDATE_LOCK.writeLock().lock();
-      VEHICLE_ODOMETRY
-        .addSample(
-          (0D), 
-          new Pose2d(new Translation2d(Double.NaN, Double.NaN), new Rotation2d(Double.NaN)));
-      FIELD_ODOMETRY
-        .addSample(
-          (0D), 
-          new Translation2d(Double.NaN, Double.NaN));
-    } finally {
-      UPDATE_LOCK.writeLock().unlock();
-    }
+    Robot
+      .tryInstance()
+      .ifPresent((Instance) -> 
+        Instance.add(
+          () -> {
+            if(Manager.Instance != (null)) {
+              Manager.Instance.update();
+            }
+          },
+          UPDATE_FREQUENCY
+        )
+      );
     DrivebaseSubsystem
       .tryInstance()
       .ifPresent((Instance) -> {
@@ -243,27 +240,27 @@ public final class Manager implements Singleton<Manager> {
                 applyDeadband(
                   DRIVER
                     .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
-                    .orElse((() -> 0D))
+                    .orElse((() -> Double.NaN))
                     .get(), 
                   DRIVER
                     .<Double>getPreference(CONTROL_ZONE_X)
-                    .orElse((0D))),
+                    .orElse((Double.NaN))),
                 applyDeadband(
                   DRIVER
                     .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
-                    .orElse((() -> 0D))
+                    .orElse((() -> Double.NaN))
                     .get(), 
                   DRIVER
                     .<Double>getPreference(CONTROL_ZONE_Y)
-                    .orElse((0D))),
+                    .orElse((Double.NaN))),
                 applyDeadband(
                   DRIVER
                     .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
-                    .orElse((() -> 0D))
+                    .orElse((() -> Double.NaN))
                     .get(), 
                   DRIVER
                     .<Double>getPreference(CONTROL_ZONE_T)
-                    .orElse((0D)))
+                    .orElse((Double.NaN)))
                 )),
               Instance
         ));
@@ -289,11 +286,11 @@ public final class Manager implements Singleton<Manager> {
     );               
     Logger.recordOutput(
       ("Robot/Measured"), 
-      Measured
+      getMeasured()
     );
     Logger.recordOutput(
       ("Robot/Predicted"), 
-      Predicted
+      getPredicted()
     );
   }
 
@@ -332,7 +329,7 @@ public final class Manager implements Singleton<Manager> {
    * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
    * impacts on the robot-main thread.
    * @param Observation Vehicle observation to add to the processing pool
-   * @see #sample(VisionObservation)
+   * @see #sample(FieldObservation)
    * @return Future representing the pending completion of the observation
    */
   public synchronized Future<?> sample(final VehicleObservation Observation) {
@@ -409,28 +406,28 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * <p>Adds a new {@link VisionObservation observation} instance, containing the necessary information to calculate accurate vision values, to the callback's work-stealing 
+   * <p>Adds a new {@link FieldObservation observation} instance, containing the necessary information to calculate accurate vision values, to the callback's work-stealing 
    * execution thread-pool.
    * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
    * impacts on the robot-main thread.
    * @param Observation Vision observation to add to the processing pool
    * @see #sample(VehicleObservation)
    */
-  public synchronized Future<?> sample(final VisionObservation Observation) {
+  public synchronized Future<?> sample(final FieldObservation Observation) {
     Objects.requireNonNull(Observation);
     return CALLBACK
       .submit(() -> resolve(Observation));
   }
 
   /**
-   * Updates vision odometry given the provided observation's measurement
+   * Updates field odometry given the provided observation's measurement
    * @param Observation Pooled value, which has not yet been processed, and represents a single measurement that occurred at a given point in time
    */
   @Async
-  private synchronized void resolve(final VisionObservation Observation) {
+  private synchronized void resolve(final FieldObservation Observation) {
     try {
       UPDATE_LOCK.writeLock().lock();
-      final var Approximate = Vision.isPresent()? 
+      final var Approximate = Field.isPresent()? 
         getVehicleRelative()
           .getValue()
           .getTranslation(): 
@@ -458,26 +455,26 @@ public final class Manager implements Singleton<Manager> {
           final var Vehicle = getVehicleRelative()
             .getValue()
             .getTranslation();
-          final var Field = Camera
+          final var Relative = Camera
             .plus(Approximate.unaryMinus());
-          if(Vision.isEmpty()) {
+          if(Field.isEmpty()) {
             FIELD_ODOMETRY.addSample(
               Observation
                 .Timestamps().get(Update),
-              Field);
+              Relative);
             FILTER.setXhat(
               VecBuilder.fill(
-                Field.getX(),
-                Field.getY()
-            ));      
-            Vision = Optional
+                Relative.getX(),
+                Relative.getY()
+            ));     
+            Field = Optional
               .of(Observation);    
           } else if(
-              Field.getX() > -MARGIN && Field.getX() < LENGTH + MARGIN && Field.getY() > -MARGIN && Field.getY() < WIDTH + MARGIN
+              Relative.getX() > -MARGIN && Relative.getX() < LENGTH + MARGIN && Relative.getY() > -MARGIN && Relative.getY() < WIDTH + MARGIN
                 && 
               Math.hypot(Measured.dx, Measured.dy) < LIMITS.TranslationalVelocity() 
                 && 
-              Field.minus(getFieldRelative().getValue()).getNorm() < MAXIMUM_CORRECTION
+              Relative.minus(getFieldRelative().getValue()).getNorm() < MAXIMUM_CORRECTION
             ) {
             try {
               final var Distances = Observation
@@ -502,8 +499,8 @@ public final class Manager implements Singleton<Manager> {
                   (0D), 
                   (0D)),
                 VecBuilder.fill(
-                  Field.getX(), 
-                  Field.getY()),
+                  Relative.getX(), 
+                  Relative.getY()),
                 StateSpaceUtil.makeCovarianceMatrix(
                   Nat.N2(), 
                   VecBuilder.fill(
@@ -519,7 +516,7 @@ public final class Manager implements Singleton<Manager> {
                   FILTER.getXhat((1))
               ));
             } catch(final Exception Ignored) {} finally {
-              Vision = Optional
+              Field = Optional
                 .of(Observation);                
             }
           }
@@ -586,7 +583,7 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the field odometry at the given time provided, which is an estimate based upon the {@link #sample(VisionObservation) addition} of 
+   * Provides the field odometry at the given time provided, which is an estimate based upon the {@link #sample(FieldObservation) addition} of 
    * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of field odometry
    * @return Robot (field-relative) odometry position at the given time
@@ -625,7 +622,7 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the field odometry at the current time provided, which is an estimate based upon the {@link #sample(VisionObservation) addition} of
+   * Provides the field odometry at the current time provided, which is an estimate based upon the {@link #sample(FieldObservation) addition} of
    * {@link VehicleObservation wheel observations}
    * @return Robot (field-relative) odometry position
    */
@@ -697,13 +694,13 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the latest vision observation {@link #sample(VisionObservation) sampled}.
+   * Provides the latest vision observation {@link #sample(FieldObservation) sampled}.
    * @return Latest vision observation
    */
-  public Optional<VisionObservation> getVisionObservation() {
+  public Optional<FieldObservation> getFieldObservation() {
     try {
       UPDATE_LOCK.readLock().lock();
-      return Vision;
+      return Field;
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -746,8 +743,8 @@ public final class Manager implements Singleton<Manager> {
   /**
    *
    *
-   * <h1>VisionObservation</h1>
+   * <h1>FieldObservation</h1>
    *
    */
-  public record VisionObservation(List<List<Transform3d>> Targets, List<Pose3d> Positions, List<Double> Timestamps, Translation2d Relative) {}
+  public record FieldObservation(List<List<Transform3d>> Targets, List<Pose3d> Positions, List<Double> Timestamps, Translation2d Relative) {}
 }

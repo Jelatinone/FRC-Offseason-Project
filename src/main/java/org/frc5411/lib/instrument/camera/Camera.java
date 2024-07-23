@@ -60,10 +60,16 @@ public abstract class Camera<Hardware> implements Component<Pose3d> {
   public synchronized void periodic() {
     synchronized(STATUS) {
       update(STATUS);
+      STATUS
+        .setMerit(Double.POSITIVE_INFINITY);   
     }
-    // !https://github.com/Mechanical-Advantage/AdvantageKit/issues/97
-    // Logger.processInputs(
-    //   getIdentity(), STATUS);   
+    /*
+     * See the following which references the below issue:
+     * https://github.com/Mechanical-Advantage/AdvantageKit/issues/97
+     * 
+     * Logger.processInputs(
+     *  getIdentity(), STATUS);   
+     */
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override
