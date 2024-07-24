@@ -31,7 +31,7 @@ import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
 
 import org.frc5411.robot2024.Manager;
-import org.frc5411.robot2024.Manager.WheelObservation;
+import org.frc5411.robot2024.Manager.VehicleObservation;
 import org.frc5411.robot2024.subsystems.drivebase.Constants.Modules;
 
 import edu.wpi.first.hal.HALUtil;
@@ -125,9 +125,9 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       .periodic();
     ODOMETRY = new SwerveDriveOdometry(
       KINEMATICS, 
-      getGyroscopePosition()
+      getGyroscopeMeasurement()
         .toRotation2d(), 
-      getModulePositions(),
+      getModuleMeasurements(),
       PRESET
     );
     GENERATOR = SwerveSetpointGenerator
@@ -236,7 +236,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     Logger.recordOutput(
       String.format(
         ("%s/Measurement"), getName()),
-      getModulePositions()
+      getModuleMeasurements()
     );
     Logger.recordOutput(
       String.format(
@@ -305,7 +305,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
       Manager
         .tryInstance()
         .ifPresent((Instance) -> 
-          Instance.sample(new WheelObservation(
+          Instance.sample(new VehicleObservation(
             MODULES
               .stream()
               .map(Module::getMeasurements)
@@ -422,7 +422,7 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
    * @return Array (ordered) of positions of each module
    * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager#getVehicleOdometry(Double) Manager}
    */
-  public SwerveModulePosition[] getModulePositions() {
+  public SwerveModulePosition[] getModuleMeasurements() {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
       return MODULES
@@ -437,17 +437,58 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     } 
   }
 
-    /**
+  /**
+   * Provides the current timestamp of all child {@link Module modules} of this drivebase as a {@link SwerveModulePosition} object
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Module#getTimestamp() measurement} values
+   * @return Array (ordered) of timestamp of each module
+   */
+  public double[] getModuleTimestamps() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return MODULES
+        .stream()
+        .mapToDouble((Module) -> 
+          Module
+            .getTimestamp()
+            .orElse(Double.NaN))
+        .toArray();
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    }  
+  }
+
+  /**
    * Provides the current position of child {@link Gyroscope gyroscope} of this drivebase as a {@link Rotation3d} object
    * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Gyroscope#getMeasurement() measurement} values
    * @return Gyroscope measured position on axes x (roll), y (pitch), and z (yaw)
    * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager#getVehicleOdometry(Double) Manager}
    */
-  public Rotation3d getGyroscopePosition() {
+  public Rotation3d getGyroscopeMeasurement() {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
-      return GYROSCOPE.getMeasurement()
-        .orElse(new Rotation3d(Double.NaN, Double.NaN, Double.NaN));
+      return GYROSCOPE
+        .getMeasurement()
+        .orElse(new Rotation3d(
+          Double.NaN,
+          Double.NaN, 
+          Double.NaN));
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+  /**
+   * Provides the current timestamp of child {@link Gyroscope gyroscope} of this drivebase
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Gyroscope#getMeasurement() measurement} values
+   * @return Gyroscope measured timestamp (seconds)
+   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager#getVehicleOdometry(Double) Manager}
+   */
+  public double getGyroscopeTimestamp() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return GYROSCOPE
+        .getTimestamp()
+        .orElse(Double.NaN);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
     } 

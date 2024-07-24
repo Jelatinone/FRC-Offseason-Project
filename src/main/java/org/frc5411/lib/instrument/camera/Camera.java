@@ -17,9 +17,7 @@ package org.frc5411.lib.instrument.camera;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
-import edu.wpi.first.math.geometry.Transform3d;
-
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.geometry.Pose3d;
 
 import java.util.Objects;
 
@@ -34,10 +32,10 @@ import lombok.experimental.FieldDefaults;
  * @author Cody Washington
  */
 @FieldDefaults(makeFinal = (true), level = AccessLevel.PRIVATE)
-public abstract class Camera<Hardware> implements Component<Transform3d> {
+public abstract class Camera<Hardware> implements Component<Pose3d> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   Descriptor<Hardware> DESCRIPTION;
-  ReportAutoLogged STATUS;
+  Report STATUS;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Camera Constructor.
@@ -46,8 +44,8 @@ public abstract class Camera<Hardware> implements Component<Transform3d> {
   protected Camera(final Descriptor<Hardware> Description) {
     DESCRIPTION = Objects
       .requireNonNull(Description);
-    STATUS = new ReportAutoLogged();
-    STATUS.setMeasurements(new Transform3d[] {});
+    STATUS = new Report();
+    STATUS.setMeasurements(new Pose3d[] {});
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
   @Override
@@ -64,8 +62,13 @@ public abstract class Camera<Hardware> implements Component<Transform3d> {
     synchronized(STATUS) {
       update(STATUS);
     }
-    Logger.processInputs(
-      getIdentity(), STATUS);   
+    /*
+     * See the following which references the below issue:
+     * https://github.com/Mechanical-Advantage/AdvantageKit/issues/97
+     * 
+     * Logger.processInputs(
+     *  getIdentity(), STATUS);   
+     */
   }
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
   @Override

@@ -152,7 +152,7 @@ public final class Manager implements Singleton<Manager> {
       Double.NaN);
     Position = DrivebaseSubsystem
       .tryInstance()
-      .map(DrivebaseSubsystem::getModulePositions)
+      .map(DrivebaseSubsystem::getModuleMeasurements)
       .orElse(
         INDICES
           .stream()
@@ -162,7 +162,9 @@ public final class Manager implements Singleton<Manager> {
     Rotation = DrivebaseSubsystem
       .tryInstance()
       .map((Instance) -> 
-        Instance.getGyroscopePosition().toRotation2d())
+        Instance
+          .getGyroscopeMeasurement()
+          .toRotation2d())
       .orElse(Rotation2d.fromRotations(Double.NaN));
     LIMITS = DrivebaseSubsystem
       .getLimits();
@@ -305,15 +307,15 @@ public final class Manager implements Singleton<Manager> {
 
 
   /**
-   * <p>Adds a new {@link WheelObservation observation} instance, containing the necessary information to calculate accurate wheel odometry values, to the callback's work-stealing 
+   * <p>Adds a new {@link VehicleObservation observation} instance, containing the necessary information to calculate accurate wheel odometry values, to the callback's work-stealing 
    * execution thread-pool.
    * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
    * impacts on the robot-main thread.
    * @param Observation Wheel observation to add to the processing pool
-   * @see #sample(VisionObservation)
+   * @see #sample(FieldObservation)
    * @return Future representing the pending completion of the observation
    */
-  public synchronized Future<?> sample(final WheelObservation Observation) {
+  public synchronized Future<?> sample(final VehicleObservation Observation) {
     Objects.requireNonNull(Observation);
     return CALLBACK
       .submit(() -> resolve(Observation));
@@ -324,7 +326,7 @@ public final class Manager implements Singleton<Manager> {
    * @param Observation Pooled value, which has not yet been processed, and represents a set of measurements that occurred over an interval of time
    */
   @Async
-  private synchronized void resolve(final WheelObservation Observation) {
+  private synchronized void resolve(final VehicleObservation Observation) {
     try {
       WHEEL_UPDATE_LOCK.writeLock().lock();
       final var Updates = Figures
@@ -378,14 +380,14 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * <p>Adds a new {@link VisionObservation observation} instance, containing the necessary information to calculate accurate vision values, to the callback's work-stealing 
+   * <p>Adds a new {@link FieldObservation observation} instance, containing the necessary information to calculate accurate vision values, to the callback's work-stealing 
    * execution thread-pool.
    * <p>Note that because of the lightweight nature of this method, with no blocking operations, several repeat calls of this method can be made, with no performance
    * impacts on the robot-main thread.
    * @param Observation Vision observation to add to the processing pool
-   * @see #sample(WheelObservation)
+   * @see #sample(VehicleObservation)
    */
-  public synchronized Future<?> sample(final VisionObservation Observation) {
+  public synchronized Future<?> sample(final FieldObservation Observation) {
     Objects.requireNonNull(Observation);
     return CALLBACK
       .submit(() -> resolve(Observation));
@@ -396,7 +398,7 @@ public final class Manager implements Singleton<Manager> {
    * @param Observation Pooled value, which has not yet been processed, and represents a single measurement that occurred at a given point in time
    */
   @Async
-  private synchronized void resolve(final VisionObservation Observation) {
+  private synchronized void resolve(final FieldObservation Observation) {
     try {
       VISION_UPDATE_LOCK.writeLock().lock();
       // <--- TODO: Vision Logic
@@ -406,8 +408,8 @@ public final class Manager implements Singleton<Manager> {
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
-   * Provides the vehicle odometry at the given time provided, which is an estimate based upon the {@link #sample(WheelObservation) addition} of 
-   * {@link WheelObservation wheel observations}
+   * Provides the vehicle odometry at the given time provided, which is an estimate based upon the {@link #sample(VehicleObservation) addition} of 
+   * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of vehicle odometry
    * @return Robot (vehicle-relative) odometry position at the given time
    */
@@ -421,8 +423,8 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the vehicle odometry at the current time provided, which is an estimate based upon the {@link #sample(WheelObservation) addition} of
-   * {@link WheelObservation wheel observations}
+   * Provides the vehicle odometry at the current time provided, which is an estimate based upon the {@link #sample(VehicleObservation) addition} of
+   * {@link VehicleObservation wheel observations}
    * @return Robot (vehicle-relative) odometry position
    */
   public Entry<Double,Pose2d> getVehicleRelative() {
@@ -437,8 +439,8 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the field odometry at the given time provided, which is an estimate based upon the {@link #sample(VisionObservation) addition} of 
-   * {@link WheelObservation wheel observations}
+   * Provides the field odometry at the given time provided, which is an estimate based upon the {@link #sample(FieldObservation) addition} of 
+   * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of field odometry
    * @return Robot (field-relative) odometry position at the given time
    */
@@ -452,8 +454,8 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the field odometry at the current time provided, which is an estimate based upon the {@link #sample(VisionObservation) addition} of
-   * {@link WheelObservation wheel observations}
+   * Provides the field odometry at the current time provided, which is an estimate based upon the {@link #sample(FieldObservation) addition} of
+   * {@link VehicleObservation wheel observations}
    * @return Robot (field-relative) odometry position
    */
   public Entry<Double,Translation2d> getFieldRelative() {
@@ -494,7 +496,7 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the measured velocity determined via the {@link #sample(WheelObservation) addition} of {@link WheelObservation observations}
+   * Provides the measured velocity determined via the {@link #sample(VehicleObservation) addition} of {@link VehicleObservation observations}
    * @return Measured velocity, calculated by the delta between the most recent positions
    */
   public Twist2d getMeasured() {
@@ -548,16 +550,16 @@ public final class Manager implements Singleton<Manager> {
   /**
    *
    *
-   * <h1>WheelObservation</h1>
+   * <h1>VehicleObservation</h1>
    *
    */
-  public record WheelObservation(List<List<SwerveModulePosition>> Positions, List<Double> Timestamps, List<Rotation2d> Rotations) {}
+  public record VehicleObservation(List<List<SwerveModulePosition>> Positions, List<Double> Timestamps, List<Rotation2d> Rotations) {}
 
   /**
    *
    *
-   * <h1>VisionObservation</h1>
+   * <h1>FieldObservation</h1>
    *
    */
-  public record VisionObservation(List<Pose3d> Positions, List<Transform3d> Targets, List<Double> Timestamps) {}
+  public record FieldObservation(List<List<Transform3d>> Targets, List<Pose3d> Positions, List<Double> Timestamps, Translation2d Relative) {}
 }

@@ -26,7 +26,7 @@ import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
 
 import org.frc5411.robot2024.Manager;
-import org.frc5411.robot2024.Manager.VisionObservation;
+import org.frc5411.robot2024.Manager.FieldObservation;
 
 import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.numbers.N2;
@@ -212,16 +212,21 @@ public class VisionSubsystem extends Subsystem<Named,State> {
               Manager
                 .tryInstance()
                 .ifPresent((Instance) -> 
-                  Instance.sample(new VisionObservation(
-                    List.of(
-                      Camera
-                        .getReport()
-                        .getObservations()
-                        .clone()), 
+                  Instance.sample(new FieldObservation(
+                    Stream.of(
+                        Camera
+                          .getReport()
+                          .getObservations())
+                      .map(List::of)
+                      .toList(), 
                     Camera
                       .getMeasurements(), 
-                    Camera 
-                      .getTimestamps()
+                    Camera
+                      .getTimestamps(), 
+                    Camera
+                      .getDescriptor().Position
+                        .getTranslation()
+                        .toTranslation2d()
                   ))
                 );
             }
@@ -229,7 +234,7 @@ public class VisionSubsystem extends Subsystem<Named,State> {
         Mode = CAMERAS
           .stream()
           .allMatch((Camera) -> 
-            Camera.getReport().getObservations().length > (0))?
+            Camera.getReport().getMeasurements().length > (0) && Camera.getConnection())?
           State.ACTIVE:
           State.STALE;
       }

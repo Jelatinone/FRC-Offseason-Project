@@ -14,11 +14,9 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.camera;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.math.geometry.Pose3d;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.math.geometry.Transform3d;
-
-import org.littletonrobotics.junction.AutoLog;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -35,12 +33,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Getter
 @Setter
-@AutoLog
-public class Report extends org.frc5411.lib.pattern.Report<Transform3d> {
+public class Report extends org.frc5411.lib.pattern.Report<Pose3d> {
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   volatile double Latency = (-1D);
 
   volatile int Pipeline = (-1);
 
-  volatile Pose3d Observations[] = new Pose3d[] {};
+  volatile Transform3d Observations[][] = new Transform3d[][] {};
 }
