@@ -71,6 +71,7 @@ import java.util.stream.IntStream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
@@ -93,13 +94,11 @@ public final class Manager implements Singleton<Manager> {
   @Serial
   static long serialVersionUID = 2389697764281159320L;
   
-  static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
-  static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
+  static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill(Math.pow((5E-2D), (1)), Math.pow((5E-2D), (1)));
+  static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(Math.pow((2E-2D), (1)), Math.pow((2E-2D), (1)));
 
-  static ReadWriteLock WHEEL_UPDATE_LOCK;
-  static ReadWriteLock VISION_UPDATE_LOCK;  
-
-  ExecutorService CALLBACK;
+  ReadWriteLock UPDATE_LOCK;
+  ExecutorService EXECUTOR;
 
   TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
   TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
@@ -113,22 +112,25 @@ public final class Manager implements Singleton<Manager> {
   ExtendedKalmanFilter<N2,N2,N2> FILTER;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Manager Instance;
-  static volatile Double Timestamp;
-  static volatile Twist2d Measured;
-  static volatile Twist2d Predicted;
-  static volatile Rotation2d Rotation;
-  static volatile SwerveModulePosition[] Position;
+
+  @NonFinal volatile Optional<VehicleObservation> Vehicle;
+  @NonFinal volatile Optional<FieldObservation> Field;
+
+  @NonFinal volatile Double Timestamp;
+  @NonFinal volatile Twist2d Measured;
+  @NonFinal volatile Twist2d Predicted;
+
+  @NonFinal volatile SwerveModulePosition[] Position;
+  @NonFinal volatile Rotation2d Rotation;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Manager Constructor.
    */
   private Manager() {
-    CALLBACK = Executors
-      .newWorkStealingPool(THREAD_PARALLELISM);
-    VEHICLE_ODOMETRY = TimeInterpolatableBuffer
-      .createBuffer(BUFFER_SIZE);
-    FIELD_ODOMETRY = TimeInterpolatableBuffer
-      .createBuffer(BUFFER_SIZE);
+    UPDATE_LOCK = new ReentrantReadWriteLock((true));
+    EXECUTOR = Executors.newWorkStealingPool(THREAD_PARALLELISM);
+    VEHICLE_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
+    FIELD_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
     FILTER = new ExtendedKalmanFilter<>(
       Nat.N2(),
       Nat.N2(),
@@ -142,6 +144,8 @@ public final class Manager implements Singleton<Manager> {
       .range((0), DrivebaseSubsystem.getCapacity())
       .boxed()
       .toList();
+    Vehicle = Optional.empty();
+    Field = Optional.empty();
     Measured = new Twist2d(
       Double.NaN, 
       Double.NaN, 
@@ -166,10 +170,8 @@ public final class Manager implements Singleton<Manager> {
           .getGyroscopeMeasurement()
           .toRotation2d())
       .orElse(Rotation2d.fromRotations(Double.NaN));
-    LIMITS = DrivebaseSubsystem
-      .getLimits();
-    KINEMATICS = DrivebaseSubsystem
-      .getKinematics();
+    LIMITS = DrivebaseSubsystem.getLimits();
+    KINEMATICS = DrivebaseSubsystem.getKinematics();
     ODOMETRY = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getOdometry)
@@ -182,9 +184,6 @@ public final class Manager implements Singleton<Manager> {
         Position
       ));
     configure();
-  } static {
-    WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
-    VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial
@@ -262,11 +261,13 @@ public final class Manager implements Singleton<Manager> {
    */
   @Async
   public synchronized void update() {
-    Logger.recordOutput(
-      ("Robot/Vehicle"), 
-      getVehicleRelative()
-        .getValue()
-    );
+    if(Vehicle.isPresent()) {
+      Logger.recordOutput(
+        ("Robot/Odometry/Vehicle"), 
+        getVehicleRelative()
+          .getValue()
+      );      
+    }
     Logger.recordOutput(
       ("Robot/Measured"), 
       Measured
@@ -293,7 +294,7 @@ public final class Manager implements Singleton<Manager> {
    */
   public synchronized void sample(final ChassisSpeeds Demand) {
     try {
-      WHEEL_UPDATE_LOCK.writeLock().lock();
+      UPDATE_LOCK.writeLock().lock();
       Predicted = log(
         exp(new Twist2d(
           Demand.vxMetersPerSecond, 
@@ -301,7 +302,7 @@ public final class Manager implements Singleton<Manager> {
           Demand.omegaRadiansPerSecond))
         .rotateBy(Rotation));      
     } finally {
-      WHEEL_UPDATE_LOCK.writeLock().unlock();
+      UPDATE_LOCK.writeLock().unlock();
     }
   }
 
@@ -317,7 +318,7 @@ public final class Manager implements Singleton<Manager> {
    */
   public synchronized Future<?> sample(final VehicleObservation Observation) {
     Objects.requireNonNull(Observation);
-    return CALLBACK
+    return EXECUTOR
       .submit(() -> resolve(Observation));
   }  
 
@@ -328,7 +329,7 @@ public final class Manager implements Singleton<Manager> {
   @Async
   private synchronized void resolve(final VehicleObservation Observation) {
     try {
-      WHEEL_UPDATE_LOCK.writeLock().lock();
+      UPDATE_LOCK.writeLock().lock();
       final var Updates = Figures
         .minimum(Observation.Positions().size(), Observation.Timestamps().size());
       for(var Update = (0); Update < Updates; Update++) {
@@ -371,11 +372,12 @@ public final class Manager implements Singleton<Manager> {
           Position = Positions;
           Timestamp = Observation
             .Timestamps()
-            .get(Update);              
+            .get(Update);     
+          Vehicle = Optional.of(Observation);         
         }    
       }
     } finally {
-      WHEEL_UPDATE_LOCK.writeLock().unlock();
+      UPDATE_LOCK.writeLock().unlock();
     }
   }
 
@@ -389,7 +391,7 @@ public final class Manager implements Singleton<Manager> {
    */
   public synchronized Future<?> sample(final FieldObservation Observation) {
     Objects.requireNonNull(Observation);
-    return CALLBACK
+    return EXECUTOR
       .submit(() -> resolve(Observation));
   }
 
@@ -400,10 +402,10 @@ public final class Manager implements Singleton<Manager> {
   @Async
   private synchronized void resolve(final FieldObservation Observation) {
     try {
-      VISION_UPDATE_LOCK.writeLock().lock();
+      UPDATE_LOCK.writeLock().lock();
       // <--- TODO: Vision Logic
     } finally {
-      VISION_UPDATE_LOCK.writeLock().unlock();
+      UPDATE_LOCK.writeLock().unlock();
     }
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
@@ -415,10 +417,10 @@ public final class Manager implements Singleton<Manager> {
    */
   public Entry<Double,Pose2d> getVehicleRelative(final Double Timestamp) {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return (null); // <--- TODO: Prediction Logic
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -429,12 +431,12 @@ public final class Manager implements Singleton<Manager> {
    */
   public Entry<Double,Pose2d> getVehicleRelative() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return VEHICLE_ODOMETRY
         .getInternalBuffer()
         .lastEntry();
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -446,10 +448,10 @@ public final class Manager implements Singleton<Manager> {
    */
   public Entry<Double,Translation2d> getFieldRelative(final Double Timestamp) {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return (null); // <--- TODO: Prediction Logic
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -460,12 +462,12 @@ public final class Manager implements Singleton<Manager> {
    */
   public Entry<Double,Translation2d> getFieldRelative() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return FIELD_ODOMETRY
         .getInternalBuffer()
         .lastEntry();
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -475,10 +477,10 @@ public final class Manager implements Singleton<Manager> {
    */
   public Rotation2d getVehicleRotation() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return Rotation;
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -488,10 +490,10 @@ public final class Manager implements Singleton<Manager> {
    */
   public SwerveModulePosition[] getVehiclePosition() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return Position;
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -501,10 +503,10 @@ public final class Manager implements Singleton<Manager> {
    */
   public Twist2d getMeasured() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return Measured;
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   }
 
@@ -514,10 +516,10 @@ public final class Manager implements Singleton<Manager> {
    */
   public Twist2d getPredicted() {
     try {
-      WHEEL_UPDATE_LOCK.readLock().lock();
+      UPDATE_LOCK.readLock().lock();
       return Predicted;
     } finally {
-      WHEEL_UPDATE_LOCK.readLock().unlock();
+      UPDATE_LOCK.readLock().unlock();
     }
   } 
 
