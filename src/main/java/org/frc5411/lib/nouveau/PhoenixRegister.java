@@ -280,8 +280,8 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
                 Applicator.accept(REQUESTS.get(Hash)));
             } finally {
               REQUEST_LOCK.readLock().unlock();
-              State.setRunning((false));              
             }
+            State.setRunning((false));       
             State.setPriority(getPriority());
             State.setStatus(Status.value);
             State.setPeriod(DISCRETE_AGGREGATOR.aggregate());

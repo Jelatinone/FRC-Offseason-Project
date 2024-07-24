@@ -180,7 +180,8 @@ public class Constants {
         .map((Instance) -> 
           Optional.ofNullable(Instance
             .getVehicleRelative())
-            .map((Entry) -> Entry.getValue().getRotation())
+            .map((Entry) -> 
+              Entry.getValue().getRotation())
             .orElse(Rotation2d.fromRotations(Double.NaN)))
         .orElse(Rotation2d.fromRotations(Double.NaN)));
     static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);    
