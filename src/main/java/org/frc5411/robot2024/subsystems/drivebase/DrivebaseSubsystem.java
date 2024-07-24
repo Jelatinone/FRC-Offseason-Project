@@ -316,7 +316,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
               .getMeasurements()
               .stream()
               .map(Rotation3d::toRotation2d)
-              .toList())));
+              .toList()))
+          );
       update();
     }
   }

@@ -56,6 +56,7 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
@@ -95,20 +96,19 @@ public final class Manager implements Singleton<Manager> {
   static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
   static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill((1D),(1D));
 
-  static Integer MODULES;
-
   static ReadWriteLock WHEEL_UPDATE_LOCK;
   static ReadWriteLock VISION_UPDATE_LOCK;  
 
   ExecutorService CALLBACK;
 
-  Pose2d INITIAL;
   TimeInterpolatableBuffer<Pose2d> VEHICLE_ODOMETRY;
   TimeInterpolatableBuffer<Translation2d> FIELD_ODOMETRY;
 
   Limit LIMITS;
   SwerveDriveKinematics KINEMATICS;
   SwerveDriveOdometry ODOMETRY;  
+
+  Collection<Integer> INDICES;
 
   ExtendedKalmanFilter<N2,N2,N2> FILTER;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
@@ -138,13 +138,25 @@ public final class Manager implements Singleton<Manager> {
       STATE_STANDARD_DEVIATIONS,
       MEASUREMENT_STANDARD_DEVIATIONS,
       1D / UPDATE_FREQUENCY);
+    INDICES = IntStream
+      .range((0), DrivebaseSubsystem.getCapacity())
+      .boxed()
+      .toList();
+    Measured = new Twist2d(
+      Double.NaN, 
+      Double.NaN, 
+      Double.NaN);
+    Predicted = new Twist2d(
+      Double.NaN, 
+      Double.NaN, 
+      Double.NaN);
     Position = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getModulePositions)
       .orElse(
-        IntStream
-          .range((0), DrivebaseSubsystem.getCapacity())
-          .mapToObj((Value) -> 
+        INDICES
+          .stream()
+          .map((Value) -> 
             new SwerveModulePosition(Double.NaN, Rotation2d.fromRotations(Double.NaN)))
           .toArray(SwerveModulePosition[]::new));
     Rotation = DrivebaseSubsystem
@@ -160,11 +172,10 @@ public final class Manager implements Singleton<Manager> {
       .tryInstance()
       .map(DrivebaseSubsystem::getOdometry)
       .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Position));
-    MODULES = Position.length;  
     VEHICLE_ODOMETRY.addSample(
       Timestamp = HALUtil
         .getFPGATime() / 1E6D, 
-      INITIAL = ODOMETRY.update(
+      ODOMETRY.update(
         Rotation,
         Position
       ));
@@ -172,8 +183,6 @@ public final class Manager implements Singleton<Manager> {
   } static {
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    
-    Measured = new Twist2d();
-    Predicted = new Twist2d();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial
@@ -192,11 +201,13 @@ public final class Manager implements Singleton<Manager> {
   @Override
   public synchronized void close() {
     synchronized(Manager.class) {
-      Subsystem.getSubsystems().forEach((Subsystem) -> {
-        try {
-          Subsystem.close();
-        } catch(final IOException Ignored) {}
-      });      
+      Subsystem
+        .getSubsystems()
+        .forEach((Subsystem) -> {
+          try {
+            Subsystem.close();
+          } catch(final IOException Ignored) {}
+        });      
       Instance = (null);
     }
   }
@@ -214,27 +225,27 @@ public final class Manager implements Singleton<Manager> {
               applyDeadband(
                 DRIVER
                   .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
-                  .orElse((() -> 0D))
+                  .orElse((() -> Double.NaN))
                   .get(), 
                 DRIVER
                   .<Double>getPreference(CONTROL_ZONE_X)
-                  .orElse((0D))),
+                  .orElse((Double.NaN))),
               applyDeadband(
                 DRIVER
                   .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
-                  .orElse((() -> 0D))
+                  .orElse((() -> Double.NaN))
                   .get(), 
                 DRIVER
                   .<Double>getPreference(CONTROL_ZONE_Y)
-                  .orElse((0D))),
+                  .orElse((Double.NaN))),
               applyDeadband(
                 DRIVER
                   .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
-                  .orElse((() -> 0D))
+                  .orElse((() -> Double.NaN))
                   .get(), 
                 DRIVER
                   .<Double>getPreference(CONTROL_ZONE_T)
-                  .orElse((0D)))
+                  .orElse((Double.NaN)))
                 )
               ),
           Instance
@@ -326,9 +337,9 @@ public final class Manager implements Singleton<Manager> {
             (0D), 
             (0D)), 
           Delta);    
-        final var Positions = new SwerveModulePosition[MODULES];
-        final var Deltas = new SwerveModulePosition[MODULES];
-        for(var Module = (0); Module < MODULES; Module++) {
+        final var Positions = new SwerveModulePosition[INDICES.size()];
+        final var Deltas = new SwerveModulePosition[INDICES.size()];
+        for(var Module = (0); Module < INDICES.size(); Module++) {
           Positions[Module] = Observation.Positions().get(Module).get(Update);
           Deltas[Module] = new SwerveModulePosition(
             Positions[Module].distanceMeters - Position[Module].distanceMeters,
