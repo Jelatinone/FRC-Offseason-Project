@@ -169,18 +169,6 @@ public final class Manager implements Singleton<Manager> {
         Position
       ));
     configure();
-    Robot
-      .tryInstance()
-      .ifPresent((Instance) -> 
-        Instance.add(
-          () -> {
-            if(Manager.Instance != (null)) {
-              Manager.Instance.update();
-            }
-          },
-          UPDATE_FREQUENCY
-        )
-      );
   } static {
     WHEEL_UPDATE_LOCK = new ReentrantReadWriteLock((true));
     VISION_UPDATE_LOCK = new ReentrantReadWriteLock((true));    

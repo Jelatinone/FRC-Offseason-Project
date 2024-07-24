@@ -15,7 +15,6 @@
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
-import org.frc5411.lib.schema.Callback;
 import org.frc5411.lib.schema.Singleton;
 
 import edu.wpi.first.net.PortForwarder;
@@ -40,8 +39,6 @@ import org.littletonrobotics.urcl.URCL;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +49,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
 import static org.frc5411.robot2024.Constants.Identity.*;
+import static org.frc5411.robot2024.Constants.Mode.*;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
@@ -67,10 +65,11 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   static long serialVersionUID = 9197360083967213848L;
+
   Map<String,Integer> COMMANDS;
-  Collection<Callback> CALLBACKS;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Robot Instance;
+
   @NonFinal volatile Command Autonomous;
   @NonFinal volatile Boolean Message;
   @NonFinal volatile Double Timestamp;
@@ -80,10 +79,9 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
    */
   private Robot() {
     COMMANDS = new HashMap<>();
-    CALLBACKS = new ArrayList<>();
   } static {
-    Logger.recordMetadata(("Robot-Type"), Constants.Identity.TYPE.name());
-    Logger.recordMetadata(("Robot-Mode"), Constants.Identity.MODE.name());
+    Logger.recordMetadata(("Robot-Type"), TYPE.name());
+    Logger.recordMetadata(("Robot-Mode"), MODE.name());
     Logger.recordMetadata(("Runtime-Type"), getRuntimeType().name());
     Logger.recordMetadata(("Robot-Number"), String.valueOf(RobotController.getTeamNumber()));
     Logger.recordMetadata(("Project-Name"), Metadata.MAVEN_NAME);
@@ -93,13 +91,34 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Logger.recordMetadata(("VCS-Date"), Metadata.GIT_DATE);
     Logger.recordMetadata(("VCS-Branch"), Metadata.GIT_BRANCH);
     Logger.recordMetadata(("VCS-State"), switch(Metadata.DIRTY) {
-      case (0) -> "Committed"; case (1) -> "Changed"; default -> "Unknown";
+      case (0) -> ("Committed"); case (1) -> ("Changed"); default -> ("Unknown");
     });
   }
   //----------------------------------------------------------------------[Robot Scope]------------------------------------------------------------------------//
   @Override
   public synchronized void robotInit() {
-    switch(Constants.Identity.MODE) {
+    MANAGEABLE
+      .forEach(Supplier::get);   
+    Manager.getInstance();       
+    CommandScheduler
+      .getInstance()
+      .onCommandInitialize(
+        (Operation) -> log(Operation, (true)));
+    CommandScheduler
+      .getInstance()
+      .onCommandFinish(
+        (Operation) -> log(Operation, (false)));
+    CommandScheduler
+      .getInstance()
+      .onCommandInterrupt(
+        (Operation) -> log(Operation, (false)));    
+    Logger.registerURCL(URCL.startExternal());
+    DriverStation.silenceJoystickConnectionWarning((true));
+    PortForwarder.add(
+      (5800), 
+      ("photonvision.local"), 
+      (5800));    
+    switch(MODE) {
       case ANONYMOUS:
         break;          
       case ACTUAL:
@@ -113,32 +132,10 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
         Logger.setReplaySource(new WPILOGReader(Path));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
         break;
-    }
-    initialize();
-    Manager
-      .getInstance();       
-    CommandScheduler.getInstance()
-      .onCommandInitialize(
-        (final Command Operation) -> log(Operation, (true)));
-    CommandScheduler.getInstance()
-      .onCommandFinish(
-        (final Command Operation) -> log(Operation, (false)));
-    CommandScheduler.getInstance()
-      .onCommandInterrupt(
-        (final Command Operation) -> log(Operation, (false)));    
-    Logger.registerURCL(URCL.startExternal());
-    DriverStation.silenceJoystickConnectionWarning((true));
-    PortForwarder.add((5800), ("photonvision.local"), (5800));
-    switch(Constants.Identity.MODE) {
-      case ANONYMOUS:
-        break;
-      default:
-        Shuffleboard.startRecording();
-        Logger
-          .start();
-        DataLogManager
-          .start();  
-        break;
+    } if(!MODE.equals(ANONYMOUS)) {
+      Shuffleboard.startRecording();
+      Logger.start();
+      DataLogManager.start();  
     }
   }
 
@@ -150,9 +147,9 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
       CommandScheduler
         .getInstance()
         .run();
-      CALLBACKS
-        .parallelStream()
-        .forEach(Callback::attempt);  
+      Manager
+        .tryInstance()
+        .ifPresent(Manager::update);
       if (Autonomous != (null)) {
         if (!Autonomous.isScheduled() && !Message) {
           System.out.printf(
@@ -189,7 +186,9 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
     Timestamp = Timer.getFPGATimestamp();
     Message = (false);
     if(Autonomous != null) {
-      Autonomous.onlyWhile(Instance::isAutonomousEnabled).schedule();
+      Autonomous
+        .onlyWhile(this::isAutonomousEnabled)
+        .schedule();
     }
   }
 
@@ -236,9 +235,12 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void close() {
     super.close();
-    Manager.tryInstance().ifPresent(Manager::close);
+    Manager
+      .tryInstance()
+      .ifPresent(Manager::close);
     synchronized(Robot.class) {
-      CALLBACKS.clear();
+      Logger.end();
+      Shuffleboard.stopRecording();
       COMMANDS.clear();
       Instance = (null);
     }
@@ -254,38 +256,16 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   }
 
   /**
-   * Inserts a new periodic runnable operation into the callbacks being managed by this Robot instance
-   * @param Callback Periodic operation to perform at an interval
-   * @param Period   Time interval (discrete time interval, period, etc.) upon which the operation is scheduled to run at
-   */
-  public void add(final Runnable Callback, final Integer Period) {
-    synchronized(Robot.class) {
-      Instance.CALLBACKS.add(new Callback(Callback, 1D / Period));
-    }
-  }
-
-  /**
    * Logs a command that has been scheduled with the {@link CommandScheduler} using the {@link Logger}.
    * @param Operation Command to be logged, can be in any state
    * @param Running   Whether this command is currently active
    */
-  private static void log(final Command Operation, final Boolean Running) {
+  private void log(final Command Operation, final Boolean Running) {
     final var Name = Operation.getName();
-    final var Count = Instance.COMMANDS.getOrDefault(Name, (0)) + (Running? 1: -1);
-    Instance.COMMANDS.put(Name, Count);
+    final var Count = COMMANDS.getOrDefault(Name, (0)) + (Running? 1: -1);
+    COMMANDS.put(Name, Count);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]-[%s]"), Name, Integer.toHexString(Operation.hashCode())), Running);
     Logger.recordOutput(String.format(("Commands/Unique/[%s]"), Name), Count > 0);
-  }
-
-  /**
-   * Performs pre-initialization on relevant variables to this manager type. This is useful for any case where the initialized values references within the constructor are
-   * cyclical in nature. In that case, this call can be made to ensure that the relevant Subsystems are initialized prior to referencing.
-   */
-  public static synchronized void initialize() {
-    synchronized(Robot.class) {
-      MANAGEABLE
-        .forEach(Supplier::get);      
-    }
   }
   //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
   /**
