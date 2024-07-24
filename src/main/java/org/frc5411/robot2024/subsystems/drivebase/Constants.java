@@ -177,12 +177,7 @@ public class Constants {
       new ProfiledPIDController(HEADING_COORDINATOR_DESCRIPTOR), 
       () -> Manager
         .tryInstance()
-        .map((Instance) -> 
-          Optional.ofNullable(Instance
-            .getVehicleRelative())
-            .map((Entry) -> 
-              Entry.getValue().getRotation())
-            .orElse(Rotation2d.fromRotations(Double.NaN)))
+        .map(Manager::getVehicleRotation)
         .orElse(Rotation2d.fromRotations(Double.NaN)));
     static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);    
   }

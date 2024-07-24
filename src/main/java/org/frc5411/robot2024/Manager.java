@@ -116,6 +116,8 @@ public final class Manager implements Singleton<Manager> {
   @NonFinal volatile Twist2d Measured;
   @NonFinal volatile Twist2d Predicted;
 
+  @NonFinal volatile Pose2d Pose;
+
   @NonFinal volatile SwerveModulePosition[] Positions;
   @NonFinal volatile Rotation2d Rotation;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
@@ -255,7 +257,7 @@ public final class Manager implements Singleton<Manager> {
       Logger.recordOutput(
         ("Robot/Odometry/Vehicle"), 
         getVehicleRelative()
-          .getValue()
+          //.getValue()
       );      
     }
     if(Field.isPresent()) {
@@ -369,7 +371,7 @@ public final class Manager implements Singleton<Manager> {
               Timestamp = Observation
                 .Timestamps()
                 .get(Update),
-              ODOMETRY
+              Pose = ODOMETRY
                 .update(Rotation, Positions = Position)
             );      
             FILTER.predict(
@@ -411,7 +413,9 @@ public final class Manager implements Singleton<Manager> {
       if(Vehicle.isEmpty() && Field.isEmpty()) {
         return;
       }
-      final var Approximate = getVehicleRelative()
+      final var Approximate = VEHICLE_ODOMETRY
+        .getInternalBuffer()
+        .lastEntry()
         .getValue()
         .getTranslation();
       IntStream
@@ -433,7 +437,7 @@ public final class Manager implements Singleton<Manager> {
             .plus(
               Observation
                 .Relative()
-                .rotateBy(getVehicleRotation()));
+                .rotateBy(Rotation));
           final var Relative = Camera
             .plus(Approximate.unaryMinus());
           if(Field.isEmpty()) {
@@ -550,12 +554,10 @@ public final class Manager implements Singleton<Manager> {
    * {@link VehicleObservation wheel observations}
    * @return Robot (vehicle-relative) odometry position
    */
-  public Entry<Double,Pose2d> getVehicleRelative() {
+  public Pose2d getVehicleRelative() {
     try {
       UPDATE_LOCK.readLock().lock();
-      return VEHICLE_ODOMETRY
-        .getInternalBuffer()
-        .lastEntry();
+      return Pose; // <--- TODO: Workaround
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }

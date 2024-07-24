@@ -117,7 +117,7 @@ class Descriptions {
 
   static org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<Supplier<Pose2d>> MOCK_CAMERA_DESCRIPTOR =
     org.frc5411.lib.instrument.camera.Descriptor.<Supplier<Pose2d>>builder()
-      .Hardware(() -> Manager.tryInstance().map((Instance) -> Instance.getVehicleRelative().getValue()).orElse(new Pose2d(Double.NaN, Double.NaN, Rotation2d.fromRadians(Double.NaN))))
+      .Hardware(() -> Manager.tryInstance().map((Instance) -> Instance.getVehicleRelative()).orElse(new Pose2d(Double.NaN, Double.NaN, Rotation2d.fromRadians(Double.NaN))))
       .Single(VecBuilder.fill((0D), (0D), Double.MAX_VALUE))
       .Multiple(VecBuilder.fill((0D), (0D), Double.MAX_VALUE));
   }
