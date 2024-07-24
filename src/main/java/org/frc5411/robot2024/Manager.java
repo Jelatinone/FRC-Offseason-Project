@@ -19,14 +19,11 @@ import org.frc5411.lib.instrument.module.Limit;
 //---------------------------------------------------------------------------[Libraries]-----------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
-import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Figures;
 
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
-import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.StateSpaceUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
@@ -36,14 +33,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.jcabi.aspects.Async;
@@ -54,18 +49,17 @@ import org.littletonrobotics.urcl.URCL;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -76,7 +70,6 @@ import lombok.experimental.NonFinal;
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
 import static org.frc5411.robot2024.Constants.Control.*;
-import static org.frc5411.robot2024.Constants.Field.*;
 import static org.frc5411.robot2024.Constants.Identity.*;
 import static org.frc5411.robot2024.Constants.Preferences.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
@@ -87,7 +80,6 @@ import static org.frc5411.robot2024.Constants.Preferences.*;
  *
  * <p>Utility class handling the declaration and usage of subsystems at runtime.
  */
-@SuppressWarnings("unused")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public final class Manager implements Singleton<Manager> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
@@ -116,11 +108,11 @@ public final class Manager implements Singleton<Manager> {
   @NonFinal volatile Optional<VehicleObservation> Vehicle;
   @NonFinal volatile Optional<FieldObservation> Field;
 
-  @NonFinal volatile Double Timestamp;
+  @NonFinal volatile double Timestamp;
   @NonFinal volatile Twist2d Measured;
   @NonFinal volatile Twist2d Predicted;
 
-  @NonFinal volatile SwerveModulePosition[] Position;
+  @NonFinal volatile SwerveModulePosition[] Positions;
   @NonFinal volatile Rotation2d Rotation;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -128,7 +120,8 @@ public final class Manager implements Singleton<Manager> {
    */
   private Manager() {
     UPDATE_LOCK = new ReentrantReadWriteLock((true));
-    EXECUTOR = Executors.newWorkStealingPool(THREAD_PARALLELISM);
+    EXECUTOR = Executors
+      .newWorkStealingPool(THREAD_PARALLELISM);
     VEHICLE_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
     FIELD_ODOMETRY = TimeInterpolatableBuffer.createBuffer(BUFFER_SIZE);
     FILTER = new ExtendedKalmanFilter<>(
@@ -154,7 +147,7 @@ public final class Manager implements Singleton<Manager> {
       Double.NaN, 
       Double.NaN, 
       Double.NaN);
-    Position = DrivebaseSubsystem
+    Positions = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getModuleMeasurements)
       .orElse(
@@ -175,14 +168,7 @@ public final class Manager implements Singleton<Manager> {
     ODOMETRY = DrivebaseSubsystem
       .tryInstance()
       .map(DrivebaseSubsystem::getOdometry)
-      .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Position));
-    VEHICLE_ODOMETRY.addSample(
-      Timestamp = HALUtil
-        .getFPGATime() / 1E6D, 
-      ODOMETRY.update(
-        Rotation,
-        Position
-      ));
+      .orElse(new SwerveDriveOdometry(KINEMATICS, Rotation, Positions));
     configure();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
@@ -268,13 +254,20 @@ public final class Manager implements Singleton<Manager> {
           .getValue()
       );      
     }
+    if(Field.isPresent()) {
+      Logger.recordOutput(
+        ("Robot/Odometry/Field"), 
+        getFieldRelative()
+          .getValue()
+      );      
+    }
     Logger.recordOutput(
       ("Robot/Measured"), 
-      Measured
+      getMeasured()
     );
     Logger.recordOutput(
       ("Robot/Predicted"), 
-      Predicted
+      getPredicted()
     );
   }
 
@@ -330,52 +323,60 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final VehicleObservation Observation) {
     try {
       UPDATE_LOCK.writeLock().lock();
-      final var Updates = Figures
-        .minimum(Observation.Positions().size(), Observation.Timestamps().size());
-      for(var Update = (0); Update < Updates; Update++) {
-        var Include = (true);
-        final var Delta = Observation.Timestamps().get(Update) - Timestamp;
-        FILTER.predict( 
-          VecBuilder.fill(
-            (0D), 
-            (0D)), 
-          Delta);    
-        final var Positions = new SwerveModulePosition[INDICES.size()];
-        final var Deltas = new SwerveModulePosition[INDICES.size()];
-        for(var Module = (0); Module < INDICES.size(); Module++) {
-          Positions[Module] = Observation.Positions().get(Module).get(Update);
-          Deltas[Module] = new SwerveModulePosition(
-            Positions[Module].distanceMeters - Position[Module].distanceMeters,
-            Positions[Module].angle);
-          final var Velocity = 
-            (Deltas[Module].distanceMeters) / Delta;
-          final var Omega = 
-            (Deltas[Module].angle.div(Delta)).getRadians();
-          Include =           
-            !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) | Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D)); 
-        }
-        if(Include) {
-          Measured = KINEMATICS
-            .toTwist2d(Deltas);
-          Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
-            Observation
-              .Rotations().get(Update):
-            Rotation
-              .plus(new Rotation2d(Measured.dtheta));
-          VEHICLE_ODOMETRY.addSample(
-            Observation
-              .Timestamps()
-              .get(Update), 
-            ODOMETRY
-              .update(Rotation, Positions)
-          );       
-          Position = Positions;
-          Timestamp = Observation
-            .Timestamps()
-            .get(Update);     
-          Vehicle = Optional.of(Observation);         
-        }    
-      }
+      IntStream
+        .range((0), Figures.minimum(Observation.Positions().size(), Observation.Timestamps().size()))
+        .filter((Update) -> {
+          try {
+            return !(VEHICLE_ODOMETRY.getInternalBuffer().lastKey() - BUFFER_SIZE > Observation.Timestamps().get(Update));
+          } catch(final NoSuchElementException Ignored) {
+            return Vehicle.isEmpty();
+          }
+        })
+        .forEach((Update) -> {
+          final var Interval = Observation.Timestamps().get(Update) - Timestamp;
+          final var Position = new SwerveModulePosition[INDICES.size()];
+          final var Discrete = new SwerveModulePosition[INDICES.size()];
+          final var Included = INDICES
+            .stream()
+            .allMatch((Module) -> {
+              Position[Module] = Observation.Positions().get(Module).get(Update);
+              Discrete[Module] = new SwerveModulePosition(
+                Position[Module].distanceMeters - Positions[Module].distanceMeters,
+                Position[Module].angle);
+              final var Velocity = 
+                (Discrete[Module].distanceMeters) / Interval;
+              final var Omega = 
+                Discrete[Module].angle
+                  .minus(Position[Module].angle)
+                  .div(Interval)
+                  .getRadians();
+              return 
+                !(Math.abs(Omega) > LIMITS.RotationalVelocity() * (5D) || Math.abs(Velocity) > LIMITS.TranslationalVelocity() * (5D));     
+            });
+          if(Included || Vehicle.isEmpty()) {
+            Measured = KINEMATICS
+              .toTwist2d(Discrete);
+            Rotation = !Observation.Rotations().isEmpty() ^ Double.isFinite(Observation.Rotations().get(Update).getRadians())?
+              Observation
+                .Rotations().get(Update):
+              Rotation
+                .plus(new Rotation2d(Measured.dtheta));
+            VEHICLE_ODOMETRY.addSample(
+              Timestamp = Observation
+                .Timestamps()
+                .get(Update),
+              ODOMETRY
+                .update(Rotation, Positions = Position)
+            );      
+            FILTER.predict(
+              VecBuilder
+                .fill((0D), (0D)),
+              Interval
+            );   
+            Vehicle = Optional
+              .of(Observation);   
+          }
+        });
     } finally {
       UPDATE_LOCK.writeLock().unlock();
     }
@@ -491,7 +492,7 @@ public final class Manager implements Singleton<Manager> {
   public SwerveModulePosition[] getVehiclePosition() {
     try {
       UPDATE_LOCK.readLock().lock();
-      return Position;
+      return Positions;
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
