@@ -78,7 +78,7 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
 
   Aggregator<Double> DISCRETE_AGGREGATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
-  static volatile PhoenixRegister Instance = (null);
+  static volatile PhoenixRegister Instance;
   static volatile ReportAutoLogged State;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
@@ -259,7 +259,8 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
               final var Providers = SIGNALS.iterator();
               final var Timestamp = DISCRETE_AGGREGATOR.attain() - SIGNALS
                 .stream()
-                .mapToDouble((Signal) -> Signal.getTimestamp().getLatency())
+                .mapToDouble((Signal) -> 
+                  Signal.getTimestamp().getLatency())
                 .average()
                 .orElse((0D));
               RESPONSES.forEach((Queue) ->
@@ -275,7 +276,8 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
             }
             try {
               REQUEST_LOCK.readLock().lock();
-              CLIENTS.forEach((Hash, Applicator) -> Applicator.accept(REQUESTS.get(Hash)));
+              CLIENTS.forEach((Hash, Applicator) -> 
+                Applicator.accept(REQUESTS.get(Hash)));
             } finally {
               REQUEST_LOCK.readLock().unlock();
               State.setRunning((false));              

@@ -59,8 +59,8 @@ public abstract class Report<@NonNull Measurement extends StructSerializable> im
   /**
    * -- GETTER --
    * Provides a numerical value representative of the confidence in the internal state readings provided by it's state observers reported during
-   * the more recent {@link Component#update(Report) update} cycle
-   * @implNote Positive infinite by default, which represents zero confidence in the readings
+   * the more recent {@link Component#update(Report) update} cycle; must be bound between [+1, POSITIVE_INFINITY)
+   * @implNote Positive infinity by default, which represents zero confidence in the readings
    * @return Hardware confidence (figure of merit)
    */
   volatile double Merit = Double.POSITIVE_INFINITY;

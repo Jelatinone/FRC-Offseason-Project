@@ -60,6 +60,7 @@ public final class Constants {
 
     static Integer QUEUE_SIZE = (20);
     static Double BUFFER_SIZE = (2D);
+    
     static Double MAXIMUM_CORRECTION = (2D);
 
     static List<Supplier<Subsystem>> MANAGEABLE = List.of(

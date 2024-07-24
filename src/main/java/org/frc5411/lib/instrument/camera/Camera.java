@@ -14,7 +14,6 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.camera;
-//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
 import edu.wpi.first.math.geometry.Pose3d;
@@ -61,6 +60,8 @@ public abstract class Camera<Hardware> implements Component<Pose3d> {
   public synchronized void periodic() {
     synchronized(STATUS) {
       update(STATUS);
+      STATUS
+        .setMerit(Double.POSITIVE_INFINITY);   
     }
     /*
      * See the following which references the below issue:

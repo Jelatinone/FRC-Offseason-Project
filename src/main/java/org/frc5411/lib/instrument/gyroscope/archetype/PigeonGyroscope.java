@@ -53,24 +53,27 @@ public class PigeonGyroscope extends Gyroscope<Pigeon2> {
    */
   public PigeonGyroscope(final Descriptor<Pigeon2> Descriptor) {
     super(Descriptor);
+
     YAW_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
-        Descriptor.Hardware.getYaw().getValue()
+        getDescriptor().Hardware.getYaw().getValue()
       ));
     PITCH_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
-        Descriptor.Hardware.getPitch().getValue()
+        getDescriptor().Hardware.getPitch().getValue()
       ));
     ROLL_POSITIONS = StandardRegister
       .getInstance()
       .register(() -> Optional.of(
-        Descriptor.Hardware.getRoll().getValue()
+        getDescriptor().Hardware.getRoll().getValue()
       ));
+      
     UPDATE_TIMESTAMPS = StandardRegister
       .getInstance()
       .timestamp();
+
     configure();
   }
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//

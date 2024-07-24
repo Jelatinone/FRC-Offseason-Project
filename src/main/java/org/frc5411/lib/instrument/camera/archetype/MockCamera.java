@@ -97,14 +97,13 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
 
     WORLD = new VisionSystemSim(getIdentity());
     WORLD.addAprilTags(Layout);
-    WORLD.addCamera(
-      SIMULATOR, 
-      getDescriptor().Position);
+    WORLD.addCamera(SIMULATOR, getDescriptor().Position);
 
     if(RESULT_REGISTER == (null)) {
       synchronized(MockCamera.class) {
         if(RESULT_REGISTER == (null)) {
           RESULT_REGISTER = new IdentityRegister<>();
+          RESULT_REGISTER.start();
         }
       }
     }

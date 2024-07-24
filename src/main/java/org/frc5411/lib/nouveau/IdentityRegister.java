@@ -86,7 +86,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
     CALLBACK = new Notifier(this);
     CALLBACK.setName(getClass().getSimpleName());
     Frequency = UPDATE_FREQUENCY;
-    start();
+    start(); //TODO: <--- Workaround
   }
 
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
@@ -122,7 +122,6 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
   public synchronized void close() {
     halt();
     try {
-      SIGNAL_LOCK.writeLock().lock();
       QUEUE_LOCK.writeLock().lock();     
       synchronized(PhoenixRegister.class) {
         TIMESTAMPS
@@ -135,7 +134,6 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
         State = (null);
       }        
     } finally {
-      SIGNAL_LOCK.writeLock().unlock();
       QUEUE_LOCK.writeLock().unlock();      
     }
   }
@@ -160,7 +158,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
   @Override
   public synchronized void start() {
     CALLBACK
-      .startPeriodic(1D / Frequency);
+      .startPeriodic(1D / UPDATE_FREQUENCY);     
   }
 
   @Override
