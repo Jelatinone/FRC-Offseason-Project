@@ -98,7 +98,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   @Override
   public synchronized void robotInit() {
     MANAGEABLE
-      .forEach(Supplier::get);   
+      .forEach(Supplier::get); 
     Manager.getInstance();       
     CommandScheduler
       .getInstance()

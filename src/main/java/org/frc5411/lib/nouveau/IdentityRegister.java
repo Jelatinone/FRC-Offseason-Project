@@ -160,7 +160,7 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
   @Override
   public synchronized void start() {
     CALLBACK
-      .startPeriodic(1D/ Frequency);
+      .startPeriodic(1D / Frequency);
   }
 
   @Override

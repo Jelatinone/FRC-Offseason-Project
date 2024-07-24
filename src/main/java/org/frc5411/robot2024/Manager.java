@@ -24,6 +24,7 @@ import org.frc5411.lib.utility.Figures;
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.StateSpaceUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
@@ -70,6 +71,9 @@ import lombok.experimental.NonFinal;
 import static edu.wpi.first.math.MathUtil.*;
 import static org.frc5411.lib.utility.Geometry.*;
 import static org.frc5411.robot2024.Constants.Control.*;
+import static org.frc5411.robot2024.Constants.Field.LENGTH;
+import static org.frc5411.robot2024.Constants.Field.MARGIN;
+import static org.frc5411.robot2024.Constants.Field.WIDTH;
 import static org.frc5411.robot2024.Constants.Identity.*;
 import static org.frc5411.robot2024.Constants.Preferences.*;
 //--------------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
@@ -404,7 +408,98 @@ public final class Manager implements Singleton<Manager> {
   private synchronized void resolve(final FieldObservation Observation) {
     try {
       UPDATE_LOCK.writeLock().lock();
-      // <--- TODO: Vision Logic
+      if(Vehicle.isEmpty() && Field.isEmpty()) {
+        return;
+      }
+      final var Approximate = getVehicleRelative()
+        .getValue()
+        .getTranslation();
+      IntStream
+        .range((0), Figures.minimum(Observation.Positions().size(), Observation.Timestamps().size()))
+        .filter((Update) -> {
+          try {
+            return !(FIELD_ODOMETRY.getInternalBuffer().lastKey() - BUFFER_SIZE > Observation.Timestamps().get(Update));
+          } catch(final NoSuchElementException Ignored) {
+            return Vehicle.isEmpty();
+          }
+        })
+        .forEach((Update) -> {
+          final var Position = Observation
+            .Positions()
+            .get(Update);
+          final Translation2d Camera = Position
+            .toPose2d()
+            .getTranslation()
+            .plus(
+              Observation
+                .Relative()
+                .rotateBy(getVehicleRotation()));
+          final var Relative = Camera
+            .plus(Approximate.unaryMinus());
+          if(Field.isEmpty()) {
+            FIELD_ODOMETRY.addSample(
+              Observation
+                .Timestamps().get(Update),
+              Relative);
+            FILTER.setXhat(
+              VecBuilder.fill(
+                Relative.getX(),
+                Relative.getY()
+            ));     
+            Field = Optional
+              .of(Observation);    
+          } else if(
+              Relative.getX() > -MARGIN && Relative.getX() < LENGTH + MARGIN && Relative.getY() > -MARGIN && Relative.getY() < WIDTH + MARGIN
+                && 
+              Math.hypot(Measured.dx, Measured.dy) < LIMITS.TranslationalVelocity() 
+                && 
+              Relative.minus(getFieldRelative().getValue()).getNorm() < MAXIMUM_CORRECTION
+            ) {
+            try {
+              final var Distances = Observation
+                .Targets()
+                .get(Update)
+                .stream()
+                .map((Target) -> 
+                  Target.getTranslation().getNorm())
+                .toList();
+              final var Minimum = Distances
+                .stream()
+                .min(Double::compareTo)
+                .orElse((0D));
+              final var Total = Distances
+                .stream()
+                .mapToDouble(Double::doubleValue)
+                .sum();
+              final var Deviation = 
+                (1/10D) * (((1/100D) * Math.pow(Minimum, (2D))) + ((1/200D) * Math.pow(Total / Distances.size(), (2D)))) / Distances.size();
+              FILTER.correct(
+                VecBuilder.fill(
+                  (0D), 
+                  (0D)),
+                VecBuilder.fill(
+                  Relative.getX(), 
+                  Relative.getY()),
+                StateSpaceUtil.makeCovarianceMatrix(
+                  Nat.N2(), 
+                  VecBuilder.fill(
+                    Math.pow((Deviation), (1D)), 
+                    Math.pow((Deviation), (1D)))
+              ));
+              FIELD_ODOMETRY.addSample(
+                Timestamp = Observation
+                  .Timestamps()
+                  .get(Update), 
+                new Translation2d(
+                  FILTER.getXhat((0)), 
+                  FILTER.getXhat((1))
+              ));
+            } catch(final Exception Ignored) {} finally {
+              Field = Optional
+                .of(Observation);                
+            }
+          }
+        });
     } finally {
       UPDATE_LOCK.writeLock().unlock();
     }
@@ -415,11 +510,36 @@ public final class Manager implements Singleton<Manager> {
    * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of vehicle odometry
    * @return Robot (vehicle-relative) odometry position at the given time
+   * @throws NoSuchElementException When the provided timestamp is out of bounds for the vehicle-relative buffer
    */
-  public Entry<Double,Pose2d> getVehicleRelative(final Double Timestamp) {
+  public Pose2d getVehicleRelative(final Double Timestamp) {
     try {
       UPDATE_LOCK.readLock().lock();
-      return (null); // <--- TODO: Prediction Logic
+      final var Sample = VEHICLE_ODOMETRY
+        .getSample(Timestamp);
+      if(Sample.isPresent()) {
+        return Sample.get();
+      } else {
+        final var Initial = VEHICLE_ODOMETRY
+          .getInternalBuffer()
+          .firstEntry();
+        if(Timestamp < Initial.getKey()) {
+          final var Latest = VEHICLE_ODOMETRY
+            .getInternalBuffer()
+            .lastEntry();
+          final var Interval = Timestamp - Latest.getKey();
+          return Latest
+            .getValue()
+            .exp(
+              new Twist2d(
+                Predicted.dx * Interval, 
+                Predicted.dy * Interval, 
+                Predicted.dtheta * Interval)
+            );  
+        } else {
+          throw new NoSuchElementException();
+        }
+      }      
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -446,11 +566,35 @@ public final class Manager implements Singleton<Manager> {
    * {@link VehicleObservation wheel observations}
    * @param Timestamp Time at which to obtain a sample of field odometry
    * @return Robot (field-relative) odometry position at the given time
+   * @throws NoSuchElementException When the provided timestamp is out of bounds for the field-relative buffer
    */
-  public Entry<Double,Translation2d> getFieldRelative(final Double Timestamp) {
+  public Translation2d getFieldRelative(final double Timestamp) {
     try {
       UPDATE_LOCK.readLock().lock();
-      return (null); // <--- TODO: Prediction Logic
+      final var Sample = FIELD_ODOMETRY
+        .getSample(Timestamp);
+      if(Sample.isPresent()) {
+        return Sample.get();
+      } else {        
+        final var Initial = FIELD_ODOMETRY
+          .getInternalBuffer()
+          .firstEntry();
+        if(Timestamp < Initial.getKey()) {
+          final var Latest = FIELD_ODOMETRY
+            .getInternalBuffer()
+            .lastEntry();
+          final var Interval = Timestamp - Latest.getKey();
+          return Latest
+            .getValue()
+            .plus(
+              new Translation2d(
+                Predicted.dx * Interval, 
+                Predicted.dy * Interval)
+            );
+        } else {
+          throw new NoSuchElementException();
+        }
+      }      
     } finally {
       UPDATE_LOCK.readLock().unlock();
     }
@@ -486,19 +630,6 @@ public final class Manager implements Singleton<Manager> {
   }
 
   /**
-   * Provides the relative position of the chassis' wheel's positions (where the relatively depends upon underlying implementation)
-   * @return Position of wheels jn two-dimensional space observed by the robot
-   */
-  public SwerveModulePosition[] getVehiclePosition() {
-    try {
-      UPDATE_LOCK.readLock().lock();
-      return Positions;
-    } finally {
-      UPDATE_LOCK.readLock().unlock();
-    }
-  }
-
-  /**
    * Provides the measured velocity determined via the {@link #sample(VehicleObservation) addition} of {@link VehicleObservation observations}
    * @return Measured velocity, calculated by the delta between the most recent positions
    */
@@ -523,6 +654,32 @@ public final class Manager implements Singleton<Manager> {
       UPDATE_LOCK.readLock().unlock();
     }
   } 
+
+  /**
+   * Provides the latest vehicle observation {@link #sample(VehicleObservation) sampled}.
+   * @return Latest vehicle observation
+   */
+  public Optional<VehicleObservation> getVehicleObservation() {
+    try {
+      UPDATE_LOCK.readLock().lock();
+      return Vehicle;
+    } finally {
+      UPDATE_LOCK.readLock().unlock();
+    }
+  }
+
+  /**
+   * Provides the latest vision observation {@link #sample(FieldObservation) sampled}.
+   * @return Latest vision observation
+   */
+  public Optional<FieldObservation> getFieldObservation() {
+    try {
+      UPDATE_LOCK.readLock().lock();
+      return Field;
+    } finally {
+      UPDATE_LOCK.readLock().unlock();
+    }
+  }
 
   /**
    * Attempts retrieval an instance of this {@link Singleton}, but does not explicitly create a new instance if one does not yet exist
