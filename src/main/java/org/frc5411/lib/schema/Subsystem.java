@@ -14,8 +14,10 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.schema;
+
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 import com.jcabi.aspects.Async;
 
@@ -28,8 +30,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.Collection;
-
-import lombok.NonNull;
 //----------------------------------------------------------------------[Declaration]--------------------------------------------------------------------------//
 /**
  * <h1>Subsystem</h1>
@@ -38,9 +38,9 @@ import lombok.NonNull;
  * 
  * @author Cody Washington
  */
-public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull State extends Enum<?>> extends SubsystemBase implements Singleton<Subsystem<Defined, State>> {
+public abstract class Subsystem extends SubsystemBase implements Singleton<Subsystem> {
   //---------------------------------------------------------------------[Constants]---------------------------------------------------------------------------//
-  private static final List<Subsystem<?,?>> SUBSYSTEMS = new ArrayList<>();
+  private static final List<Subsystem> SUBSYSTEMS = new ArrayList<>();
   private final ReadWriteLock OPERATION_LOCK;
   //-------------------------------------------------------------------[Constructor(s)]------------------------------------------------------------------------//
   /**
@@ -60,7 +60,8 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
    */
   protected Subsystem(final ReadWriteLock Lock) {
     super();
-    OPERATION_LOCK = Objects.requireNonNull(Lock);
+    OPERATION_LOCK = Objects
+      .requireNonNull(Lock);
     SUBSYSTEMS.add(this);
   }
   //----------------------------------------------------------------------[Methods]----------------------------------------------------------------------------//
@@ -73,16 +74,14 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
   public abstract void update();
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**
-   * Provides the list of enum values containing all the named commands registered under this subsystem instance
+   * Provides the list of enum values containing all the named commands registered under this subsystem instance, all commands
+   * should not be {@link CommandScheduler#isComposed composed}.
+   * @implNote Empty list collection by default.
    * @return Enum of Named Commands
    */
-  public abstract List<Defined> getCommands();
-
-  /**
-   * Provides the enum of the current state of this subsystem instance.
-   * @return State of this instance
-   */
-  public abstract State getState();
+  public Collection<Registrable> getCommands() {
+    return List.of();
+  }
 
   /**
    * Provides all of the child {@link Component component} hardware devices utilized by this subsystem, which should be registered 
@@ -103,7 +102,7 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
   }
 
   @Override
-  public final Subsystem<Defined,State> clone() throws CloneNotSupportedException {
+  public final Subsystem clone() throws CloneNotSupportedException {
     throw new CloneNotSupportedException(
       String.format(
         ("%s Instances Cannot Be Cloned"), 
@@ -115,7 +114,7 @@ public abstract class Subsystem<@NonNull Defined extends Registrable, @NonNull S
    * Provides a list (ordered) of all constructed subsystems.
    * @return List of subsystems
    */
-  public static List<Subsystem<?,?>> getSubsystems() {
+  public static List<Subsystem> getSubsystems() {
     return SUBSYSTEMS;
   }
 }

@@ -24,11 +24,13 @@ import org.frc5411.lib.schema.Singleton;
 import org.frc5411.lib.schema.Subsystem;
 import org.frc5411.lib.utility.Aggregator;
 import org.frc5411.lib.utility.Vector;
-
 import org.frc5411.robot2024.Manager;
 import org.frc5411.robot2024.Manager.FieldObservation;
 
 import edu.wpi.first.hal.HALUtil;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -65,7 +67,7 @@ import lombok.experimental.FieldDefaults;
  * 
  */
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-public class VisionSubsystem extends Subsystem<Named,State> {
+public class VisionSubsystem extends Subsystem {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 2571418245449373564L;
@@ -133,8 +135,7 @@ public class VisionSubsystem extends Subsystem<Named,State> {
           .parallel()
           .forEach((Camera) -> {
             try {
-              Camera
-                .close();
+              Camera.close();
             } catch (final IOException Ignored) {}
           });
         Instance = (null);
@@ -243,16 +244,62 @@ public class VisionSubsystem extends Subsystem<Named,State> {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
   }
-  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
-
   //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+  /**
+   * Provides the current position of child {@link Camera camera} of this drivebase as a {@link Pose3d} object
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Camera#getMeasurement() measurement} values
+   * @return Estimated robot position at the current time now
+   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager#getFieldOdometry(Double) Manager}
+   */
+  public Pose3d[] getCameraMeasurements() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return CAMERAS
+        .stream()
+        .map((Camera) -> 
+          Camera
+            .getMeasurement()
+            .orElse(new Pose3d(
+              new Translation3d(Double.NaN, Double.NaN, Double.NaN), 
+              new Rotation3d(Double.NaN, Double.NaN, Double.NaN))
+            ))
+        .toArray(Pose3d[]::new);
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+  /**
+   * Provides the current timestamp of all child {@link Camera camera} of this robot
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Camera#getTimestamp() timestamp} values
+   * @return Gyroscope measured timestamp (seconds)
+   */
+  public double[] getCameraTimestamps() {
+    try {
+      SUBSYSTEM_LOCK.readLock().lock();
+      return CAMERAS
+        .stream()
+        .mapToDouble((Camera) -> 
+          Camera
+            .getTimestamp()
+            .orElse(Double.NaN))
+        .toArray();
+    } finally {
+      SUBSYSTEM_LOCK.readLock().unlock();
+    } 
+  }
+
+
   @Override
-  public List<Named> getCommands() {
+  public List<Registrable> getCommands() {
     return List
       .of(Named.values());
   }
 
-  @Override
+  /**
+   * Provides the enum of the current state of this subsystem instance.
+   * @return State of this instance
+   */
   public State getState() {
     try {
       SUBSYSTEM_LOCK.readLock().lock();

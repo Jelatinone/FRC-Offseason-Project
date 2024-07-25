@@ -34,20 +34,20 @@ import static org.frc5411.lib.utility.Figures.*;
  */
 public class Geometry {
   //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
-
   public static Pose2d exp(final Twist2d Delta) {
-      final double Sin = Math.sin(Delta.dtheta);
-      final double Cos = Math.cos(Delta.dtheta);
-      double s, c;
-      if (Math.abs(Delta.dtheta) < EQUIVALENCE) {
-          s = 1.0 - 1.0 / 6.0 * Delta.dtheta * Delta.dtheta;
-          c = .5 * Delta.dtheta;
-      } else {
-          s = Sin / Delta.dtheta;
-          c = (1.0 - Cos) / Delta.dtheta;
-      }
-      return new Pose2d(new Translation2d(Delta.dx * s - Delta.dy * c, Delta.dx * c + Delta.dy * s),
-              new Rotation2d(Cos, Sin));
+    final double Sin = Math.sin(Delta.dtheta);
+    final double Cos = Math.cos(Delta.dtheta);
+    double s, c;
+    if (Math.abs(Delta.dtheta) < EQUIVALENCE) {
+      s = 1.0 - 1.0 / 6.0 * Delta.dtheta * Delta.dtheta;
+      c = .5 * Delta.dtheta;
+    } else {
+      s = Sin / Delta.dtheta;
+      c = (1.0 - Cos) / Delta.dtheta;
+    }
+    return new Pose2d(
+      new Translation2d(Delta.dx * s - Delta.dy * c, Delta.dx * c + Delta.dy * s),
+      new Rotation2d(Cos, Sin));
   }
 
 
@@ -56,8 +56,9 @@ public class Geometry {
       final double Half = Theta / 2D;
       final double Cosine = Transform.getRotation().getCos() - 1D;
       final double Tangent = (Math.abs(Cosine) < EQUIVALENCE)?  1D - 1D / 12D * Theta * Theta:  -(Half * Transform.getRotation().getSin()) / Cosine;
-      final Translation2d Translation = Transform.getTranslation()
-              .rotateBy(new Rotation2d(Tangent, -Half));
+      final Translation2d Translation = Transform
+        .getTranslation()
+        .rotateBy(new Rotation2d(Tangent, -Half));
       return new Twist2d(Translation.getX(), Translation.getY(), Theta);
   }
 }

@@ -81,7 +81,7 @@ public class MockCamera extends Camera<Supplier<Pose2d>> {
       Math.random(),
       Math.random());
     Properties.setFPS((100));
-    Properties.setAvgLatencyMs((90));
+    Properties.setAvgLatencyMs((5));
     Properties.setLatencyStdDevMs((15));
 
     SIMULATOR = new PhotonCameraSim(new PhotonCamera(getIdentity()), Properties);

@@ -18,7 +18,6 @@ package org.frc5411.robot2024.subsystems.drivebase;
 import org.frc5411.lib.external.SwerveSetpointGenerator;
 import org.frc5411.lib.instrument.gyroscope.Gyroscope;
 import org.frc5411.lib.instrument.gyroscope.archetype.PigeonGyroscope;
-import org.frc5411.lib.instrument.module.Limit;
 import org.frc5411.lib.instrument.module.Module;
 import org.frc5411.lib.instrument.module.Setpoint;
 import org.frc5411.lib.instrument.module.archetype.MockModule;
@@ -44,6 +43,7 @@ import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.pathplanner.lib.auto.NamedCommands;
@@ -80,7 +80,7 @@ import static org.frc5411.robot2024.subsystems.drivebase.Constants.Regulation.*;
  * 
  */
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
-public class DrivebaseSubsystem extends Subsystem<Named,State> {
+public class DrivebaseSubsystem extends Subsystem {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
   static long serialVersionUID = 2571418245449373564L;
@@ -283,22 +283,20 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
           .stream()
           .parallel()
           .forEach((Module) -> {
-            Module
-              .periodic();
+            Module.periodic();
             if(DriverStation.isDisabled() || DriverStation.isEStopped()) {
-              Module
-                .cease();
+              Module.cease();
             } else {
               Module
                 .set(Effort.States()[Module.getDescriptor().Identity.ordinal()]);
             }
           });
-        Manager
-          .tryInstance()
-          .ifPresent((Instance) -> 
-            Instance
-              .sample(Effort.Speeds())
-          );
+        // Manager
+        //   .tryInstance()
+        //   .ifPresent((Instance) -> 
+        //     Instance
+        //       .sample(Effort.Speeds())
+        //   );
       }
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
@@ -334,20 +332,6 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
         .coordinate(Objects.requireNonNull(Effort));
       HEADING_COORDINATOR
         .coordinate(Rotation2d.fromRotations(Effort.dtheta));
-    } finally {
-      SUBSYSTEM_LOCK.writeLock().unlock();
-    }
-  }
-
-  /**
-   * Force resets this Subsystem's states and hardware, may fix issues. Should ideally not be called repeatedly or often such as during 
-   * {@link #periodic()}.
-   */
-  public synchronized void reset() {
-    try {
-      SUBSYSTEM_LOCK.writeLock().lock();
-      GYROSCOPE
-        .reset();
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
     }
@@ -479,9 +463,8 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
 
   /**
    * Provides the current timestamp of child {@link Gyroscope gyroscope} of this drivebase
-   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Gyroscope#getMeasurement() measurement} values
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Camera#getTimestamp() timestamp} values
    * @return Gyroscope measured timestamp (seconds)
-   * @implNote It is preferred to obtain chassis, and module related odometry values via the {@link Manager#getVehicleOdometry(Double) Manager}
    */
   public double getGyroscopeTimestamp() {
     try {
@@ -503,40 +486,16 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     return ODOMETRY;
   }
 
-  /**
-   * Provides a numeric value describing the number of child modules associated with this drivebase; derived from the length of {@link Modules#values()}.
-   * @return Numeric value representation of the drivebase' module count
-   * @implNote The returned object of this method is always constants regardless of {@link #getInstance() instance}
-   */
-  public static Integer getCapacity() {
-    return Modules.values().length;
-  }
-
-  /**
-   * Provides the {@link SwerveDriveKinematics kinematics} object of this drivebase chassis, with the module locations derived from the locations of the {@link Module descriptors}
-   * @return Kinematics object constant of this chassis
-   * @implNote The returned object of this method is always constants regardless of {@link #getInstance() instance}
-   */
-  public static SwerveDriveKinematics getKinematics() {
-    return KINEMATICS;
-  }
-
-  /**
-   * Provides the {@link Limit} object of this drivebase, which describes the limits of its movements in two-dimensional space.
-   * @return Limits object of this chassis
-   * @implNote The returned object of this method is always constants regardless of {@link #getInstance() instance}
-   */
-  public static Limit getLimits() {
-    return LIMITS;
-  }
-
   @Override
-  public List<Named> getCommands() {
+  public List<Registrable> getCommands() {
     return List
       .of(Named.values());
   }
 
-  @Override
+  /**
+   * Provides the enum of the current state of this subsystem instance.
+   * @return State of this instance
+   */
   public State getState() {
     try {
       SUBSYSTEM_LOCK.readLock().lock();
@@ -571,6 +530,49 @@ public class DrivebaseSubsystem extends Subsystem<Named,State> {
     }
     return Result;
   }
+  //-------------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
+  /**
+   * <h1>Named</h1>
+   * 
+   * Represents the named, Pathplanner registrable, commands of this subsystem to run along specific points of an .auto PathPlanner file.
+   * These are referred to externally in PathPlanner by their {@link #name() enum name}.
+   */
+  enum Named implements Registrable {
+    //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
+    EMPTY$PLACEHOLDER(new InstantCommand());
+    //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
+    private final Command NAMED_COMMAND;
+    //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
+    /**
+     * Named Constructor.
+     * @param Command Valid named command to register as a {@link NamedCommands NamedCommand}.
+     */
+    Named(final Command Command) {
+      NAMED_COMMAND = Command;
+      CommandScheduler
+        .getInstance()
+        .requireNotComposedOrScheduled(Command);      
+      DrivebaseSubsystem
+        .tryInstance()
+        .ifPresent((Instance) -> {
+          if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
+            NAMED_COMMAND
+              .addRequirements(Instance);
+          }
+        });
+      register();
+    }
+    //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+    @Override
+    public final Command getCommand() {
+      return NAMED_COMMAND;
+    }
+
+    @Override
+    public final String getName() {
+      return name();
+    }
+  }
 } 
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
 /**
@@ -598,11 +600,7 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       Twist.dx, 
       Twist.dy, 
       Twist.dtheta, 
-      Manager
-        .tryInstance()
-        .map(Manager::getVehicleRotation)
-        .orElse(Rotation2d
-          .fromRotations(Double.NaN)))
+      new Rotation2d())
   ),
 
   /**
@@ -614,11 +612,7 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
       Twist.dx, 
       Twist.dy, 
       Twist.dtheta, 
-      Manager
-        .tryInstance()
-        .map(Manager::getVehicleRotation)
-        .orElse(Rotation2d
-          .fromRotations(Double.NaN)))
+      new Rotation2d())
   );
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   private final Function<Twist2d, ChassisSpeeds> FUNCTION;
@@ -639,44 +633,5 @@ enum State implements Function<Twist2d, ChassisSpeeds> {
   public final ChassisSpeeds apply(final Twist2d Twist) {
     return FUNCTION
       .apply(Twist);
-  }
-}
-/**
- * <h1>Named</h1>
- * 
- * Represents the named, Pathplanner registrable, commands of this subsystem to run along specific points of an .auto PathPlanner file.
- * These are referred to externally in PathPlanner by their {@link #name() enum name}.
- */
-enum Named implements Registrable {
-  //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
-  RESET$GYROSCOPE(new InstantCommand(() -> DrivebaseSubsystem.tryInstance().ifPresent(DrivebaseSubsystem::reset)));
-  //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  private final Command NAMED_COMMAND;
-  //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
-  /**
-   * Named Constructor.
-   * @param Command Valid named command to register as a {@link NamedCommands NamedCommand}.
-   */
-  Named(final Command Command) {
-    NAMED_COMMAND = Command;
-    DrivebaseSubsystem
-      .tryInstance()
-      .ifPresent((Instance) -> {
-        if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
-          NAMED_COMMAND
-            .addRequirements(Instance);
-        }
-      });
-    register();
-  }
-  //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
-  @Override
-  public final Command getCommand() {
-    return NAMED_COMMAND;
-  }
-
-  @Override
-  public final String getName() {
-    return name();
   }
 }

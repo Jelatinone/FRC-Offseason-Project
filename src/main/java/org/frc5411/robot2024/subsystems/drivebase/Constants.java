@@ -21,7 +21,6 @@ import org.frc5411.lib.instrument.module.Limit;
 import org.frc5411.lib.nascent.archetype.PIDController;
 import org.frc5411.lib.nascent.archetype.ProfiledPIDController;
 import org.frc5411.lib.utility.Figures;
-
 import org.frc5411.robot2024.Manager;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -166,20 +165,17 @@ public class Constants {
   /**
    * <h1>Regulation<h1>
    */
-  @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = (true))
+  @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
   public static class Regulation {
-    static Translation2d[] LOCATIONS = Stream.of(Modules.values()).map((Module) -> Module.get().Position).toArray(Translation2d[]::new);
-    static SwerveDriveKinematics KINEMATICS = new SwerveDriveKinematics(LOCATIONS);    
+    public static Translation2d[] LOCATIONS = Stream.of(Modules.values()).map((Module) -> Module.get().Position).toArray(Translation2d[]::new);
+    public static SwerveDriveKinematics KINEMATICS = new SwerveDriveKinematics(LOCATIONS);    
 
-    static Limit LIMITS = new Limit(Identity.LINEAR_VELOCITY, Identity.LINEAR_ACCELERATION, Identity.ANGULAR_VELOCITY);
-
-    static HeadingCoordinator HEADING_COORDINATOR = new HeadingCoordinator(
+    public static Limit LIMITS = new Limit(Identity.LINEAR_VELOCITY, Identity.LINEAR_ACCELERATION, Identity.ANGULAR_VELOCITY);
+    
+    public static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);    
+    public static HeadingCoordinator HEADING_COORDINATOR = new HeadingCoordinator(
       new ProfiledPIDController(HEADING_COORDINATOR_DESCRIPTOR), 
-      () -> Manager
-        .tryInstance()
-        .map(Manager::getVehicleRotation)
-        .orElse(Rotation2d.fromRotations(Double.NaN)));
-    static TeleoperatedCoordinator TELEOPERATED_COORDINATOR = new TeleoperatedCoordinator((0D), LIMITS);    
+      () -> Manager.tryInstance().map(Manager::getResolved).map((Entry) -> Entry.getValue().getRotation()).orElse(Rotation2d.fromRotations(Double.NaN))); 
   }
 }
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//

@@ -86,7 +86,6 @@ public non-sealed class IdentityRegister<Identity> implements Register<Supplier<
     CALLBACK = new Notifier(this);
     CALLBACK.setName(getClass().getSimpleName());
     Frequency = UPDATE_FREQUENCY;
-    start(); //TODO: <--- Workaround
   }
 
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//

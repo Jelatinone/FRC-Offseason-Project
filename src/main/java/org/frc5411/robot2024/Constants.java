@@ -16,15 +16,19 @@
 package org.frc5411.robot2024;
 //-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.utility.Profile;
+import org.frc5411.lib.schema.Singleton;
 import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import java.util.List;
+import java.util.Collection;
 import java.util.function.Supplier;
 
 import lombok.AccessLevel;
@@ -63,7 +67,10 @@ public final class Constants {
     
     static Double MAXIMUM_CORRECTION = (2D);
 
-    static List<Supplier<Subsystem>> MANAGEABLE = List.of(
+    static Vector<N2> STATE_STANDARD_DEVIATIONS = VecBuilder.fill(Math.pow((5E-2D), (1)), Math.pow((5E-2D), (1)));
+    static Vector<N2> MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(Math.pow((2E-2D), (1)), Math.pow((2E-2D), (1)));
+
+    static Collection<Supplier<Singleton<?>>> CHILDREN = List.of(
       VisionSubsystem::getInstance,
       DrivebaseSubsystem::getInstance
     ); 

@@ -101,7 +101,6 @@ public non-sealed class PhoenixRegister extends Thread implements Register<Statu
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));  
     setDaemon((true));
     setName(getClass().getSimpleName());
-    start();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial

@@ -36,7 +36,6 @@ import lombok.experimental.NonFinal;
  * 
  * @author Cody Washington (@Jelatinone) 
  */
-@SuppressWarnings("ALL")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public class Aggregator<Aggregates> {
   //-----------------------------------------------------------------------[Constants]--------------------------------------------------------------------------//

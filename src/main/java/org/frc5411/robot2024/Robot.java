@@ -14,15 +14,18 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.robot2024;
+import org.frc5411.lib.nouveau.PhoenixRegister;
+import org.frc5411.lib.nouveau.Register;
+import org.frc5411.lib.nouveau.StandardRegister;
 //-------------------------------------------------------------------------[Libraries]-------------------------------------------------------------------------//
 import org.frc5411.lib.schema.Singleton;
+import org.frc5411.lib.schema.Subsystem;
 
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -46,7 +49,6 @@ import java.util.function.Supplier;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 
 import static org.frc5411.robot2024.Constants.Identity.*;
 import static org.frc5411.robot2024.Constants.Mode.*;
@@ -65,20 +67,16 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial
   static long serialVersionUID = 9197360083967213848L;
-
-  Map<String,Integer> COMMANDS;
+  //------------------------------------------------------------------------[Logging]--------------------------------------------------------------------------//
+  Map<String,Integer> COMMAND_SCHEDULE;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile Robot Instance;
-
-  @NonFinal volatile Command Autonomous;
-  @NonFinal volatile Boolean Message;
-  @NonFinal volatile Double Timestamp;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Robot Constructor.
    */
   private Robot() {
-    COMMANDS = new HashMap<>();
+    COMMAND_SCHEDULE = new HashMap<>();
   } static {
     Logger.recordMetadata(("Robot-Type"), TYPE.name());
     Logger.recordMetadata(("Robot-Mode"), MODE.name());
@@ -97,21 +95,16 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //----------------------------------------------------------------------[Robot Scope]------------------------------------------------------------------------//
   @Override
   public synchronized void robotInit() {
-    MANAGEABLE
+    CHILDREN
+      .parallelStream()
       .forEach(Supplier::get); 
-    Manager.getInstance();       
-    CommandScheduler
-      .getInstance()
-      .onCommandInitialize(
-        (Operation) -> log(Operation, (true)));
-    CommandScheduler
-      .getInstance()
-      .onCommandFinish(
-        (Operation) -> log(Operation, (false)));
-    CommandScheduler
-      .getInstance()
-      .onCommandInterrupt(
-        (Operation) -> log(Operation, (false)));    
+    StandardRegister
+      .tryInstance()
+      .ifPresent(Register::start);
+    PhoenixRegister
+      .tryInstance()
+      .ifPresent(Register::start);
+    Manager.getInstance();         
     Logger.registerURCL(URCL.startExternal());
     DriverStation.silenceJoystickConnectionWarning((true));
     PortForwarder.add(
@@ -133,6 +126,18 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(Path, ("-Simulated")), (1e-2)));
         break;
     } if(!MODE.equals(ANONYMOUS)) {
+      CommandScheduler
+        .getInstance()
+        .onCommandInitialize(
+          (Operation) -> log(Operation, (true)));
+      CommandScheduler
+        .getInstance()
+        .onCommandFinish(
+          (Operation) -> log(Operation, (false)));
+      CommandScheduler
+        .getInstance()
+        .onCommandInterrupt(
+          (Operation) -> log(Operation, (false)));  
       Shuffleboard.startRecording();
       Logger.start();
       DataLogManager.start();  
@@ -150,15 +155,6 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
       Manager
         .tryInstance()
         .ifPresent(Manager::update);
-      if (Autonomous != (null)) {
-        if (!Autonomous.isScheduled() && !Message) {
-          System.out.printf(
-            ("*** Auto %s in %.2f secs ***%n"),
-            DriverStation.isAutonomousEnabled()? "finished": "cancelled",
-            Logger.getRealTimestamp() / (1E6D) - Timestamp);
-          Message = (true);
-        }
-      }
       Threads.setCurrentThreadPriority((true), (10));      
     }
   }
@@ -171,7 +167,9 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //---------------------------------------------------------------------[Disabled Scope]----------------------------------------------------------------------//
   @Override
   public synchronized void disabledInit() {
-    CommandScheduler.getInstance().cancelAll();
+    CommandScheduler
+      .getInstance()
+      .cancelAll();
   }
 
   @Override
@@ -182,15 +180,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //--------------------------------------------------------------------[Autonomous Scope]---------------------------------------------------------------------//
   
   @Override
-  public synchronized void autonomousInit() {
-    Timestamp = Timer.getFPGATimestamp();
-    Message = (false);
-    if(Autonomous != null) {
-      Autonomous
-        .onlyWhile(this::isAutonomousEnabled)
-        .schedule();
-    }
-  }
+  public synchronized void autonomousInit() {}
 
   @Override
   public synchronized void autonomousPeriodic() {}
@@ -234,14 +224,32 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
 
   @Override
   public synchronized void close() {
-    super.close();
-    Manager
-      .tryInstance()
-      .ifPresent(Manager::close);
     synchronized(Robot.class) {
+      super.close();
+      StandardRegister
+        .tryInstance()
+        .ifPresent(StandardRegister::close);
+      PhoenixRegister
+        .tryInstance()
+        .ifPresent(PhoenixRegister::close);
+      Manager
+        .tryInstance()
+        .ifPresent((Instance) -> {
+          try {
+            Instance.close();
+          } catch (final SecurityException Ignored) {}
+        });   
+      Subsystem
+        .getSubsystems()
+        .parallelStream()
+        .forEach((Child) -> {
+            try {
+              Child.close();
+            } catch (final IOException Ignored) {}
+          });
       Logger.end();
       Shuffleboard.stopRecording();
-      COMMANDS.clear();
+      COMMAND_SCHEDULE.clear();
       Instance = (null);
     }
   }
@@ -258,25 +266,26 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
   /**
    * Logs a command that has been scheduled with the {@link CommandScheduler} using the {@link Logger}.
    * @param Operation Command to be logged, can be in any state
-   * @param Running   Whether this command is currently active
+   * @param Active    Whether this command is currently active
    */
-  private void log(final Command Operation, final Boolean Running) {
+  private void log(final Command Operation, final Boolean Active) {
     final var Name = Operation.getName();
-    final var Count = COMMANDS.getOrDefault(Name, (0)) + (Running? 1: -1);
-    COMMANDS.put(Name, Count);
-    Logger.recordOutput(String.format(("Commands/Unique/[%s]-[%s]"), Name, Integer.toHexString(Operation.hashCode())), Running);
-    Logger.recordOutput(String.format(("Commands/Unique/[%s]"), Name), Count > 0);
-  }
-  //---------------------------------------------------------------------[Mutators]----------------------------------------------------------------------------//
-  /**
-   * Mutates the current autonomous command to a different command, immediately ends any running commands if applicable.
-   * @param Operation Command to be executed, can be in any state, will be run as {@link Command#asProxy() proxy}
-   */
-  public synchronized void set(final Command Operation) {
-    if(Autonomous != (null)) {
-      Autonomous.cancel();
-    }
-    Autonomous = Operation.asProxy();
+    final var Count = COMMAND_SCHEDULE.getOrDefault(Name, (0)) + (Active? 1: -1);
+    COMMAND_SCHEDULE
+      .put(Name, Count);
+    Logger.recordOutput(
+      String.format(
+        ("Commands/Unique/[%s]-[%s]"), 
+          Name, 
+          Integer
+            .toHexString(Operation.hashCode())), 
+      Active);
+    Logger.recordOutput(
+      String
+        .format(
+          ("Commands/Unique/[%s]"), 
+          Name), 
+      Count > 0);
   }
   //---------------------------------------------------------------------[Accessors]---------------------------------------------------------------------------//
   /**

@@ -22,10 +22,6 @@ import edu.wpi.first.math.Num;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.util.DoubleCircularBuffer;
 
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
-import org.apache.commons.math3.analysis.integration.UnivariateIntegrator;
-
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 //----------------------------------------------------------------------[Declaration]-----------------------------------------------------------------------//
@@ -38,28 +34,45 @@ import lombok.experimental.FieldDefaults;
  * 
  * @author Cody Washington (@Jelatinone) 
  */
-@SuppressWarnings("ALL")
 @FieldDefaults(level = AccessLevel.PUBLIC, makeFinal = (true))
 public class Figures {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   public static final Double PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679D;
   public static final Double E = 2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274D;
   public static final Double EQUIVALENCE = 1E-9D;
-  private static final UnivariateIntegrator INTEGRATOR = new TrapezoidIntegrator();
-  //------------------------------------------------------------------------[Methods]--------------------------------------------------------------------------//
+  //------------------------------------------------------------------------[Figures]--------------------------------------------------------------------------//
   /**
-   * Provides the standard deviation for a given set of numbers 
-   * @param Numbers Collection (array) of data to find the standard deviation of
-   * @return Standard deviation as a double value
+   * Computes the minimum element among a collection (array) of numbers, under the case that the collection (array) is empty the returned value is {@link Double#MAX_VALUE}.
+   * @param Numbers Collection (array) of data to find the minimum of
+   * @return Minimum value of collection (array) of data
    */
-  public static Number stdev(final double... Numbers){
-    double Mean = mean(Numbers), Sum = (0D);
-    for(final double Number : Numbers){
-      Sum += Math.pow((Number - Mean), (2));
+  @SuppressWarnings("unchecked")
+  public static <Figure extends Number> Figure minimum(final Figure... Numbers) {
+    Figure Minimum = Numbers[0];
+    for(var Index = (1); Index < Numbers.length; Index++) {
+      if(Numbers[Index].doubleValue() < Minimum.doubleValue()) {
+        Minimum = Numbers[Index];
+      }
     }
-    return Math.sqrt(Sum / Numbers.length - 1);
+    return Minimum;
   }
 
+  /**
+   * Computes the maximum element among a collection (array) of numbers, under the case that the collection (array) is empty the returned value is {@link Double#MIN_VALUE}.
+   * @param Numbers Collection (array) of data to find the maximum of
+   * @return Maximum value of collection (array) of data
+   */
+  @SuppressWarnings("unchecked")
+  public static <Figure extends Number> Figure maximum(final Figure... Numbers) {
+    Figure Maximum = Numbers[0];
+    for(var Index = (1); Index < Numbers.length; Index++) {
+      if(Numbers[Index].doubleValue() > Maximum.doubleValue()) {
+        Maximum = Numbers[Index];
+      }
+    }
+    return Maximum;
+  }
+  //-----------------------------------------------------------------------[Primitive]--------------------------------------------------------------------------//
   /**
    * Transforms a circular buffer into an array of equivalent length and elements in the same order, but is not destructive to the original buffer. 
    * i.e. the original elements of the buffer are retained.
@@ -81,7 +94,7 @@ public class Figures {
    * @param Source Array source to accept elements from into the new buffer
    * @return Buffer with the same elements, in the same order
    */
-  public static DoubleCircularBuffer from(final double[] Source) {
+  public static DoubleCircularBuffer from(final double... Source) {
     final var Buffer = new DoubleCircularBuffer(Source.length);
     for(final double Element: Source) {
       Buffer.addLast(Element);
@@ -90,60 +103,16 @@ public class Figures {
   }
 
   /**
-   * Performs a standard integration of a {@link UnivariateFunction} along the given bounds using the {@link TrapezoidIntegrator trapezoidal integration} method.
-   * @param Evaluations Number of evaluations to perform; more evaluations provide more accuracy, but are more expensive
-   * @param Function    Function to integrate along the defined bounds
-   * @return Evaluation of the integral
+   * Provides the standard deviation for a given set of numbers 
+   * @param Numbers Collection (array) of data to find the standard deviation of
+   * @return Standard deviation as a double value
    */
-  public static Number integrate(final Number Evaluations, UnivariateFunction Function) {
-    return INTEGRATOR.integrate(
-        Evaluations
-          .intValue(), 
-        Function, 
-        (0D),
-        (1D)
-    );
-  }
-
-  /**
-   * Computes the minimum element among a collection (array) of numbers, under the case that the collection (array) is empty the returned value is {@link Double#MAX_VALUE}.
-   * @param Numbers Collection (array) of data to find the minimum of
-   * @return Minimum value of collection (array) of data
-   */
-  @SuppressWarnings("unchecked")
-  public static <Figure extends Number> Figure minimum(final Figure... Numbers) {
-    Figure Minimum = Numbers[0];
-    for(final Figure Element: Numbers) {
-      if(Element.doubleValue() < Minimum.doubleValue()) {
-        Minimum = Element;
-      }
+  public static double stdev(final double... Numbers){
+    double Mean = mean(Numbers), Sum = (0D);
+    for(final double Number : Numbers){
+      Sum += Math.pow((Number - Mean), (2));
     }
-    return Minimum;
-  }
-
-  /**
-   * Computes the maximum element among a collection (array) of numbers, under the case that the collection (array) is empty the returned value is {@link Double#MIN_VALUE}.
-   * @param Numbers Collection (array) of data to find the maximum of
-   * @return Maximum value of collection (array) of data
-   */
-  @SuppressWarnings("unchecked")
-  public static <Figure extends Number> Figure maximum(final Figure... Numbers) {
-    Figure Maximum = Numbers[0];
-    for(final Figure Element: Numbers) {
-      if(Element.doubleValue() > Maximum.doubleValue()) {
-        Maximum = Element;
-      }
-    }
-    return Maximum;
-  }
-
-  /**
-   * Provides squared inputs to a given input, while retaining the sign
-   * @param Input Any Real Number
-   * @return Input Squared, with the same sign of the original
-   */
-  public static double squareSigned(final double Input) {
-    return Math.copySign(Input * Input, Input);
+    return Math.sqrt(Sum / Numbers.length - 1);
   }
 
   /**
@@ -161,15 +130,6 @@ public class Figures {
   }
 
   /**
-   * Shorthand for unwrapping a single 1 x 1 matrix into a single double element of equivalent values
-   * @param Matrix Single-row Single-column matrix to be unwrapped
-   * @return Unwrapped value
-   */
-  public static double unwrap(final Matrix<N1,N1> Matrix) {
-    return Matrix.get((0), (0));
-  }
-
-  /**
    * Shorthand for wrapping a vector, essentially a one-dimensional matrix from a list of double elements
    * @param <Elements> Number of elements within the array itself as a functional interface
    * @param Elements Elements to be placed into the new Matrix
@@ -178,4 +138,15 @@ public class Figures {
   public static <Elements extends Num> Matrix<Elements,N1> wrap(final double... Elements) {
     return MatBuilder.fill(() -> Elements.length, Nat.N1(), Elements);
   }
+  
+  /**
+   * Shorthand for unwrapping a single 1 x 1 matrix into a single double element of equivalent values
+   * @param Matrix Single-row Single-column matrix to be unwrapped
+   * @return Unwrapped value
+   */
+  public static double unwrap(final Matrix<N1,N1> Matrix) {
+    return Matrix.get((0), (0));
+  }
+
+
 }

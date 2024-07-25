@@ -87,7 +87,6 @@ public non-sealed class StandardRegister implements Register<Supplier<Optional<N
     SIGNAL_LOCK = new ReentrantReadWriteLock((true));
     CALLBACK = new Notifier(this);
     CALLBACK.setName(getClass().getSimpleName());
-    start();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial

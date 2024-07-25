@@ -23,12 +23,14 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotBase;
 
 import java.util.function.Supplier;
+import java.util.Map.Entry;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -117,7 +119,7 @@ class Descriptions {
 
   static org.frc5411.lib.instrument.camera.Descriptor.DescriptorBuilder<Supplier<Pose2d>> MOCK_CAMERA_DESCRIPTOR =
     org.frc5411.lib.instrument.camera.Descriptor.<Supplier<Pose2d>>builder()
-      .Hardware(() -> Manager.tryInstance().map((Instance) -> Instance.getVehicleRelative()).orElse(new Pose2d(Double.NaN, Double.NaN, Rotation2d.fromRadians(Double.NaN))))
+      .Hardware(() -> Manager.tryInstance().map(Manager::getResolved).map(Entry::getValue).orElse(new Pose2d(new Translation2d(Double.NaN, Double.NaN), new Rotation2d(Double.NaN))))
       .Single(VecBuilder.fill((0D), (0D), Double.MAX_VALUE))
       .Multiple(VecBuilder.fill((0D), (0D), Double.MAX_VALUE));
   }
