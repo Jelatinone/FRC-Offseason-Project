@@ -163,6 +163,7 @@ public final class Manager implements Singleton<Manager> {
       Double.NaN);
     Vehicle = Optional.empty();
     Field = Optional.empty();
+    compose();
   }
   //-----------------------------------------------------------------------[Methods]---------------------------------------------------------------------------//
   @Serial
@@ -213,39 +214,37 @@ public final class Manager implements Singleton<Manager> {
       .ifPresent(Subsystem::removeDefaultCommand);
     DrivebaseSubsystem
       .tryInstance()
-      .ifPresent((Instance) -> {
-        Instance
-          .setDefaultCommand(
-            new InstantCommand(() -> 
-              Instance.apply(new Twist2d(
-                applyDeadband(
-                  DRIVER
-                    .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
-                    .orElse((() -> Double.NaN))
-                    .get(), 
-                  DRIVER
-                    .<Double>getPreference(CONTROL_ZONE_X)
-                    .orElse((Double.NaN))),
-                applyDeadband(
-                  DRIVER
-                    .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
-                    .orElse((() -> Double.NaN))
-                    .get(), 
-                  DRIVER
-                    .<Double>getPreference(CONTROL_ZONE_Y)
-                    .orElse((Double.NaN))),
-                applyDeadband(
-                  DRIVER
-                    .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
-                    .orElse((() -> Double.NaN))
-                    .get(), 
-                  DRIVER
-                    .<Double>getPreference(CONTROL_ZONE_T)
-                    .orElse((Double.NaN)))
-                )),
-              Instance
-        ));
-      });
+      .ifPresent((Instance) -> Instance
+        .setDefaultCommand(
+          new InstantCommand(() ->
+            Instance.apply(new Twist2d(
+              applyDeadband(
+                DRIVER
+                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
+                  .orElse((() -> Double.NaN))
+                  .get(),
+                DRIVER
+                  .<Double>getPreference(CONTROL_ZONE_X)
+                  .orElse((Double.NaN))),
+              applyDeadband(
+                DRIVER
+                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
+                  .orElse((() -> Double.NaN))
+                  .get(),
+                DRIVER
+                  .<Double>getPreference(CONTROL_ZONE_Y)
+                  .orElse((Double.NaN))),
+              applyDeadband(
+                DRIVER
+                  .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
+                  .orElse((() -> Double.NaN))
+                  .get(),
+                DRIVER
+                  .<Double>getPreference(CONTROL_ZONE_T)
+                  .orElse((Double.NaN)))
+              )),
+            Instance
+      )));
   }
 
 

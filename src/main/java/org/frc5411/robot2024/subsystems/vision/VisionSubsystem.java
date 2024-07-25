@@ -53,6 +53,7 @@ import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 //------------------------------------------------------------------------[Declaration]------------------------------------------------------------------------//
 /**
  *
@@ -78,7 +79,8 @@ public class VisionSubsystem extends Subsystem {
   Camera<?> IDENTITY;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile VisionSubsystem Instance;
-  static volatile State Mode;
+  
+  @NonFinal volatile State Mode;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Drivebase Subsystem Constructor.
@@ -334,27 +336,28 @@ public class VisionSubsystem extends Subsystem {
     }
     return Result;
   }
+  //-------------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
+  /**
+   * <h1>State</h1>
+   * 
+   * Represents the named states of operation of vision, which have do not have distinct behavior that differentiate it from other modes of control, but
+   * represent different modes of logic which occur underneath when reading Camera values
+   */
+  enum State {
+    //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
+    /**
+     * Represents a stale (or waiting) state of this instance, where {@link VisionSubsystem#periodic()} is not running; therefore the subsystem's 
+     * measurements are considered 'stale' or out-of-date.
+     */
+    STALE,
+    /**
+     * Represents an active (or running) state of this instance, where {@link VisionSubsystem#periodic()} is running; therefore the subsystem's 
+     * measurements are considered to be up-to-date (but still possibly in the process of updating).
+     */
+    ACTIVE
+  }
 } 
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
-/**
- * <h1>State</h1>
- * 
- * Represents the named states of operation of vision, which have do not have distinct behavior that differentiate it from other modes of control, but
- * represent different modes of logic which occur underneath when reading Camera values
- */
-enum State {
-  //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
-  /**
-   * Represents a stale (or waiting) state of this instance, where {@link VisionSubsystem#periodic()} is not running; therefore the subsystem's 
-   * measurements are considered 'stale' or out-of-date.
-   */
-  STALE,
-  /**
-   * Represents an active (or running) state of this instance, where {@link VisionSubsystem#periodic()} is running; therefore the subsystem's 
-   * measurements are considered to be up-to-date (but still possibly in the process of updating).
-   */
-  ACTIVE
-}
 /**
  * <h1>Named</h1>
  * 

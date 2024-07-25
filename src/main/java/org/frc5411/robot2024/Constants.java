@@ -160,7 +160,7 @@ public final class Constants {
   public enum Profiles implements Supplier<Profile<Keybindings,Preferences>> {
 
     DEV_DRIVER(
-      new org.frc5411.lib.utility.Profile<Keybindings,Preferences>(("DEV_DRIVER"))
+      new Profile<Keybindings,Preferences>(("DEV_DRIVER"))
         .add(Preferences.CONTROL_EFFORT_X, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((1)))
         .add(Preferences.CONTROL_ZONE_X, (2e-1D))
         .add(Preferences.CONTROL_EFFORT_Y, (Supplier<Double>) () -> -Control.DRIVER_CONTROLLER.getRawAxis((0)))
@@ -170,15 +170,15 @@ public final class Constants {
     ),
 
     DEV_OPERATOR(
-      new Profile<Keybindings,Preferences>(("DEV_OPERATOR"))
+      new Profile<>(("DEV_OPERATOR"))
     ),
 
     COMP_DRIVER(
-      new Profile<Keybindings,Preferences>(("COMP_DRIVER"))
+      new Profile<>(("COMP_DRIVER"))
     ),
 
     COMP_OPERATOR(
-      new Profile<Keybindings,Preferences>(("COMP_OPERATOR"))
+      new Profile<>(("COMP_OPERATOR"))
     );
 
     private final Profile<Keybindings,Preferences> PROFILE;

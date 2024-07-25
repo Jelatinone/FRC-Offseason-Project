@@ -63,6 +63,7 @@ import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
 import static org.frc5411.robot2024.subsystems.drivebase.Constants.Identity.*;
 import static org.frc5411.robot2024.subsystems.drivebase.Constants.Regulation.*;
@@ -95,8 +96,9 @@ public class DrivebaseSubsystem extends Subsystem {
   SwerveSetpointGenerator GENERATOR;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile DrivebaseSubsystem Instance;
-  static volatile State Mode;
-  static volatile Setpoint Effort;
+  
+  @NonFinal volatile State Mode;
+  @NonFinal volatile Setpoint Effort;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
    * Drivebase Subsystem Constructor.
@@ -291,12 +293,12 @@ public class DrivebaseSubsystem extends Subsystem {
                 .set(Effort.States()[Module.getDescriptor().Identity.ordinal()]);
             }
           });
-        // Manager
-        //   .tryInstance()
-        //   .ifPresent((Instance) -> 
-        //     Instance
-        //       .sample(Effort.Speeds())
-        //   );
+         Manager
+           .tryInstance()
+           .ifPresent((Instance) ->
+             Instance
+               .sample(Effort.Speeds())
+           );
       }
     } finally {
       SUBSYSTEM_LOCK.writeLock().unlock();
@@ -463,7 +465,7 @@ public class DrivebaseSubsystem extends Subsystem {
 
   /**
    * Provides the current timestamp of child {@link Gyroscope gyroscope} of this drivebase
-   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Camera#getTimestamp() timestamp} values
+   * <p> Performs a read-lock blocking operation, which ensures that {@link org.frc5411.lib.pattern.Report reports} are up-to-date before retrieval of {@link Gyroscope#getTimestamp() timestamp} values
    * @return Gyroscope measured timestamp (seconds)
    */
   public double getGyroscopeTimestamp() {
@@ -532,106 +534,106 @@ public class DrivebaseSubsystem extends Subsystem {
   }
   //-------------------------------------------------------------------------[Internal]--------------------------------------------------------------------------//
   /**
-   * <h1>Named</h1>
+   * <h1>State</h1>
    * 
-   * Represents the named, Pathplanner registrable, commands of this subsystem to run along specific points of an .auto PathPlanner file.
-   * These are referred to externally in PathPlanner by their {@link #name() enum name}.
+   * Represents the named states of operation of the drivebase, which have distinct behavior that differentiate it from other modes of control, i.e.
+   * robot-oriented (Relative) control differs from field-oriented through the use of a gyroscope as the reference of rotation.
    */
-  enum Named implements Registrable {
+  enum State implements Function<Twist2d, ChassisSpeeds> {
     //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
-    EMPTY$PLACEHOLDER(new InstantCommand());
+    /**
+     * Control based on the detection of objects located on the field, i.e. Object-Oriented; driving with respect
+     * to game pieces and field elements.
+     */
+    OBJECTIVE((Twist) -> {
+        throw new UnsupportedOperationException();
+    }),
+
+    /**
+     * Control based on the direction of the absolute rotation (yaw) of the gyroscope , i.e. Field Oriented; driving
+     * with respect to the direction of the driver-station on the field
+     */
+    ABSOLUTE((Twist) -> 
+      ChassisSpeeds.fromFieldRelativeSpeeds(
+        Twist.dx, 
+        Twist.dy, 
+        Twist.dtheta, 
+        new Rotation2d())
+    ),
+
+    /**
+     * Control based on the relative direction of the robot, i.e. Robot-Oriented; driving with no frame of reference
+     * to guide us
+     */
+    RELATIVE((Twist) -> 
+      ChassisSpeeds.fromRobotRelativeSpeeds(
+        Twist.dx, 
+        Twist.dy, 
+        Twist.dtheta, 
+        new Rotation2d())
+    );
     //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-    private final Command NAMED_COMMAND;
+    private final Function<Twist2d, ChassisSpeeds> FUNCTION;
     //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
     /**
-     * Named Constructor.
-     * @param Command Valid named command to register as a {@link NamedCommands NamedCommand}.
+     * State Constructor.
+     * @param Function Bi-function which consumes both the desired rotation and translation to produce speeds for the demand.
      */
-    Named(final Command Command) {
-      NAMED_COMMAND = Command;
-      CommandScheduler
-        .getInstance()
-        .requireNotComposedOrScheduled(Command);      
-      DrivebaseSubsystem
-        .tryInstance()
-        .ifPresent((Instance) -> {
-          if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
-            NAMED_COMMAND
-              .addRequirements(Instance);
-          }
-        });
-      register();
+    State(final Function<Twist2d, ChassisSpeeds> Function) {
+      FUNCTION = Function;
     }
-    //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
-    @Override
-    public final Command getCommand() {
-      return NAMED_COMMAND;
-    }
-
-    @Override
-    public final String getName() {
-      return name();
+    //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
+    /**
+     * Applies the function's given arguments of Translation and Rotation to create ChassisSpeeds.
+     * @param Twist Demand translation & rotation in two-dimensional space
+     * @return Output ChassisSpeeds based on the arguments
+     */
+    public final ChassisSpeeds apply(final Twist2d Twist) {
+      return FUNCTION
+        .apply(Twist);
     }
   }
 } 
 //-----------------------------------------------------------------------[External]----------------------------------------------------------------------------//
 /**
- * <h1>State</h1>
+ * <h1>Named</h1>
  * 
- * Represents the named states of operation of the drivebase, which have distinct behavior that differentiate it from other modes of control, i.e.
- * robot-oriented (Relative) control differs from field-oriented through the use of a gyroscope as the reference of rotation.
+ * Represents the named, Pathplanner registrable, commands of this subsystem to run along specific points of an .auto PathPlanner file.
+ * These are referred to externally in PathPlanner by their {@link #name() enum name}.
  */
-enum State implements Function<Twist2d, ChassisSpeeds> {
+enum Named implements Registrable {
   //------------------------------------------------------------------------[Values]---------------------------------------------------------------------------//
-  /**
-   * Control based on the detection of objects located on the field, i.e. Object-Oriented; driving with respect
-   * to game pieces and field elements.
-   */
-  OBJECTIVE((Twist) -> {
-      throw new UnsupportedOperationException();
-  }),
-
-  /**
-   * Control based on the direction of the absolute rotation (yaw) of the gyroscope , i.e. Field Oriented; driving
-   * with respect to the direction of the driver-station on the field
-   */
-  ABSOLUTE((Twist) -> 
-    ChassisSpeeds.fromFieldRelativeSpeeds(
-      Twist.dx, 
-      Twist.dy, 
-      Twist.dtheta, 
-      new Rotation2d())
-  ),
-
-  /**
-   * Control based on the relative direction of the robot, i.e. Robot-Oriented; driving with no frame of reference
-   * to guide us
-   */
-  RELATIVE((Twist) -> 
-    ChassisSpeeds.fromRobotRelativeSpeeds(
-      Twist.dx, 
-      Twist.dy, 
-      Twist.dtheta, 
-      new Rotation2d())
-  );
+  EMPTY$PLACEHOLDER(new InstantCommand());
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
-  private final Function<Twist2d, ChassisSpeeds> FUNCTION;
+  private final Command NAMED_COMMAND;
   //---------------------------------------------------------------------[Constructor(s)]----------------------------------------------------------------------//
   /**
-   * State Constructor.
-   * @param Function Bi-function which consumes both the desired rotation and translation to produce speeds for the demand.
+   * Named Constructor.
+   * @param Command Valid named command to register as a {@link NamedCommands NamedCommand}.
    */
-  State(final Function<Twist2d, ChassisSpeeds> Function) {
-    FUNCTION = Function;
+  Named(final Command Command) {
+    NAMED_COMMAND = Command;
+    CommandScheduler
+      .getInstance()
+      .requireNotComposedOrScheduled(Command);      
+    DrivebaseSubsystem
+      .tryInstance()
+      .ifPresent((Instance) -> {
+        if(!NAMED_COMMAND.getRequirements().contains(Instance)) {
+          NAMED_COMMAND
+            .addRequirements(Instance);
+        }
+      });
+    register();
   }
-  //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
-  /**
-   * Applies the function's given arguments of Translation and Rotation to create ChassisSpeeds.
-   * @param Twist Demand translation & rotation in two-dimensional space
-   * @return Output ChassisSpeeds based on the arguments
-   */
-  public final ChassisSpeeds apply(final Twist2d Twist) {
-    return FUNCTION
-      .apply(Twist);
+  //-----------------------------------------------------------------------[Accessors]-------------------------------------------------------------------------//
+  @Override
+  public final Command getCommand() {
+    return NAMED_COMMAND;
+  }
+
+  @Override
+  public final String getName() {
+    return name();
   }
 }

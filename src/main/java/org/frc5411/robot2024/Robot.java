@@ -62,6 +62,7 @@ import static org.frc5411.robot2024.Constants.Mode.*;
  *
  * @see Manager
  */
+@SuppressWarnings("DataFlowIssue")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = (true))
 public final class Robot extends LoggedRobot implements Singleton<Robot> {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
