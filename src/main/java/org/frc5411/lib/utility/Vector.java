@@ -50,23 +50,24 @@ public class Vector<@NonNull Type, @NonNull Elements extends Num> implements Str
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   /**
    * Type Vector Constructor.
-   * @param Elements              Natural number representation of the number of elements in this array
+   * @param Magnitude             Natural number representation of the number of elements in this array
    * @param Vector                Array data to place within the bounds of the Vector's array, length should match the number of elements specified.
    * @throws BoundaryException    Bounds of the array are exceeded or not met by the length of the Vector parameter
    * @throws NullPointerException Either the Elements parameter or the Vector parameter evaluate to null 
    */
   @SuppressWarnings("unchecked")
-  public Vector(final Nat<Elements> Elements, final Type... Vector) throws BoundaryException {
+  public Vector(final Nat<Elements> Magnitude, final Type... Vector) throws BoundaryException {
     try {
-      assert Elements.getNum() == Objects.requireNonNull(Vector).length;
+      assert Magnitude.getNum() == Objects.requireNonNull(Vector).length;
     } catch(final AssertionError Ignored) {
       throw new BoundaryException(
         String.format(
-          ("Bounds of Vector defined, [%d], do not match the length of the vector, [%d], excepted"), 
-          Elements.getNum(), 
-          Vector.length));
+          ("Bounds of Vector defined, %d, do not match the length of the vector, %d, excepted"), 
+          Magnitude.getNum(), 
+          Vector.length)
+      );
     }
-    VECTOR = Objects.requireNonNull(Vector);
+    VECTOR = Vector;
   }
   //------------------------------------------------------------------------[Methods]-------------------------------------------------------------------------//
   /**

@@ -31,7 +31,6 @@ import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -75,7 +74,7 @@ public class VisionSubsystem extends Subsystem {
   static ReadWriteLock SUBSYSTEM_LOCK;
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
-  Vector<Camera<?>,N2> CAMERAS;
+  Vector<Camera<?>,?> CAMERAS;
   Camera<?> IDENTITY;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile VisionSubsystem Instance;

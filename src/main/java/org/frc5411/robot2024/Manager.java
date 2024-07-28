@@ -22,6 +22,7 @@ import org.frc5411.robot2024.subsystems.drivebase.Constants.*;
 import org.frc5411.robot2024.subsystems.vision.VisionSubsystem;
 import org.frc5411.robot2024.subsystems.drivebase.DrivebaseSubsystem;
 
+import edu.wpi.first.hal.HALUtil;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
@@ -153,6 +154,7 @@ public final class Manager implements Singleton<Manager> {
                 .toArray(SwerveModulePosition[]::new))
         )
     ));
+    Timestamp = HALUtil.getFPGATime() / 1E6D;
     Measured = new Twist2d(
       Double.NaN, 
       Double.NaN, 
@@ -255,11 +257,13 @@ public final class Manager implements Singleton<Manager> {
    */
   @Async
   public synchronized void update() {
-    Logger.recordOutput(
-      ("Robot/Odometry/Vehicle"), 
-      getResolved()
-        .getValue()
-    );              
+    if(Vehicle.isPresent() || Field.isPresent()) {
+      Logger.recordOutput(
+        ("Robot/Odometry"), 
+        getResolved()
+          .getValue()
+      );    
+    }     
     Logger.recordOutput(
       ("Robot/Measured"), 
       getMeasured()

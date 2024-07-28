@@ -104,7 +104,7 @@ public final class Robot extends LoggedRobot implements Singleton<Robot> {
       .ifPresent(Register::start);
     PhoenixRegister
       .tryInstance()
-      .ifPresent(Register::start);
+      .ifPresent(Register::start);      
     Manager.getInstance();         
     Logger.registerURCL(URCL.startExternal());
     DriverStation.silenceJoystickConnectionWarning((true));

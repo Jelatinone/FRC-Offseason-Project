@@ -39,7 +39,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.*;
-import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -88,7 +87,7 @@ public class DrivebaseSubsystem extends Subsystem {
   static ReadWriteLock SUBSYSTEM_LOCK;
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
-  Vector<Module<?,?>,N4> MODULES;
+  Vector<Module<?,?>,?> MODULES;
   Module<?,?> IDENTITY; 
   Gyroscope<?> GYROSCOPE;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
@@ -119,12 +118,10 @@ public class DrivebaseSubsystem extends Subsystem {
       .stream()
       .findAny()
       .orElseThrow();
-    GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR
-      .complete(PigeonGyroscope::new);      
+    GYROSCOPE = Constants.GYROSCOPE_DESCRIPTOR.complete(PigeonGyroscope::new);      
     MODULES
       .forEach(Module::periodic);
-    GYROSCOPE
-      .periodic();
+    GYROSCOPE.periodic();
     ODOMETRY = new SwerveDriveOdometry(
       KINEMATICS, 
       getGyroscopeMeasurement()
@@ -279,8 +276,7 @@ public class DrivebaseSubsystem extends Subsystem {
             Demand,
             DISCRETE_AGGREGATOR.getAggregated()), 
           DISCRETE_AGGREGATOR.getAggregated());
-        GYROSCOPE
-          .periodic();
+        GYROSCOPE.periodic();
         MODULES
           .stream()
           .parallel()
@@ -416,7 +412,7 @@ public class DrivebaseSubsystem extends Subsystem {
         .map((Module) -> 
           Module
             .getMeasurement()
-            .orElse(new SwerveModulePosition(Double.NaN, Rotation2d.fromRotations(Double.NaN))))
+            .orElse(new SwerveModulePosition()))
         .toArray(SwerveModulePosition[]::new);
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
@@ -454,10 +450,7 @@ public class DrivebaseSubsystem extends Subsystem {
       SUBSYSTEM_LOCK.readLock().lock();
       return GYROSCOPE
         .getMeasurement()
-        .orElse(new Rotation3d(
-          Double.NaN,
-          Double.NaN, 
-          Double.NaN));
+        .orElse(new Rotation3d());
     } finally {
       SUBSYSTEM_LOCK.readLock().unlock();
     } 
@@ -546,7 +539,7 @@ public class DrivebaseSubsystem extends Subsystem {
      * to game pieces and field elements.
      */
     OBJECTIVE((Twist) -> {
-        throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException();
     }),
 
     /**
@@ -558,7 +551,12 @@ public class DrivebaseSubsystem extends Subsystem {
         Twist.dx, 
         Twist.dy, 
         Twist.dtheta, 
-        new Rotation2d())
+        Manager
+        .tryInstance()
+        .map(Manager::getResolved)
+        .map((Entry) -> 
+          Entry.getValue().getRotation())
+        .orElse(new Rotation2d()))
     ),
 
     /**
@@ -570,7 +568,14 @@ public class DrivebaseSubsystem extends Subsystem {
         Twist.dx, 
         Twist.dy, 
         Twist.dtheta, 
-        new Rotation2d())
+        Manager
+        .tryInstance()
+        .map(Manager::getResolved)
+        .map((Entry) -> 
+          Entry
+            .getValue()
+            .getRotation())
+        .orElse(new Rotation2d()))
     );
     //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
     private final Function<Twist2d, ChassisSpeeds> FUNCTION;
