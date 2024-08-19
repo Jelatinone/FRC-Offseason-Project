@@ -203,6 +203,12 @@ public class DrivebaseSubsystem extends Subsystem {
     );     
     Logger.recordOutput(
       String.format(
+        ("%s/Merit"), getName()),
+      IDENTITY
+        .getMerit()
+    );
+    Logger.recordOutput(
+      String.format(
         ("%s/Latency"), getName()),
       DISCRETE_AGGREGATOR
         .attain() 
@@ -555,7 +561,9 @@ public class DrivebaseSubsystem extends Subsystem {
         .tryInstance()
         .map(Manager::getResolved)
         .map((Entry) -> 
-          Entry.getValue().getRotation())
+          Entry
+            .getValue()
+            .getRotation())
         .orElse(new Rotation2d()))
     ),
 

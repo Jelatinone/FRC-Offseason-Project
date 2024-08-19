@@ -36,7 +36,7 @@ import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 import com.jcabi.aspects.Async;
@@ -85,7 +85,7 @@ public final class Manager implements Singleton<Manager> {
   @Serial
   static long serialVersionUID = 2389697764281159320L;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
-  ExtendedKalmanFilter<N2,N2,N2> FILTER;  
+  ExtendedKalmanFilter<N3,N3,N3> FILTER;  
   Collection<Integer> INDICES;
   SwerveDriveOdometry ODOMETRY;  
   //-----------------------------------------------------------------------[Execution]-------------------------------------------------------------------------//
@@ -117,9 +117,9 @@ public final class Manager implements Singleton<Manager> {
       .boxed()
       .toList();
     FILTER = new ExtendedKalmanFilter<>(
-      Nat.N2(),
-      Nat.N2(),
-      Nat.N2(),
+      Nat.N3(),
+      Nat.N3(),
+      Nat.N3(),
       (Input, Output) -> Output,
       (Input, Output) -> Input,
       STATE_STANDARD_DEVIATIONS,
@@ -223,24 +223,24 @@ public final class Manager implements Singleton<Manager> {
               applyDeadband(
                 DRIVER
                   .<Supplier<Double>>getPreference(CONTROL_EFFORT_X)
-                  .orElse((() -> Double.NaN))
-                  .get(),
+                  .map(Supplier::get)
+                  .orElse((Double.NaN)),
                 DRIVER
                   .<Double>getPreference(CONTROL_ZONE_X)
                   .orElse((Double.NaN))),
               applyDeadband(
                 DRIVER
                   .<Supplier<Double>>getPreference(CONTROL_EFFORT_Y)
-                  .orElse((() -> Double.NaN))
-                  .get(),
+                  .map(Supplier::get)
+                  .orElse((Double.NaN)),
                 DRIVER
                   .<Double>getPreference(CONTROL_ZONE_Y)
                   .orElse((Double.NaN))),
               applyDeadband(
                 DRIVER
                   .<Supplier<Double>>getPreference(CONTROL_EFFORT_T)
-                  .orElse((() -> Double.NaN))
-                  .get(),
+                  .map(Supplier::get)
+                  .orElse((Double.NaN)),
                 DRIVER
                   .<Double>getPreference(CONTROL_ZONE_T)
                   .orElse((Double.NaN)))
@@ -362,7 +362,7 @@ public final class Manager implements Singleton<Manager> {
             );      
             FILTER.predict(
               VecBuilder
-                .fill((0D), (0D)),
+                .fill((0D), (0D), (0D)),
               Interval
             );   
             Vehicle = Optional

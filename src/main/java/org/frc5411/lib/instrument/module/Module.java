@@ -25,7 +25,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -77,11 +76,11 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
 
   @Override
   public synchronized SwerveModuleState set(@NonNull SwerveModuleState Demand) {
-    Objects.requireNonNull(Demand);
     // <--- TODO: Implement Orbit-style module acceleration limits (forward, skid, tilt, etc)
+    Demand = SwerveModuleState.optimize(Demand, getOutput().orElseThrow().angle);
     synchronized(STATUS) {
       STATUS
-        .setState(Demand = SwerveModuleState.optimize(Demand, getOutput().orElseThrow().angle));
+        .setState(Demand);
     }
     return Demand;
   }
@@ -93,16 +92,14 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
       final var State = getState().orElseThrow();
       final var Output = getOutput().orElseThrow();
       final var Input = new SwerveModuleState();
+      final var Error = unwrap(DESCRIPTION.RotationalFeedback.getError());
       if(getConnection()) {
         setTranslationalVoltage(
           (Input.speedMetersPerSecond = unwrap(
             DESCRIPTION.TranslationalFeedback.calculate(
               VecBuilder.fill(
                 Output.speedMetersPerSecond, 
-                State.speedMetersPerSecond 
-                            * 
-                Math
-                  .cos(unwrap(DESCRIPTION.RotationalFeedback.getError())))
+                State.speedMetersPerSecond * Math.cos(Error))
             )
           ))
         );
@@ -119,9 +116,13 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
             ))).getRotations()
           );
         }
-        //https://youtu.be/N6ogT5DjGOk?feature=shared&t=1674
         STATUS
-          .setMerit((1D)); // <--- TODO: Calculate Merit
+          .setMerit(Math.pow(Math.pow(
+              State.speedMetersPerSecond - Output.speedMetersPerSecond, (3D)) 
+                                         / 
+              State.speedMetersPerSecond * Math.cos(Error) + (1D), 
+            (2D)) + (1D)
+          );
       } else {
         cease();
         STATUS
@@ -130,7 +131,7 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
       STATUS.setInput(Input);
     }
     Logger.processInputs(
-      getIdentity(),STATUS);   
+      getIdentity(), STATUS);   
   }
   //-----------------------------------------------------------------------[Mutators]--------------------------------------------------------------------------//
   /**
@@ -150,24 +151,6 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
     return STATUS;
   }
 
-  /**
-   * Provides the current position (angular displacement) of the module's rotational axis with an offset, interpreted from the current measurement of the system recorded
-   * within the {@link #update(org.frc5411.lib.pattern.Report)}
-   * @return Position of the rotational controller's axis of rotation in radians as a Rotation2d Object
-   */
-  public Optional<Rotation2d> getRotationalPosition() {
-    return getMeasurement().map((Measurement) -> Measurement.angle.minus(DESCRIPTION.RotationalOffset));
-  }
-
-  /**
-   * Provides the current position (translational displacement) of the module's translational axis with an offset, interpreted from the current measurement of the system
-   * recorded within the {@link #update(org.frc5411.lib.pattern.Report)}
-   * @return Position of the translational controller's axis of rotation in meters as a Double Object
-   */
-  public Optional<Double> getTranslationPosition() {
-    return getMeasurement().map((Measurement) -> Measurement.distanceMeters - DESCRIPTION.TranslationalOffset);
-  }
-  
   @Override
   public Descriptor<Controller,Encoder> getDescriptor() {
     return DESCRIPTION;

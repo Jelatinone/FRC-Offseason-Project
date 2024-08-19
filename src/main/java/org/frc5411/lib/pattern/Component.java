@@ -188,8 +188,17 @@ public interface Component<@NonNull Measurement extends StructSerializable> exte
    * remain true.
    * @return Status of connection to hardware
    */
-  default Boolean getConnection() {
+  default boolean getConnection() {
     return getReport().isConnected();
+  }
+
+  /**
+   * Provides the current figure of merit (trust in this instance's hardware) which must range between [+1, POSITIVE_INFINITY), where the upper bound
+   * is hardware which has no merit (or trust).
+   * @return Merit of hardware
+   */
+  default double getMerit() {
+    return getReport().getMerit();
   }
 
   /**

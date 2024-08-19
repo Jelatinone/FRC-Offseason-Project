@@ -14,11 +14,13 @@
 // limitations under the License.
 //------------------------------------------------------------------------[Package]----------------------------------------------------------------------------//
 package org.frc5411.lib.instrument.camera;
+//-----------------------------------------------------------------------[Libraries]---------------------------------------------------------------------------//
 import org.frc5411.lib.pattern.Component;
 
 import edu.wpi.first.math.geometry.Pose3d;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -60,8 +62,21 @@ public abstract class Camera<Hardware> implements Component<Pose3d> {
   public synchronized void periodic() {
     synchronized(STATUS) {
       update(STATUS);
-      STATUS
-        .setMerit(Double.POSITIVE_INFINITY);   
+      if(getConnection()) {
+        STATUS.setMerit(
+          Stream.of(STATUS.getObservations())
+          .reduce((Current, Next) -> Next)
+          .map((Observation) -> 
+            Stream.of(Observation)
+              .map((Transform) -> 
+                Transform.getTranslation().getNorm())
+              .min(Double::compareTo)
+              .orElse(Double.NaN))
+          .orElse(Double.NaN));
+      } else {
+        STATUS
+          .setMerit(Double.POSITIVE_INFINITY);
+      }
     }
     /*
      * See the following which references the below issue:
