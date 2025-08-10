@@ -39,6 +39,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.*;
+import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -87,8 +88,8 @@ public class DrivebaseSubsystem extends Subsystem {
   static ReadWriteLock SUBSYSTEM_LOCK;
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
-  Vector<Module<?,?>,?> MODULES;
-  Module<?,?> IDENTITY; 
+  Vector<Module<?,?>,N4> MODULES;
+  Component<?> IDENTITY; 
   Gyroscope<?> GYROSCOPE;
   //----------------------------------------------------------------------[Regulation]-------------------------------------------------------------------------//
   SwerveDriveOdometry ODOMETRY;  
@@ -240,8 +241,13 @@ public class DrivebaseSubsystem extends Subsystem {
     );    
     Logger.recordOutput(
       String.format(
-        ("%s/Measurement"), getName()),
+        ("%s/Measurement/Modules"), getName()),
       getModuleMeasurements()
+    );
+    Logger.recordOutput(
+      String.format(
+        ("%s/Measurement/Gyroscope"), getName()),
+      getGyroscopeMeasurement()
     );
     Logger.recordOutput(
       String.format(
@@ -558,13 +564,13 @@ public class DrivebaseSubsystem extends Subsystem {
         Twist.dy, 
         Twist.dtheta, 
         Manager
-        .tryInstance()
-        .map(Manager::getResolved)
-        .map((Entry) -> 
-          Entry
-            .getValue()
-            .getRotation())
-        .orElse(new Rotation2d()))
+          .tryInstance()
+          .map(Manager::getResolved)
+          .map((Entry) -> 
+            Entry
+              .getValue()
+              .getRotation())
+          .orElse(new Rotation2d()))
     ),
 
     /**
@@ -577,13 +583,13 @@ public class DrivebaseSubsystem extends Subsystem {
         Twist.dy, 
         Twist.dtheta, 
         Manager
-        .tryInstance()
-        .map(Manager::getResolved)
-        .map((Entry) -> 
-          Entry
-            .getValue()
-            .getRotation())
-        .orElse(new Rotation2d()))
+          .tryInstance()
+          .map(Manager::getResolved)
+          .map((Entry) -> 
+            Entry
+              .getValue()
+              .getRotation())
+          .orElse(new Rotation2d()))
     );
     //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
     private final Function<Twist2d, ChassisSpeeds> FUNCTION;
@@ -625,10 +631,10 @@ enum Named implements Registrable {
    * @param Command Valid named command to register as a {@link NamedCommands NamedCommand}.
    */
   Named(final Command Command) {
-    NAMED_COMMAND = Command;
     CommandScheduler
       .getInstance()
-      .requireNotComposedOrScheduled(Command);      
+      .requireNotComposedOrScheduled(Command);       
+    NAMED_COMMAND = Command;
     DrivebaseSubsystem
       .tryInstance()
       .ifPresent((Instance) -> {

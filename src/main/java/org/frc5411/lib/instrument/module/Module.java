@@ -91,8 +91,8 @@ public abstract class Module<@NonNull Controller, @NonNull Encoder> implements A
       update(STATUS);
       final var State = getState().orElseThrow();
       final var Output = getOutput().orElseThrow();
-      final var Input = new SwerveModuleState();
       final var Error = unwrap(DESCRIPTION.RotationalFeedback.getError());
+      final var Input = new SwerveModuleState();
       if(getConnection()) {
         setTranslationalVoltage(
           (Input.speedMetersPerSecond = unwrap(

@@ -70,12 +70,12 @@ import lombok.experimental.NonFinal;
 public class VisionSubsystem extends Subsystem {
   //-----------------------------------------------------------------------[Constants]-------------------------------------------------------------------------//
   @Serial 
-  static long serialVersionUID = 2571418245449373564L;
+  static long serialVersionUID = 217287786227419609L;
   static ReadWriteLock SUBSYSTEM_LOCK;
   static Aggregator<Double> DISCRETE_AGGREGATOR;
   //-----------------------------------------------------------------------[Hardware]--------------------------------------------------------------------------//
   Vector<Camera<?>,?> CAMERAS;
-  Camera<?> IDENTITY;
+  Component<?> IDENTITY;
   //------------------------------------------------------------------------[Fields]---------------------------------------------------------------------------//
   static volatile VisionSubsystem Instance;
   

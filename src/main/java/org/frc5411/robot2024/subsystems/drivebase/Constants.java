@@ -199,7 +199,7 @@ class Descriptions {
   static org.frc5411.lib.instrument.gyroscope.Descriptor.DescriptorBuilder<?> REAL_GYROSCOPE_DESCRIPTOR = 
     org.frc5411.lib.instrument.gyroscope.Descriptor.<Pigeon2>builder()
       .Identity((0))
-      .Hardware(new Pigeon2((0)))
+      .Hardware(new Pigeon2((10)))
       .Offset(new Rotation3d());
 
   static org.frc5411.lib.instrument.module.Descriptor.DescriptorBuilder<CANSparkBase,CANcoder> REAL_MODULE_DESCRIPTOR = 
@@ -207,10 +207,10 @@ class Descriptions {
       .TranslationalReduction((6.75D))
       .TranslationalOffset((0D))
       .TranslationalInverted((false))
-      .TranslationalFeedback(PIDController.Descriptor.builder().Proportional((0.2D)).Integral((0D)).Derivative((0D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
+      .TranslationalFeedback(PIDController.Descriptor.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .RotationalReduction((150D) / (7D))
       .RotationalInverted((false))
-      .RotationalFeedback(PIDController.Descriptor.builder().Proportional((.00281D)).Integral((0D)).Derivative((0D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
+      .RotationalFeedback(PIDController.Descriptor.builder().Proportional((0D)).Integral((0D)).Derivative((0D)).build().<PIDController.Descriptor,PIDController>complete(PIDController::new))
       .Radius(Units.inchesToMeters((4D)))
       .Limits(Limit.builder().TranslationalVelocity((4.8D)).TranslationalAcceleration((4.8D) * (5D)).RotationalVelocity((24) * Figures.PI).build());
 
