@@ -231,7 +231,7 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
    * @param Demand Voltage sent to the controller object 
    */
   protected void setTranslationalVoltage(final double Demand) {
-    getDescriptor().TranslationalController.set(MathUtil.clamp(Demand, (-12D), (12D)));
+    getDescriptor().TranslationalController.setVoltage(MathUtil.clamp(Demand, (-12D), (12D)));
   }
 
   /**
@@ -239,6 +239,6 @@ public class SparkModule extends Module<CANSparkBase,CANcoder> {
    * @param Demand Voltage sent to the controller object 
    */
   protected void setRotationalVoltage(final double Demand) {
-    getDescriptor().RotationalController.set(MathUtil.clamp(Demand, (-12D), (12D)));
+    getDescriptor().RotationalController.setVoltage(MathUtil.clamp(Demand, (-12D), (12D)));
   }
 }
